@@ -5,6 +5,7 @@ An attempt to port the [apidocjs plugin][apidocjs] to sbt
 [apidocjs]: http://apidocjs.com/
 
 
+
 ### Resources
 
 [SBT-Plugin Best Practices](http://www.scala-sbt.org/0.13/docs/Plugins-Best-Practices.html)
