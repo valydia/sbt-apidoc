@@ -1,0 +1,15 @@
+/RUNNING_PID
+/logs/
+/project/*-shim.sbt
+/project/project/
+/project/target/
+/target/
+.idea
+.sbtserver
+/project/.sbtserver.lock
+/ApidocPluginTest/target/
+/ApidocPluginTest/project/project/
+/ApidocPluginTest/project/target/
+src/sbt-test/call-apidoc/target/
+src/sbt-test/call-apidoc/project/project/
+src/sbt-test/call-apidoc/project/target/
