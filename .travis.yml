@@ -1,3 +1,10 @@
-jdk: openjdk6
+sudo: false
+
 language: scala
-script: sbt test scripted
+scala:
+   - 2.10.4
+
+jdk:
+  - openjdk7
+
+script: sbt ++$TRAVIS_SCALA_VERSION test scripted
