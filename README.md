@@ -1,10 +1,10 @@
-#sbt-apidoc-plugin
+#sbt-apidoc
 
 An attempt to port the [apidocjs plugin][apidocjs] to sbt
 
 [apidocjs]: http://apidocjs.com/
 
-
+[![Build Status](https://api.travis-ci.org/valydia/sbt-apidoc.png)](http://travis-ci.org/valydia/sbt-apidoc)
 
 ### Resources
 
