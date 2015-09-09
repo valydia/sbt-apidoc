@@ -10,18 +10,22 @@ name := """sbt-apidoc"""
 version := "1.0-SNAPSHOT"
 
 scalaVersion := "2.10.4"
+//scalaVersion := "2.11.7"
+
+crossScalaVersions := Seq("2.9.2", "2.10.0", "2.11.7")
 
 scalacOptions ++= Seq("-deprecation", "-feature")
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
+val json4s_version = "3.2.11"
+
 libraryDependencies ++= Seq(
-  "org.json4s"         %% "json4s-native"    % "3.2.11",
-  "org.json4s"         %% "json4s-jackson"   % "3.2.11",
+  "org.json4s"         %% "json4s-native"    % json4s_version,
+  "org.json4s"         %% "json4s-jackson"   % json4s_version,
   "org.scalatest"      %% "scalatest"        % "2.2.4"   % "test",
   "org.mockito"        %  "mockito-core"     % "1.8.5"   % "test"
 )
-
 
 // Scripted - sbt plugin tests
 scriptedSettings

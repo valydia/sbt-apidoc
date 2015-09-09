@@ -3,7 +3,7 @@ package com.culpin.team
 import sbt._
 
 trait SbtApidocKeys {
-  lazy val apidoc = taskKey[File]("Generates APIDOC plugin documentation")
+  lazy val apidoc = taskKey[Option[File]]("Generates APIDOC plugin documentation")
   lazy val apidocOutputDir = settingKey[File]("The output directory of the apidoc")
   lazy val apidocName = settingKey[String]("The Name of the API")
   lazy val apidocTitle = settingKey[String]("Browser title text.")
