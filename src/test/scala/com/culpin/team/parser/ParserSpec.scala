@@ -46,25 +46,6 @@ class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
     assert(result4 === expected4)
   }
 
-  "Parser" should "find index of api blocks" in {
-    val block = List(
-      List(),
-      List(Element("@param arg", "param", "param", "arg")),
-      List(Element("@param arg", "param", "param", "arg")),
-      List(Element("@apiParam", "apipara", "apiPara", "m")),
-      List(Element("@param arg The array of string", "param", "param", "arg The array of string"),
-        Element("@param theString the string", "param", "param", "theString the string"),
-        Element("@param theInt the int", "param", "param", "theInt the int"),
-        Element("@return the result string", "return", "return", "the result string")),
-      List(Element("@apiIgnore Not finished Method", "apiignore", "apiIgnore", "Not finished Method"),
-        Element("@param theString the string", "param", "param", "theString the string"),
-        Element("@param theInt the int", "param", "param", "theInt the int"),
-        Element("@return the result string", "return", "return", "the result string"))
-    )
-    val result = Parser.findBlocksWithApiGetIndex(block)
-    assert(result === List(3))
-  }
-
   "Api Parser" should "parse api element " in {
     val apiParser = new ApiParser
     val Some(result) = apiParser.parseBlock("{get} /user/:id")
@@ -214,7 +195,7 @@ class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
       )
     )
 
-    val result = Parser.parseBlockElement(Seq(0), detectedElement, "app/controllers/gathr/culpinteam/v1/Application.scala")
+    val result = Parser.parseBlockElement(detectedElement, "app/controllers/gathr/culpinteam/v1/Application.scala")
 
     //      val expected = Seq(
     //          Block(

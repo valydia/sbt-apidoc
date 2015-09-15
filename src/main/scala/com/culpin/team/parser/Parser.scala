@@ -200,8 +200,7 @@ object Parser {
     val elements = rawBlocks.map { b =>
       findElements(b)
     }
-    val indexApiBlocks = findBlocksWithApiGetIndex(elements)
-    parseBlockElement(indexApiBlocks, elements, file.getName)
+    parseBlockElement(elements, file.getName)
   }
 
   val parser = List(
@@ -215,9 +214,20 @@ object Parser {
     new ApiVersionParser
   )
 
-  def parseBlockElement(indexApiBlocks: Seq[Int], detectedElements: Seq[Seq[Element]], filename: String): Seq[Block] = {
-    indexApiBlocks.map { blockIndex =>
-      val elements = detectedElements(blockIndex)
+  def parseBlockElement(detectedElements: Seq[Seq[Element]], filename: String): Seq[Block] = {
+    def isApiBlock(elements: Seq[Element]): Boolean = {
+      val apiIgnore = elements.exists { elem =>
+        val elementName = elem.name
+        (elementName.length() >= 9 && elementName.substring(0, 9) == "apiignore")
+      }
+      val apiElem = elements.exists { elem =>
+        val elementName = elem.name
+        elementName.length() >= 3 && elementName.substring(0, 3) == "api"
+      }
+      !apiIgnore && apiElem
+    }
+
+    detectedElements.filter(isApiBlock).map { elements =>
       elements.foldLeft(Block()) {
         case (block, element) =>
           val parserMap = parser.map(p => (p.name, p)).toMap
@@ -246,32 +256,6 @@ object Parser {
     val field = b1.field.orElse(b2.field)
     val defaultValue = b1.defaultValue.orElse(b2.defaultValue)
     Block(`type`, title, name, url, group, version, description, None, size, optional, field, defaultValue)
-  }
-
-  /**
-   * Return block indexes with active API-elements
-   * An @apiIgnore ignores the block.
-   * Other, non @api elements, will be ignored.
-   * @param blocks
-   * @return
-   */
-  def findBlocksWithApiGetIndex(blocks: Seq[Seq[Element]]): Seq[Int] = {
-
-    blocks.zipWithIndex.foldLeft(Seq[Int]()) {
-      case (acc, (elements, index)) =>
-        val apiIgnore = elements.exists { elem =>
-          val elementName = elem.name
-          (elementName.length() >= 9 && elementName.substring(0, 9) == "apiignore")
-        }
-        val apiElem = elements.exists { elem =>
-          val elementName = elem.name
-          elementName.length() >= 3 && elementName.substring(0, 3) == "api"
-        }
-        if (!apiIgnore && apiElem)
-          acc :+ index
-        else
-          acc
-    }
   }
 
   /**
