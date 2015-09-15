@@ -3,6 +3,7 @@ package com.culpin.team.core
 import java.io.File
 
 import com.culpin.team.SbtApidocConfiguration
+import com.culpin.team.parser.Parser
 
 import org.json4s.NoTypeHints
 import org.json4s.native.Serialization
@@ -17,9 +18,6 @@ case class Block(`type`: Option[String] = None, title: Option[String] = None, na
   size: Option[String] = None, optional: Option[String] = None, field: Option[String] = None, defaultValue: Option[String] = None)
 case class Example(title: Option[String], content: Option[String], `type`: Option[String])
 case class Success(examples: List[Example])
-//"type":"get","url":"/","title":"Home page.","name":"Welcome_Page.","group":"Application","version":"1.0.0",
-// "description":"<p>Renders the welcome page</p> ",
-// "success":{"examples":[{"title":"Success-Response:","content":"HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}","type":"json"
 object Apidoc {
 
   /**
@@ -30,8 +28,10 @@ object Apidoc {
    */
   def apply(sources: Seq[File], config: SbtApidocConfiguration, log: Logger): Try[Option[(String, String)]] = {
 
+    val blocks = Parser(sources, log)
+
     implicit val formats = Serialization.formats(NoTypeHints)
-    USuccess(Some(("", writePretty(config))))
+    USuccess(Some((writePretty(blocks), writePretty(config))))
   }
 
 }

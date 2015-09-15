@@ -7,7 +7,7 @@ organization := "com.culpin.team"
 name := """sbt-apidoc"""
 
 //Change to the version
-version := "1.0-SNAPSHOT"
+version := "0.3-SNAPSHOT"
 
 scalaVersion := "2.10.4"
 //scalaVersion := "2.11.7"

@@ -1,9 +1,13 @@
 package com.culpin.team.parser
 
-import com.culpin.team.core.{ Example, Success, Block, Element }
-import org.scalatest.{ Matchers, FlatSpec }
+import java.io.File
 
-class ParserSpec extends FlatSpec with Matchers {
+import com.culpin.team.core.{ Example, Success, Block, Element }
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{ Matchers, FlatSpec }
+import sbt.Logger
+
+class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
 
   "Parser" should "should find block in file" in {
     val string = "/**\n * Created by valydia on 26/07/15.\n */\npublic class JavaMain {\n    /**\n     * Block 1\n    " +
@@ -130,7 +134,7 @@ class ParserSpec extends FlatSpec with Matchers {
 
     val Some(result) = apiParamParser.parseBlock("{String} country=\"DE\" Mandatory with default value \"DE\".")
     val expected = Block(field = Some("country"), description = Some("Mandatory with default value \"DE\"."),
-       optional = Some("false"), `type` = Some("String"), defaultValue = Some("DE"), group = Some("Parameter"))
+      optional = Some("false"), `type` = Some("String"), defaultValue = Some("DE"), group = Some("Parameter"))
     assert(result === expected)
 
     val Some(result2) = apiParamParser.parseBlock("{String} lastname     Mandatory Lastname.")
@@ -151,13 +155,12 @@ class ParserSpec extends FlatSpec with Matchers {
 
   }
 
-
   "ApiParamParser" should "parse Type, Fieldname, Description" in {
     val apiParamParser = new ApiParamParser
 
     val Some(result) = apiParamParser.parseBlock("{String} name The users name.")
-    val expected = Block( field = Some("name"), description = Some("The users name."),
-          optional = Some("false"), `type` = Some("String"), group = Some("Parameter"))
+    val expected = Block(field = Some("name"), description = Some("The users name."),
+      optional = Some("false"), `type` = Some("String"), group = Some("Parameter"))
     assert(result === expected)
 
   }
@@ -168,7 +171,7 @@ class ParserSpec extends FlatSpec with Matchers {
       "[ \\MyClass\\field.user_first-name = \'John Doe\' ] Some description."
     val Some(result) = apiParamParser.parseBlock(content)
     val expected = Block(size = Some("1..10"), field = Some("\\MyClass\\field.user_first-name"), description = Some("Some description."),
-       optional = Some("true"), `type` = Some("\\Object\\String.uni-code_char[]"), defaultValue = Some("John Doe"), group = Some("MyGroup"))
+      optional = Some("true"), `type` = Some("\\Object\\String.uni-code_char[]"), defaultValue = Some("John Doe"), group = Some("MyGroup"))
     assert(result === expected)
   }
 
@@ -178,7 +181,7 @@ class ParserSpec extends FlatSpec with Matchers {
       "\\MyClass\\field.user_first-name = John_Doe Some description."
     val Some(result) = apiParamParser.parseBlock(content)
     val expected = Block(size = Some("1..10"), field = Some("\\MyClass\\field.user_first-name"), description = Some("Some description."),
-       optional = Some("false"), `type` = Some("\\Object\\String.uni-code_char[]"), defaultValue = Some("John_Doe"), group = Some("MyGroup"))
+      optional = Some("false"), `type` = Some("\\Object\\String.uni-code_char[]"), defaultValue = Some("John_Doe"), group = Some("MyGroup"))
     assert(result === expected)
   }
 
@@ -186,8 +189,8 @@ class ParserSpec extends FlatSpec with Matchers {
     val apiSuccessParser = new ApiSuccessParser
 
     val Some(result) = apiSuccessParser.parseBlock("{String} firstname Firstname of the User.")
-    val expected = Block( field = Some("firstname"), description = Some("Firstname of the User."),
-       optional = Some("false"), `type` = Some("String"), group = Some("Success 200"))
+    val expected = Block(field = Some("firstname"), description = Some("Firstname of the User."),
+      optional = Some("false"), `type` = Some("String"), group = Some("Success 200"))
     assert(result === expected)
   }
 
@@ -195,34 +198,54 @@ class ParserSpec extends FlatSpec with Matchers {
     val apiNameParser = new ApiNameParser
 
     val Some(result) = apiNameParser.parseBlock("Welcome Page.")
-    val expected = Block( name = Some("Welcome_Page."))
+    val expected = Block(name = Some("Welcome_Page."))
     assert(result === expected)
   }
 
+  "Parser" should "parse block element" in {
+    val detectedElement = Seq(
+      Seq(
+        Element("@api {get} / Home page.", "api", "api", "{get} / Home page."),
+        Element("@apiName Welcome Page.", "apiname", "apiName", "Welcome Page."),
+        Element("@apiGroup Application", "apigroup", "apiGroup", "Application"),
+        Element("@apiVersion 1.0.0", "apiversion", "apiVersion", "1.0.0"),
+        Element("@apiDescription Renders the welcome page\n", "apidescription", "apiDescription", "Renders the welcome page\n"),
+        Element("@apiSuccessExample Success-Response:\n    HTTP/1.1 200 OK\n    HTML for welcome page\n    {\n      \"emailAvailable\": \"true\"\n    }\n", "apisuccessexample", "apiSuccessExample", "Success-Response:\n    HTTP/1.1 200 OK\n    HTML for welcome page\n    {\n      \"emailAvailable\": \"true\"\n    }\n")
+      )
+    )
 
+    val result = Parser.parseBlockElement(Seq(0), detectedElement, "app/controllers/gathr/culpinteam/v1/Application.scala")
 
-  //  "Parser" should "parse block element" in {
-  //    val detectedElement = Seq(
-  //      Seq(
-  //        Element("@api {get} / Home page.", "api", "api", "{get} / Home page."),
-  //        Element("@apiName Welcome Page.", "apiname", "apiName", "Welcome Page."),
-  //        Element("@apiGroup Application", "apigroup", "apiGroup", "Application"),
-  //        Element("@apiVersion 1.0.0", "apiversion", "apiVersion", "1.0.0"),
-  //        Element("@apiDescription Renders the welcome page\n", "apidescription", "apiDescription", "Renders the welcome page\n"),
-  //        Element("@apiSuccessExample Success-Response:\n    HTTP/1.1 200 OK\n    HTML for welcome page\n    {\n      \"emailAvailable\": \"true\"\n    }\n", "apisuccessexample", "apiSuccessExample", "Success-Response:\n    HTTP/1.1 200 OK\n    HTML for welcome page\n    {\n      \"emailAvailable\": \"true\"\n    }\n")
-  //      )
-  //    )
-  //
-  //    val result = Parser.parseBlockElement(Seq(0), detectedElement, "app/controllers/gathr/culpinteam/v1/Application.scala")
-  //
-  //    val expected = Seq(
-  //        Block(
-  //          Some("get"), Some("Home page."), Some("Welcome_Page."), Some("/"), Some("Application"), Some("1.0.0"),
-  //          Some("<p>Renders the welcome page</p> "),
-  //          Some(Success(List(Example(Some("Success-Response:"), Some("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"),Some("json")))))
-  //        )
-  //    )
-  //    assert(result === expected)
-  //  }
+    //      val expected = Seq(
+    //          Block(
+    //            Some("get"), Some("Home page."), Some("Welcome_Page."), Some("/"), Some("Application"), Some("1.0.0"),
+    //            Some("<p>Renders the welcome page</p> "),
+    //            Some(Success(List(Example(Some("Success-Response:"), Some("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"),Some("json")))))
+    //          )
+    //      )
+    val expected = Seq(
+      Block(
+        Some("get"), Some("Home page."), Some("Welcome_Page."), Some("/"), Some("Application"), Some("1.0.0"),
+        Some("Renders the welcome page")
+      )
+    )
+    assert(result === expected)
+  }
+
+  "Parser" should "parse file" in {
+
+    val sources = Seq(new File(getClass.getResource("/Application.scala").getFile))
+    val blocks = Parser(sources, mock[Logger])
+    val block = blocks(0)(0)
+    println(block)
+    assert(block.`type` === Some("get"))
+    assert(block.title === Some("Home page."))
+    assert(block.name === Some("Welcome_Page."))
+    assert(block.url === Some("/"))
+    assert(block.group === Some("Application"))
+    assert(block.version === Some("1.0.0"))
+    assert(block.description === Some("Renders the welcome page"))
+
+  }
 
 }
