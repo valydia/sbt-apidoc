@@ -44,7 +44,11 @@ object SbtApidoc extends AutoPlugin {
     val sourcesFiles = (sources in Compile).value
 
     val config = SbtApidocConfiguration(apidocName.value, apidocDescription.value, apidocSampleURL.value.isDefined, apidocVersion.value.getOrElse("1.0.0"))
-    val maybeFolder = Apidoc(sourcesFiles, config, log) match {
+
+    val parseResult = Apidoc(sourcesFiles, config, log)
+    //log.error(parseResult.toString)
+    //println("%%%%%%%%%%%%%%%%%%%%%%%" + parseResult)
+    val maybeFolder = parseResult match {
       case Success(Some((apiData, apiProject))) => Some(generateApidoc(apiData, apiProject, apidocOutputDir.value, log))
       case Success(None) => None
       case Failure(ex) => None

@@ -110,6 +110,23 @@ class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
 
   }
 
+  "ApiExampleParser" should "parse example element" in {
+
+    val apiExampleParser = new ApiExampleParser
+    val Some(result) = apiExampleParser.parseBlock("Example usage:\ncurl -i http://localhost/user/4711", Some("@apiExample Example usage:\ncurl -i http://localhost/user/4711"))
+    val expected = Block(examples = Some(List(Example(Some("Example usage:"), Some("curl -i http://localhost/user/4711"), Some("json")))))
+    assert(result === expected)
+
+  }
+
+  "ApiNameParser" should "parse name element" in {
+    val apiNameParser = new ApiNameParser
+
+    val Some(result) = apiNameParser.parseBlock("Welcome Page.")
+    val expected = Block(name = Some("Welcome_Page."))
+    assert(result === expected)
+  }
+
   "ApiParamParser" should "parse param element" in {
     val apiParamParser = new ApiParamParser
 
@@ -175,15 +192,17 @@ class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
     assert(result === expected)
   }
 
-  "ApiNameParser" should "parse name element" in {
-    val apiNameParser = new ApiNameParser
+  "ApiSuccessExampleParser" should "parse success exemple element" in {
 
-    val Some(result) = apiNameParser.parseBlock("Welcome Page.")
-    val expected = Block(name = Some("Welcome_Page."))
+    val apiSuccessExampleParser = new ApiSuccessExampleParser
+
+    val Some(result) = apiSuccessExampleParser.parseBlock("Success-Response:\n    HTTP/1.1 200 OK\n    HTML for welcome page\n    {\n      \"emailAvailable\": \"true\"\n    }\n", None)
+    val expected = Block(success = Some(Success(List(Example(Some("Success-Response:"), Some("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"), Some("json"))))))
     assert(result === expected)
   }
 
   "Parser" should "parse block element" in {
+
     val detectedElement = Seq(
       Seq(
         Element("@api {get} / Home page.", "api", "api", "{get} / Home page."),
@@ -197,19 +216,14 @@ class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
 
     val result = Parser.parseBlockElement(detectedElement, "app/controllers/gathr/culpinteam/v1/Application.scala")
 
-    //      val expected = Seq(
-    //          Block(
-    //            Some("get"), Some("Home page."), Some("Welcome_Page."), Some("/"), Some("Application"), Some("1.0.0"),
-    //            Some("<p>Renders the welcome page</p> "),
-    //            Some(Success(List(Example(Some("Success-Response:"), Some("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"),Some("json")))))
-    //          )
-    //      )
     val expected = Seq(
       Block(
         Some("get"), Some("Home page."), Some("Welcome_Page."), Some("/"), Some("Application"), Some("1.0.0"),
-        Some("Renders the welcome page")
+        Some("Renders the welcome page"),
+        Some(Success(List(Example(Some("Success-Response:"), Some("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"), Some("json")))))
       )
     )
+
     assert(result === expected)
   }
 
@@ -226,6 +240,7 @@ class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
     assert(block.group === Some("Application"))
     assert(block.version === Some("1.0.0"))
     assert(block.description === Some("Renders the welcome page"))
+    assert(block.success === Some(Success(List(Example(Some("Success-Response:"), Some("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"), Some("json"))))))
 
   }
 

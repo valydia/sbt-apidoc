@@ -2,7 +2,7 @@ package com.culpin.team.parser
 
 import java.io.File
 
-import com.culpin.team.core.{ Block, Element }
+import com.culpin.team.core._
 import com.culpin.team.util.Util
 import sbt.Logger
 import scala.util.matching.Regex
@@ -53,6 +53,51 @@ class ApiDescriptionParser extends Parser {
       None
     else
       Some(Block(description = Some(description)))
+  }
+}
+
+class ApiErrorExampleParser extends ApiExampleParser {
+
+  override val name = "apierrorexample"
+
+  override val path: String = "local.error.examples"
+
+  override def parseBlock(content: String, source: Option[String], messages: Map[String, String] = Map()): Option[Block] = {
+    val example = processBlock(content, source)
+    Some(Block(error = Some(Error(List(example)))))
+  }
+
+}
+
+class ApiExampleParser extends Parser {
+
+  override val name = "apiexample"
+
+  override val regex = """(@\w*)?(?:(?:\s*\{\s*([a-zA-Z0-9\.\/\\\[\]_-]+)\s*\}\s*)?\s*(.*)?)""".r
+
+  override val path = "local"
+
+  override def parseBlock(content: String, source: Option[String], messages: Map[String, String] = Map()): Option[Block] = {
+    val example = processBlock(content, source)
+    Some(Block(examples = Some(List(example))))
+  }
+
+  protected def processBlock(content: String, source: Option[String]): Example = {
+    val trimmedSource = Util.trim(content)
+
+    val matches = parse(trimmedSource)
+    val `type` = matches(1) orElse Some("json")
+    val title = matches(2)
+
+    val regexFollowingLines = """(?m)(^.*\s?)""".r
+    val matches2 = Parser.parse(regexFollowingLines)(trimmedSource)
+    val text = if (matches2.length <= 1) None
+    else matches2.tail.foldLeft(Option("")) {
+      case (acc, elem) =>
+        acc.map(s => s + elem.getOrElse(""))
+    }
+    val example = Example(title, text.map(Util.unindent), `type`)
+    example
   }
 }
 
@@ -138,15 +183,16 @@ class ApiSuccessParser extends ApiParamParser("Success 200") {
     super.parseBlock(content, source, messages)
 }
 
-class ApiSuccessExampleParser extends Parser {
+class ApiSuccessExampleParser extends ApiExampleParser {
 
   override val name = "apisuccessexample"
 
-  override val regex = """""".r
+  override val path: String = "local.sucsess.examples"
 
-  override val path: String = "local.examples"
-
-  override def parseBlock(content: String, source: Option[String], messages: Map[String, String] = Map()): Option[Block] = Some(Block())
+  override def parseBlock(content: String, source: Option[String], messages: Map[String, String] = Map()): Option[Block] = {
+    val example = processBlock(content, source)
+    Some(Block(success = Some(Success(List(example)))))
+  }
 
 }
 
@@ -210,6 +256,7 @@ object Parser {
     new ApiGroupParser,
     new ApiParamParser,
     new ApiSuccessExampleParser,
+    new ApiSuccessParser,
     new ApiUseParser,
     new ApiVersionParser
   )
@@ -236,14 +283,13 @@ object Parser {
           val Some(elementParser) = parserMap.get(element.name)
 
           //TODO handle empty block
-          val Some(values) = elementParser.parseBlock(element.content)
+          val Some(values) = elementParser.parseBlock(element.content, Some(element.source))
           merge(block, values)
       }
     }
   }
 
   def merge(b1: Block, b2: Block): Block = {
-
     val `type` = b1.`type`.orElse(b2.`type`)
     val title = b1.title.orElse(b2.title)
     val name = b1.name.orElse(b2.name)
@@ -255,7 +301,17 @@ object Parser {
     val optional = b1.optional.orElse(b2.optional)
     val field = b1.field.orElse(b2.field)
     val defaultValue = b1.defaultValue.orElse(b2.defaultValue)
-    Block(`type`, title, name, url, group, version, description, None, size, optional, field, defaultValue)
+    val success = (b1.success, b2.success) match {
+      case (None, s2) => s2
+      case (s1, None) => s1
+      case (Some(s1), Some(s2)) => Some(Success(s1.examples ++ s2.examples))
+    }
+    val error = (b1.error, b2.error) match {
+      case (None, e2) => e2
+      case (e1, None) => e1
+      case (Some(e1), Some(e2)) => Some(Error(e1.examples ++ e2.examples))
+    }
+    Block(`type`, title, name, url, group, version, description, success, size, optional, field, defaultValue, None, error)
   }
 
   /**
