@@ -2,7 +2,7 @@ package com.culpin.team.parser
 
 import java.io.File
 
-import com.culpin.team.core.{ Example, Success, Block, Element }
+import com.culpin.team.core._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{ Matchers, FlatSpec }
 import sbt.Logger
@@ -131,24 +131,27 @@ class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
     val apiParamParser = new ApiParamParser
 
     val Some(result) = apiParamParser.parseBlock("{String} country=\"DE\" Mandatory with default value \"DE\".")
-    val expected = Block(field = Some("country"), description = Some("Mandatory with default value \"DE\"."),
-      optional = Some("false"), `type` = Some("String"), defaultValue = Some("DE"), group = Some("Parameter"))
+    val field = Fields(List(Parameter(field = Some("country"), description = Some("Mandatory with default value \"DE\"."),
+      optional = Some("false"), `type` = Some("String"), defaultValue = Some("DE"), group = Some("Parameter"))))
+    val expected = Block(parameter = Some(field))
+
     assert(result === expected)
 
     val Some(result2) = apiParamParser.parseBlock("{String} lastname     Mandatory Lastname.")
-
-    val expected2 = Block(field = Some("lastname"), description = Some("Mandatory Lastname."),
+    val parameter2 = Parameter(field = Some("lastname"), description = Some("Mandatory Lastname."),
       optional = Some("false"), `type` = Some("String"), group = Some("Parameter"))
+    val expected2 = Block(parameter = Some(Fields(List(parameter2))))
     assert(result2 === expected2)
   }
 
   "ApiParamParser" should "parse Simple fieldname only" in {
     val apiParamParser = new ApiParamParser
+    val parameter = Parameter(field = Some("simple"), description = Some(""),
+      optional = Some("false"), group = Some("Parameter"))
 
     val Some(result) = apiParamParser.parseBlock("simple")
 
-    val expected = Block(field = Some("simple"), description = Some(""),
-      optional = Some("false"), group = Some("Parameter"))
+    val expected = Block(parameter = Some(Fields(List(parameter))))
     assert(result === expected)
 
   }
@@ -157,19 +160,23 @@ class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
     val apiParamParser = new ApiParamParser
 
     val Some(result) = apiParamParser.parseBlock("{String} name The users name.")
-    val expected = Block(field = Some("name"), description = Some("The users name."),
+    val parameter = Parameter(field = Some("name"), description = Some("The users name."),
       optional = Some("false"), `type` = Some("String"), group = Some("Parameter"))
+    val expected = Block(parameter = Some(Fields(List(parameter))))
     assert(result === expected)
 
   }
 
   "ApiParamParser" should "parse all options, with optional defaultValue" in {
+
     val apiParamParser = new ApiParamParser
     val content = "( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }" +
       "[ \\MyClass\\field.user_first-name = \'John Doe\' ] Some description."
     val Some(result) = apiParamParser.parseBlock(content)
-    val expected = Block(size = Some("1..10"), field = Some("\\MyClass\\field.user_first-name"), description = Some("Some description."),
-      optional = Some("true"), `type` = Some("\\Object\\String.uni-code_char[]"), defaultValue = Some("John Doe"), group = Some("MyGroup"))
+    val parameter = Parameter(size = Some("1..10"), field = Some("\\MyClass\\field.user_first-name"), description = Some("Some description."),
+      optional = Some("true"), `type` = Some("\\Object\\String.uni-code_char[]"), defaultValue = Some("John Doe"), group = Some("MyGroup"),
+      allowedValue = Some(List("\'abc\'", "\'def\'")))
+    val expected = Block(parameter = Some(Fields(List(parameter))))
     assert(result === expected)
   }
 
@@ -178,8 +185,10 @@ class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
     val content = "( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  " +
       "\\MyClass\\field.user_first-name = John_Doe Some description."
     val Some(result) = apiParamParser.parseBlock(content)
-    val expected = Block(size = Some("1..10"), field = Some("\\MyClass\\field.user_first-name"), description = Some("Some description."),
-      optional = Some("false"), `type` = Some("\\Object\\String.uni-code_char[]"), defaultValue = Some("John_Doe"), group = Some("MyGroup"))
+    val parameter = Parameter(size = Some("1..10"), field = Some("\\MyClass\\field.user_first-name"), description = Some("Some description."),
+      optional = Some("false"), `type` = Some("\\Object\\String.uni-code_char[]"), defaultValue = Some("John_Doe"), group = Some("MyGroup"),
+      allowedValue = Some(List("\'abc\'", "\'def\'")))
+    val expected = Block(parameter = Some(Fields(List(parameter))))
     assert(result === expected)
   }
 
@@ -187,8 +196,9 @@ class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
     val apiSuccessParser = new ApiSuccessParser
 
     val Some(result) = apiSuccessParser.parseBlock("{String} firstname Firstname of the User.")
-    val expected = Block(field = Some("firstname"), description = Some("Firstname of the User."),
+    val parameter = Parameter(field = Some("firstname"), description = Some("Firstname of the User."),
       optional = Some("false"), `type` = Some("String"), group = Some("Success 200"))
+    val expected = Block(parameter = Some(Fields(List(parameter))))
     assert(result === expected)
   }
 
@@ -197,7 +207,7 @@ class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
     val apiSuccessExampleParser = new ApiSuccessExampleParser
 
     val Some(result) = apiSuccessExampleParser.parseBlock("Success-Response:\n    HTTP/1.1 200 OK\n    HTML for welcome page\n    {\n      \"emailAvailable\": \"true\"\n    }\n", None)
-    val expected = Block(success = Some(Success(List(Example(Some("Success-Response:"), Some("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"), Some("json"))))))
+    val expected = Block(success = Some(Success(Some(List(Example(Some("Success-Response:"), Some("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"), Some("json")))))))
     assert(result === expected)
   }
 
@@ -220,7 +230,7 @@ class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
       Block(
         Some("get"), Some("Home page."), Some("Welcome_Page."), Some("/"), Some("Application"), Some("1.0.0"),
         Some("Renders the welcome page"),
-        Some(Success(List(Example(Some("Success-Response:"), Some("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"), Some("json")))))
+        Some(Success(Some(List(Example(Some("Success-Response:"), Some("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"), Some("json"))))))
       )
     )
 
@@ -240,7 +250,7 @@ class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
     assert(block.group === Some("Application"))
     assert(block.version === Some("1.0.0"))
     assert(block.description === Some("Renders the welcome page"))
-    assert(block.success === Some(Success(List(Example(Some("Success-Response:"), Some("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"), Some("json"))))))
+    assert(block.success === Some(Success(Some(List(Example(Some("Success-Response:"), Some("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"), Some("json")))))))
 
   }
 

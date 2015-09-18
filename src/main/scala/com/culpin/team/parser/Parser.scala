@@ -64,8 +64,18 @@ class ApiErrorExampleParser extends ApiExampleParser {
 
   override def parseBlock(content: String, source: Option[String], messages: Map[String, String] = Map()): Option[Block] = {
     val example = processBlock(content, source)
-    Some(Block(error = Some(Error(List(example)))))
+    Some(Block(error = Some(Error(Some(List(example))))))
   }
+
+}
+//
+class ApiErrorParser extends ApiParamParser("Error 4xx") {
+
+  override val name = "apierror"
+
+  override val path: String = "local.use.error.fields." + defaultGroup //TODO improve
+
+  //parseBlock()
 
 }
 
@@ -147,30 +157,67 @@ class ApiParamParser(val defaultGroup: String = "Parameter") extends Parser {
   val allowedValuesWithQuoteRegExp = """\'[^\']*[^\']\'""".r
   val allowedValuesRegExp = """[^,\s]+""".r
 
-  override def parseBlock(content: String, source: Option[String] = None, messages: Map[String, String] = Map()): Option[Block] = {
-    val c = Util.trim(content);
+  def processBlock(content: String): Option[Parameter] = {
+    val c = Util.trim(content)
     val contentNoLineBreak = Parser.replaceLineWithUnicode(c)
     val matches = parse(contentNoLineBreak)
     if (matches.isEmpty)
       None
     else {
-      val allowedValues = matches(3)
-      val av = if (allowedValues.isDefined) {
-        val regex = allowedValues.get.charAt(0) match {
+      val maybeAllowedValues = matches(3)
+      //      val av2 = if (maybeAllowedValues.isDefined) {
+      //                  val regex = maybeAllowedValues.get.charAt(0) match {
+      //                  case '\"' => allowedValuesWithDoubleQuoteRegExp
+      //                  case '\'' => allowedValuesWithQuoteRegExp
+      //                  case _ => allowedValuesRegExp
+      //                    }
+      //                //Parser.parse(regex)(allowedValues.get)
+      //                  Parser.parseAndFilterNullGroup(regex)(maybeAllowedValues.get)
+      //                } else Nil
+      val allowedValue = maybeAllowedValues.map { av =>
+        val regex = av.charAt(0) match {
           case '\"' => allowedValuesWithDoubleQuoteRegExp
           case '\'' => allowedValuesWithQuoteRegExp
           case _ => allowedValuesRegExp
         }
-        Parser.parse(regex)(allowedValues.get)
-      } else Nil
+        regex.findAllIn(av).toList
+        //Parser.parse(regex)(av)
+        //Parser.parseAndFilterNullGroup(regex)(av)
+      }
       val group = matches(0).orElse(Some(defaultGroup))
       val description = matches(9).map(Parser.reverseUnicodeLinebreak(_))
-      Some(Block(group = group, `type` = matches(1), size = matches(2), optional = matches(4).map(s => (s.charAt(0) == '[').toString),
-        field = matches(5), defaultValue = matches(6).orElse(matches(7)).orElse(matches(8)), description = description))
+      Some(Parameter(group = group, `type` = matches(1), size = matches(2), optional = matches(4).map(s => (s.charAt(0) == '[').toString),
+        field = matches(5), defaultValue = matches(6).orElse(matches(7)).orElse(matches(8)), description = description, allowedValue = allowedValue))
+    }
+  }
 
+  override def parseBlock(content: String, source: Option[String] = None, messages: Map[String, String] = Map()): Option[Block] = {
+    val maybeParam = processBlock(content)
+    val maybeField = maybeParam.map(param => Fields(List(param)))
+    maybeField.map { field =>
+      Some(Block(parameter = Some(field)))
+    }.getOrElse {
+      None
     }
 
   }
+}
+
+class ApiPermissionParser extends ApiUseParser {
+
+  override val name = "apipermission"
+
+  override val path: String = "local.permission"
+
+  override def parseBlock(content: String, source: Option[String] = None, messages: Map[String, String] = Map()): Option[Block] = {
+    val c = Util.trim(content)
+
+    if (c.isEmpty)
+      None
+    else
+      Some(Block(permission = Some(List(Permission(c)))))
+  }
+
 }
 
 class ApiSuccessParser extends ApiParamParser("Success 200") {
@@ -179,8 +226,8 @@ class ApiSuccessParser extends ApiParamParser("Success 200") {
 
   override val path: String = "local.use.success.fields." + defaultGroup //TODO improve
 
-  override def parseBlock(content: String, source: Option[String], messages: Map[String, String] = Map()): Option[Block] =
-    super.parseBlock(content, source, messages)
+  //  override def parseBlock(content: String, source: Option[String], messages: Map[String, String] = Map()): Option[Block] =
+  //    super.parseBlock(content, source, messages)
 }
 
 class ApiSuccessExampleParser extends ApiExampleParser {
@@ -191,7 +238,7 @@ class ApiSuccessExampleParser extends ApiExampleParser {
 
   override def parseBlock(content: String, source: Option[String], messages: Map[String, String] = Map()): Option[Block] = {
     val example = processBlock(content, source)
-    Some(Block(success = Some(Success(List(example)))))
+    Some(Block(success = Some(Success(Some(List(example))))))
   }
 
 }
@@ -252,9 +299,13 @@ object Parser {
   val parser = List(
     new ApiParser,
     new ApiDescriptionParser,
+    new ApiErrorParser,
+    new ApiErrorExampleParser,
+    new ApiExampleParser,
     new ApiNameParser,
     new ApiGroupParser,
     new ApiParamParser,
+    new ApiPermissionParser,
     new ApiSuccessExampleParser,
     new ApiSuccessParser,
     new ApiUseParser,
@@ -283,6 +334,7 @@ object Parser {
           val Some(elementParser) = parserMap.get(element.name)
 
           //TODO handle empty block
+
           val Some(values) = elementParser.parseBlock(element.content, Some(element.source))
           merge(block, values)
       }
@@ -297,21 +349,40 @@ object Parser {
     val group = b1.group.orElse(b2.group)
     val version = b1.version.orElse(b2.version)
     val description = b1.description.orElse(b2.description)
-    val size = b1.size.orElse(b2.size)
-    val optional = b1.optional.orElse(b2.optional)
-    val field = b1.field.orElse(b2.field)
-    val defaultValue = b1.defaultValue.orElse(b2.defaultValue)
+
     val success = (b1.success, b2.success) match {
       case (None, s2) => s2
       case (s1, None) => s1
-      case (Some(s1), Some(s2)) => Some(Success(s1.examples ++ s2.examples))
+      //case (Some(s1), Some(s2)) => Some(Success(s1.examples ++ s2.examples))
+      case (Some(s1), Some(s2)) => (s1, s2) match {
+        case (Success(me1, None), Success(me2, None)) => Some(Success(Some(me1.getOrElse(Nil) ++ me2.getOrElse(Nil))))
+        case (Success(None, mf1), Success(None, mf2)) => Some(Success(fields = Some(Fields(mf1.map(_.field).getOrElse(Nil) ++ mf2.map(_.field).getOrElse(Nil)))))
+        case (Success(me1, mf1), Success(me2, mf2)) => Some(Success(examples = Some(me1.getOrElse(Nil) ++ me2.getOrElse(Nil)), fields = Some(Fields(mf1.map(_.field).getOrElse(Nil) ++ mf2.map(_.field).getOrElse(Nil)))))
+      }
     }
-    val error = (b1.error, b2.error) match {
+    val examples = (b1.examples, b2.examples) match {
       case (None, e2) => e2
       case (e1, None) => e1
-      case (Some(e1), Some(e2)) => Some(Error(e1.examples ++ e2.examples))
+      case (Some(e1), Some(e2)) => Some(e1 ++ e2)
     }
-    Block(`type`, title, name, url, group, version, description, success, size, optional, field, defaultValue, None, error)
+
+    val error = (b1.error, b2.error) match {
+      case (None, s2) => s2
+      case (s1, None) => s1
+      //case (Some(s1), Some(s2)) => Some(Error(s1.examples ++ s2.examples))
+      case (Some(s1), Some(s2)) => (s1, s2) match {
+        case (Error(me1, None), Error(me2, None)) => Some(Error(Some(me1.getOrElse(Nil) ++ me2.getOrElse(Nil))))
+        case (Error(None, mf1), Error(None, mf2)) => Some(Error(fields = Some(Fields(mf1.map(_.field).getOrElse(Nil) ++ mf2.map(_.field).getOrElse(Nil)))))
+        case (Error(me1, mf1), Error(me2, mf2)) => Some(Error(examples = Some(me1.getOrElse(Nil) ++ me2.getOrElse(Nil)), fields = Some(Fields(mf1.map(_.field).getOrElse(Nil) ++ mf2.map(_.field).getOrElse(Nil)))))
+      }
+    }
+    val permission = (b1.permission, b2.permission) match {
+      case (None, p2) => p2
+      case (p1, None) => p1
+      case (Some(p1), Some(p2)) => Some(p1 ++ p2)
+    }
+
+    Block(`type`, title, name, url, group, version, description, success, examples, error, permission)
   }
 
   /**
