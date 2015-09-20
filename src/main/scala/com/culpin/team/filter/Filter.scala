@@ -1,9 +1,10 @@
 package com.culpin.team.filter
 
-import com.culpin.team.core.Block
+import org.json4s.JsonAST.JArray
 
 object Filter {
 
-  def apply(parsedFiles: Seq[Seq[Block]]): Seq[Block] = if (parsedFiles.isEmpty) Seq() else parsedFiles.head
+
+  def apply(parsedFiles: JArray): JArray = JArray(List(parsedFiles \ "local"))
 
 }
