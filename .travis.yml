@@ -1,6 +1,8 @@
+# Use container-based infrastructure
 sudo: false
 
 language: scala
+
 scala:
    - 2.10.4
 
@@ -20,7 +22,7 @@ env:
     - TEST_COMMAND="sbtapidocjs/scripted core/test"
 
 script:
-    - sbt ++$TRAVIS_SCALA_VERSION "$TEST_COMMAND"
+  - sbt ++$TRAVIS_SCALA_VERSION "$TEST_COMMAND"
 
 
   # Tricks to avoid unnecessary cache updates
