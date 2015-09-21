@@ -14,7 +14,7 @@ lazy val buildSettings = Seq(
 
 
 
-lazy val root = (project in file(".")).aggregate(core, sbtplugin).
+lazy val root = (project in file(".")).aggregate(core, sbtapidocjs).
   settings(buildSettings: _*).
   settings(scalariformSettings: _*).
   settings(name := "root")
@@ -26,7 +26,7 @@ lazy val core = (project in file("core")).
     libraryDependencies ++= coreDependencies
   )
 
-lazy val sbtplugin = (project in file("sbt-apidocjs")).
+lazy val sbtapidocjs = (project in file("sbt-apidocjs")).
   settings(buildSettings: _*).
   settings(scriptedSettings:_*).
   settings(

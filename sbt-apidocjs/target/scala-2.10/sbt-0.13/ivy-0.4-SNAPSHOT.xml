@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
-	<info organisation="com.culpin.team" module="sbt-apidocjs" revision="0.4-SNAPSHOT" status="integration" publication="20150921204615" e:scalaVersion="2.10" e:sbtVersion="0.13">
+	<info organisation="com.culpin.team" module="sbt-apidocjs" revision="0.4-SNAPSHOT" status="integration" publication="20150921211312" e:scalaVersion="2.10" e:sbtVersion="0.13">
 		<license name="MIT License" url="http://opensource.org/licenses/mit-license.php/"/>
 		<description>
 		sbt-apidocjs
