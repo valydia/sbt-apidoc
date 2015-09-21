@@ -3,12 +3,16 @@
 /project/*-shim.sbt
 /project/project/
 /project/target/
+/target/*
 /target/
 core/project/project/
 core/project/target/
+core/project/target/*
 core/target/
 sbt-apidocjs/project/project/
+sbt-apidocjs/project/target/*
 sbt-apidocjs/project/target/
+sbt-apidocjs/target/*
 sbt-apidocjs/target/
 .idea
 .sbtserver
