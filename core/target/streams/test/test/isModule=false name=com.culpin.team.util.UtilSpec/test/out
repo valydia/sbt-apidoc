@@ -1,0 +1,15 @@
+[0m[[0minfo[0m] [0m[32mUtilSpec:[0m[0m
+[0m[[0minfo[0m] [0m[32mUtil unindent[0m[0m
+[0m[[0minfo[0m] [0m[32m- should strip common leading spaces[0m[0m
+[0m[[0minfo[0m] [0m[32mUtil unindent[0m[0m
+[0m[[0minfo[0m] [0m[32m- should strip common leading tabs[0m[0m
+[0m[[0minfo[0m] [0m[32mUtil unindent[0m[0m
+[0m[[0minfo[0m] [0m[32m- should should strip all leading whitespace from a single line[0m[0m
+[0m[[0minfo[0m] [0m[32mUtil unindent[0m[0m
+[0m[[0minfo[0m] [0m[32m- should should not modify the empty string[0m[0m
+[0m[[0minfo[0m] [0m[32mUtil unindent[0m[0m
+[0m[[0minfo[0m] [0m[32m- should should not modify if any line starts with non-whitespace[0m[0m
+[0m[[0minfo[0m] [0m[32mUtil unindent[0m[0m
+[0m[[0minfo[0m] [0m[32m- should should strip common leading tabs and keep spaces[0m[0m
+[0m[[0minfo[0m] [0m[32mUtil unindent[0m[0m
+[0m[[0minfo[0m] [0m[32m- should should strip common leading tabs and 1 space on each line[0m[0m

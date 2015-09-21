@@ -1,0 +1,12 @@
+[0m[[0mdebug[0m] [0mRunning TaskDef(com.culpin.team.parser.ParserSpec, org.scalatest.tools.Framework$$anon$1@5a39aa16, false, [SuiteSelector])[0m
+[0m[[0mdebug[0m] [0mRunning TaskDef(com.culpin.team.core.ApidocSpec, org.scalatest.tools.Framework$$anon$1@5a39aa16, false, [SuiteSelector])[0m
+[0m[[0mdebug[0m] [0mRunning TaskDef(com.culpin.team.util.UtilSpec, org.scalatest.tools.Framework$$anon$1@5a39aa16, false, [SuiteSelector])[0m
+[0m[[0minfo[0m] [0m[36mRun completed in 471 milliseconds.[0m[0m
+[0m[[0minfo[0m] [0m[36mTotal number of tests run: 31[0m[0m
+[0m[[0minfo[0m] [0m[36mSuites: completed 3, aborted 0[0m[0m
+[0m[[0minfo[0m] [0m[36mTests: succeeded 31, failed 0, canceled 0, ignored 0, pending 0[0m[0m
+[0m[[0minfo[0m] [0m[32mAll tests passed.[0m[0m
+[0m[[0mdebug[0m] [0mPassed tests:[0m
+[0m[[0mdebug[0m] [0m	com.culpin.team.core.ApidocSpec[0m
+[0m[[0mdebug[0m] [0m	com.culpin.team.parser.ParserSpec[0m
+[0m[[0mdebug[0m] [0m	com.culpin.team.util.UtilSpec[0m

@@ -1,0 +1,20 @@
+projects
+compile
+reload
+compile
+exit
+compile
+test
+projects 
+project root
+compile
+sourcea
+sources
+project core
+source
+sources
+exit
+test
+exit
+publishLocal
+project root

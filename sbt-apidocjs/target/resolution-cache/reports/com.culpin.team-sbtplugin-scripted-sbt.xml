@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="ivy-report.xsl"?>
+<ivy-report version="1.0">
+	<info
+		organisation="com.culpin.team"
+		module="sbtplugin"
+		revision="0.4-SNAPSHOT"
+		extra-sbtVersion="0.13"
+		extra-scalaVersion="2.10"
+		conf="scripted-sbt"
+		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, sources, docs, pom, scala-tool, scripted-sbt, scripted-sbt-launch"
+		date="20150921203227"/>
+	<dependencies>
+		<module organisation="org.scala-sbt" name="scripted-sbt">
+			<revision name="0.13.7" status="release" pubdate="20141119013423" resolver="sbt-chain" artresolver="sbt-chain" downloaded="false" searched="false" default="false" conf="default(compile), compile" position="0">
+				<metadata-artifact status="no" details="" size="1720" time="0" location="/Users/valydia/.ivy2/cache/org.scala-sbt/scripted-sbt/ivy-0.13.7.xml" searched="false" origin-is-local="false" origin-location="https://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/scripted-sbt/0.13.7/ivys/ivy.xml"/>
+				<caller organisation="com.culpin.team" name="sbtplugin" conf="scripted-sbt" rev="0.13.7" rev-constraint-default="0.13.7" rev-constraint-dynamic="0.13.7" callerrev="0.4-SNAPSHOT"/>
+				<artifacts>
+					<artifact name="scripted-sbt" type="jar" ext="jar" status="no" details="" size="57099" time="0" location="/Users/valydia/.ivy2/cache/org.scala-sbt/scripted-sbt/jars/scripted-sbt-0.13.7.jar">
+						<origin-location is-local="false" location="https://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/scripted-sbt/0.13.7/jars/scripted-sbt.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="org.scala-sbt" name="scripted-framework">
+			<revision name="0.13.7" status="release" pubdate="20141119013312" resolver="sbt-chain" artresolver="sbt-chain" downloaded="false" searched="false" default="false" conf="default(compile), compile" position="8">
+				<metadata-artifact status="no" details="" size="1710" time="0" location="/Users/valydia/.ivy2/cache/org.scala-sbt/scripted-framework/ivy-0.13.7.xml" searched="false" origin-is-local="false" origin-location="https://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/scripted-framework/0.13.7/ivys/ivy.xml"/>
+				<caller organisation="org.scala-sbt" name="scripted-sbt" conf="compile" rev="0.13.7" rev-constraint-default="0.13.7" rev-constraint-dynamic="0.13.7" callerrev="0.13.7"/>
+				<artifacts>
+					<artifact name="scripted-framework" type="jar" ext="jar" status="no" details="" size="94086" time="0" location="/Users/valydia/.ivy2/cache/org.scala-sbt/scripted-framework/jars/scripted-framework-0.13.7.jar">
+						<origin-location is-local="false" location="https://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/scripted-framework/0.13.7/jars/scripted-framework.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="org.scala-sbt" name="logging">
+			<revision name="0.13.7" status="release" pubdate="20141119013351" resolver="sbt-chain" artresolver="sbt-chain" downloaded="false" searched="false" default="false" conf="default(compile), compile" position="4">
+				<metadata-artifact status="no" details="" size="1778" time="0" location="/Users/valydia/.ivy2/cache/org.scala-sbt/logging/ivy-0.13.7.xml" searched="false" origin-is-local="false" origin-location="http://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/logging/0.13.7/ivys/ivy.xml"/>
+				<caller organisation="org.scala-sbt" name="scripted-sbt" conf="compile" rev="0.13.7" rev-constraint-default="0.13.7" rev-constraint-dynamic="0.13.7" callerrev="0.13.7"/>
+				<artifacts>
+					<artifact name="logging" type="jar" ext="jar" status="no" details="" size="108382" time="0" location="/Users/valydia/.ivy2/cache/org.scala-sbt/logging/jars/logging-0.13.7.jar">
+						<origin-location is-local="false" location="https://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/logging/0.13.7/jars/logging.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="jline" name="jline">
+			<revision name="2.11" status="release" pubdate="20130519200100" resolver="sbt-chain" artresolver="sbt-chain" homepage="" downloaded="false" searched="false" default="false" conf="default(compile), default, compile, runtime, master" position="7">
+				<license name="The BSD License" url="http://www.opensource.org/licenses/bsd-license.php"/>
+				<metadata-artifact status="no" details="" size="3767" time="0" location="/Users/valydia/.ivy2/cache/jline/jline/ivy-2.11.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/jline/jline/2.11/jline-2.11.pom"/>
+				<caller organisation="org.scala-sbt" name="logging" conf="compile" rev="2.11" rev-constraint-default="2.11" rev-constraint-dynamic="2.11" callerrev="0.13.7"/>
+				<artifacts>
+					<artifact name="jline" type="jar" ext="jar" status="no" details="" size="208781" time="0" location="/Users/valydia/.ivy2/cache/jline/jline/jars/jline-2.11.jar">
+						<origin-location is-local="false" location="https://repo1.maven.org/maven2/jline/jline/2.11/jline-2.11.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="org.scala-sbt" name="process">
+			<revision name="0.13.7" status="release" pubdate="20141119013311" resolver="sbt-chain" artresolver="sbt-chain" downloaded="false" searched="false" default="false" conf="default(compile), compile" position="6">
+				<metadata-artifact status="no" details="" size="1274" time="0" location="/Users/valydia/.ivy2/cache/org.scala-sbt/process/ivy-0.13.7.xml" searched="false" origin-is-local="false" origin-location="http://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/process/0.13.7/ivys/ivy.xml"/>
+				<caller organisation="org.scala-sbt" name="scripted-sbt" conf="compile" rev="0.13.7" rev-constraint-default="0.13.7" rev-constraint-dynamic="0.13.7" callerrev="0.13.7"/>
+				<caller organisation="org.scala-sbt" name="scripted-framework" conf="compile" rev="0.13.7" rev-constraint-default="0.13.7" rev-constraint-dynamic="0.13.7" callerrev="0.13.7"/>
+				<caller organisation="org.scala-sbt" name="logging" conf="compile" rev="0.13.7" rev-constraint-default="0.13.7" rev-constraint-dynamic="0.13.7" callerrev="0.13.7"/>
+				<artifacts>
+					<artifact name="process" type="jar" ext="jar" status="no" details="" size="123816" time="0" location="/Users/valydia/.ivy2/cache/org.scala-sbt/process/jars/process-0.13.7.jar">
+						<origin-location is-local="false" location="https://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/process/0.13.7/jars/process.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="org.scala-sbt" name="interface">
+			<revision name="0.13.7" status="release" pubdate="20141119013345" resolver="sbt-chain" artresolver="sbt-chain" extra-component="xsbti" downloaded="false" searched="false" default="false" conf="default(compile), compile" position="5">
+				<metadata-artifact status="no" details="" size="1225" time="0" location="/Users/valydia/.ivy2/cache/org.scala-sbt/interface/ivy-0.13.7.xml" searched="false" origin-is-local="false" origin-location="http://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/interface/0.13.7/ivys/ivy.xml"/>
+				<caller organisation="org.scala-sbt" name="logging" conf="compile" rev="0.13.7" rev-constraint-default="0.13.7" rev-constraint-dynamic="0.13.7" callerrev="0.13.7" extra-component="xsbti"/>
+				<artifacts>
+					<artifact name="interface" type="jar" ext="jar" status="no" details="" size="52012" time="0" location="/Users/valydia/.ivy2/cache/org.scala-sbt/interface/jars/interface-0.13.7.jar">
+						<origin-location is-local="false" location="https://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/interface/0.13.7/jars/interface.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="org.scala-sbt" name="io">
+			<revision name="0.13.7" status="release" pubdate="20141119013311" resolver="sbt-chain" artresolver="sbt-chain" downloaded="false" searched="false" default="false" conf="default(compile), compile" position="2">
+				<metadata-artifact status="no" details="" size="1653" time="0" location="/Users/valydia/.ivy2/cache/org.scala-sbt/io/ivy-0.13.7.xml" searched="false" origin-is-local="false" origin-location="http://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/io/0.13.7/ivys/ivy.xml"/>
+				<caller organisation="org.scala-sbt" name="scripted-sbt" conf="compile" rev="0.13.7" rev-constraint-default="0.13.7" rev-constraint-dynamic="0.13.7" callerrev="0.13.7"/>
+				<caller organisation="org.scala-sbt" name="scripted-framework" conf="compile" rev="0.13.7" rev-constraint-default="0.13.7" rev-constraint-dynamic="0.13.7" callerrev="0.13.7"/>
+				<artifacts>
+					<artifact name="io" type="jar" ext="jar" status="no" details="" size="273460" time="0" location="/Users/valydia/.ivy2/cache/org.scala-sbt/io/jars/io-0.13.7.jar">
+						<origin-location is-local="false" location="https://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/io/0.13.7/jars/io.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="org.scala-sbt" name="control">
+			<revision name="0.13.7" status="release" pubdate="20141119013304" resolver="sbt-chain" artresolver="sbt-chain" downloaded="false" searched="false" default="false" conf="default(compile), compile" position="3">
+				<metadata-artifact status="no" details="" size="1197" time="0" location="/Users/valydia/.ivy2/cache/org.scala-sbt/control/ivy-0.13.7.xml" searched="false" origin-is-local="false" origin-location="http://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/control/0.13.7/ivys/ivy.xml"/>
+				<caller organisation="org.scala-sbt" name="io" conf="compile" rev="0.13.7" rev-constraint-default="0.13.7" rev-constraint-dynamic="0.13.7" callerrev="0.13.7"/>
+				<artifacts>
+					<artifact name="control" type="jar" ext="jar" status="no" details="" size="13187" time="0" location="/Users/valydia/.ivy2/cache/org.scala-sbt/control/jars/control-0.13.7.jar">
+						<origin-location is-local="false" location="https://repo.typesafe.com/typesafe/ivy-releases/org.scala-sbt/control/0.13.7/jars/control.jar"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+		<module organisation="org.scala-lang" name="scala-library">
+			<revision name="2.10.4" status="release" pubdate="20140318214629" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://www.scala-lang.org/" extra-info.apiURL="http://www.scala-lang.org/api/2.10.4/" downloaded="false" searched="false" default="false" conf="default(compile), default, compile, runtime, master" position="1">
+				<license name="BSD-like" url="http://www.scala-lang.org/downloads/license.html          "/>
+				<metadata-artifact status="no" details="" size="2487" time="0" location="/Users/valydia/.ivy2/cache/org.scala-lang/scala-library/ivy-2.10.4.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.10.4/scala-library-2.10.4.pom"/>
+				<caller organisation="org.scala-sbt" name="control" conf="compile" rev="2.10.4" rev-constraint-default="2.10.4" rev-constraint-dynamic="2.10.4" callerrev="0.13.7"/>
+				<caller organisation="org.scala-sbt" name="scripted-sbt" conf="compile" rev="2.10.4" rev-constraint-default="2.10.4" rev-constraint-dynamic="2.10.4" callerrev="0.13.7"/>
+				<caller organisation="org.scala-sbt" name="interface" conf="compile" rev="2.10.4" rev-constraint-default="2.10.4" rev-constraint-dynamic="2.10.4" callerrev="0.13.7"/>
+				<caller organisation="org.scala-sbt" name="process" conf="compile" rev="2.10.4" rev-constraint-default="2.10.4" rev-constraint-dynamic="2.10.4" callerrev="0.13.7"/>
+				<caller organisation="org.scala-sbt" name="scripted-framework" conf="compile" rev="2.10.4" rev-constraint-default="2.10.4" rev-constraint-dynamic="2.10.4" callerrev="0.13.7"/>
+				<caller organisation="org.scala-sbt" name="logging" conf="compile" rev="2.10.4" rev-constraint-default="2.10.4" rev-constraint-dynamic="2.10.4" callerrev="0.13.7"/>
+				<caller organisation="org.scala-sbt" name="io" conf="compile" rev="2.10.4" rev-constraint-default="2.10.4" rev-constraint-dynamic="2.10.4" callerrev="0.13.7"/>
+				<artifacts>
+					<artifact name="scala-library" type="jar" ext="jar" status="no" details="" size="7126372" time="0" location="/Users/valydia/.ivy2/cache/org.scala-lang/scala-library/jars/scala-library-2.10.4.jar">
+						<origin-location is-local="false" location="UNKNOWN"/>
+					</artifact>
+				</artifacts>
+			</revision>
+		</module>
+	</dependencies>
+</ivy-report>

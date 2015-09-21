@@ -1,0 +1,6 @@
+[0m[[0mdebug[0m] [0mlocal do not support transaction. ivy pattern does not use revision as a directory[0m
+[0m[[0minfo[0m] [0m	published core_2.10 to /Users/valydia/.ivy2/local/com.culpin.team/core_2.10/0.4-SNAPSHOT/poms/core_2.10.pom[0m
+[0m[[0minfo[0m] [0m	published core_2.10 to /Users/valydia/.ivy2/local/com.culpin.team/core_2.10/0.4-SNAPSHOT/jars/core_2.10.jar[0m
+[0m[[0minfo[0m] [0m	published core_2.10 to /Users/valydia/.ivy2/local/com.culpin.team/core_2.10/0.4-SNAPSHOT/srcs/core_2.10-sources.jar[0m
+[0m[[0minfo[0m] [0m	published core_2.10 to /Users/valydia/.ivy2/local/com.culpin.team/core_2.10/0.4-SNAPSHOT/docs/core_2.10-javadoc.jar[0m
+[0m[[0minfo[0m] [0m	published ivy to /Users/valydia/.ivy2/local/com.culpin.team/core_2.10/0.4-SNAPSHOT/ivys/ivy.xml[0m

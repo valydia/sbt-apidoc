@@ -1,0 +1,14 @@
+compile
+project
+reload
+compile
+reload
+compile
+test
+project
+projects 
+project core
+publishLocal
+scripted
+projects
+project core
