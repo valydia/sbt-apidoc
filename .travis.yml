@@ -18,8 +18,7 @@ cache:
 env:
   # This splits the build into two parts
   matrix:
-    - TEST_COMMAND="publishLocal"
-    - TEST_COMMAND="sbtapidocjs/scripted core/test"
+    - TEST_COMMAND="publishLocal sbtapidocjs/scripted core/test"
 
 script:
   - sbt ++$TRAVIS_SCALA_VERSION "$TEST_COMMAND"
