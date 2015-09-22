@@ -1,4 +1,0 @@
-[0m[[0minfo[0m] [0m:: delivering :: com.culpin.team#sbt-apidocjs;0.4-SNAPSHOT :: 0.4-SNAPSHOT :: integration :: Mon Sep 21 21:13:12 BST 2015[0m
-[0m[[0mdebug[0m] [0m	options = status=integration pubdate=Mon Sep 21 21:13:12 BST 2015 validate=true resolveDynamicRevisions=true merge=true resolveId=null pubBranch=null[0m
-[0m[[0minfo[0m] [0m	delivering ivy file to /Users/valydia/Documents/workspace/sbt/scala-apidoc/sbt-apidoc/sbt-apidocjs/target/scala-2.10/sbt-0.13/ivy-0.4-SNAPSHOT.xml[0m
-[0m[[0mdebug[0m] [0m	deliver done (28ms)[0m

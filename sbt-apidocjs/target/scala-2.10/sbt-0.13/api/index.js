@@ -1,1 +1,0 @@
-Index.PACKAGES = {"com" : [], "com.culpin" : [], "com.culpin.team" : [{"object" : "com\/culpin\/team\/SbtApidoc$.html", "name" : "com.culpin.team.SbtApidoc"}, {"trait" : "com\/culpin\/team\/SbtApidocKeys.html", "name" : "com.culpin.team.SbtApidocKeys"}], "sbt" : []};

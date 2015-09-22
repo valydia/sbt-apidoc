@@ -1,6 +1,0 @@
-[0m[[0mdebug[0m] [0mlocal do not support transaction. ivy pattern does not use revision as a directory[0m
-[0m[[0minfo[0m] [0m	published sbt-apidocjs to /Users/valydia/.ivy2/local/com.culpin.team/sbt-apidocjs/scala_2.10/sbt_0.13/0.4-SNAPSHOT/poms/sbt-apidocjs.pom[0m
-[0m[[0minfo[0m] [0m	published sbt-apidocjs to /Users/valydia/.ivy2/local/com.culpin.team/sbt-apidocjs/scala_2.10/sbt_0.13/0.4-SNAPSHOT/jars/sbt-apidocjs.jar[0m
-[0m[[0minfo[0m] [0m	published sbt-apidocjs to /Users/valydia/.ivy2/local/com.culpin.team/sbt-apidocjs/scala_2.10/sbt_0.13/0.4-SNAPSHOT/srcs/sbt-apidocjs-sources.jar[0m
-[0m[[0minfo[0m] [0m	published sbt-apidocjs to /Users/valydia/.ivy2/local/com.culpin.team/sbt-apidocjs/scala_2.10/sbt_0.13/0.4-SNAPSHOT/docs/sbt-apidocjs-javadoc.jar[0m
-[0m[[0minfo[0m] [0m	published ivy to /Users/valydia/.ivy2/local/com.culpin.team/sbt-apidocjs/scala_2.10/sbt_0.13/0.4-SNAPSHOT/ivys/ivy.xml[0m

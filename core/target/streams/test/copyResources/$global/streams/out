@@ -1,3 +1,0 @@
-[0m[[0mdebug[0m] [0mCopy resource mappings: [0m
-[0m[[0mdebug[0m] [0m	(/Users/valydia/Documents/workspace/sbt/scala-apidoc/sbt-apidoc/core/src/test/resources/Application.scala,/Users/valydia/Documents/workspace/sbt/scala-apidoc/sbt-apidoc/core/target/scala-2.10/test-classes/Application.scala)[0m
-[0m[[0mdebug[0m] [0m	(/Users/valydia/Documents/workspace/sbt/scala-apidoc/sbt-apidoc/core/src/test/resources/simple-example.js,/Users/valydia/Documents/workspace/sbt/scala-apidoc/sbt-apidoc/core/target/scala-2.10/test-classes/simple-example.js)[0m

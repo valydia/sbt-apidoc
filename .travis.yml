@@ -21,7 +21,7 @@ env:
     - TEST_COMMAND="publishLocal sbtapidocjs/scripted core/test"
 
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION "$TEST_COMMAND"
+  - sbt ++$TRAVIS_SCALA_VERSION $TEST_COMMAND
 
 
   # Tricks to avoid unnecessary cache updates
