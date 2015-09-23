@@ -129,6 +129,52 @@ class ParserSpec extends FlatSpec with Matchers{
 
   }
 
+  "ApiHeaderParser" should "parse param element" in {
+    val apiHeaderParser = new ApiHeaderParser
+
+    val Some(result) = apiHeaderParser.parseBlock("{String} authorization Authorization value.")
+    val header = result \ "local" \ "header" \ "fields" \ "Header"
+    assert(header \ "group" === JString("Header"))
+    assert(header \ "type" === JString("String"))
+    assert(header \ "optional" === JString("false"))
+    assert(header \ "field" === JString("authorization"))
+    assert(header \ "defaultValue" === JNothing)
+    assert(header \ "description" === JString("Authorization value."))
+    assert(header \ "size" === JNothing)
+    assert(header \ "allowedValue" === JNothing)
+
+  }
+
+  "ApiHeaderParser" should "parse param element with group" in {
+    val apiHeaderParser = new ApiHeaderParser
+
+    val Some(result) = apiHeaderParser.parseBlock("(MyHeaderGroup) {String} authorization Authorization value.")
+
+    val header = result \ "local" \ "header" \ "fields" \ "MyHeaderGroup"
+    assert(header \ "group" === JString("MyHeaderGroup"))
+    assert(header \ "type" === JString("String"))
+    assert(header \ "optional" === JString("false"))
+    assert(header \ "field" === JString("authorization"))
+    assert(header \ "defaultValue" === JNothing)
+    assert(header \ "description" === JString("Authorization value."))
+    assert(header \ "size" === JNothing)
+    assert(header \ "allowedValue" === JNothing)
+
+  }
+
+  "ApiHeaderExampleParser" should "parse param elemen" in {
+    val apiHeaderExampleParser = new ApiHeaderExampleParser
+
+    val Some(result) = apiHeaderExampleParser.parseBlock("{json} Request-Example:\n{ \"content\": \"This is an example content\" }")
+
+    val examples = result \ "local" \ "header" \ "examples"
+    assert(examples \ "title" === JString("Request-Example:"))
+    assert(examples \ "content" === JString("{ \"content\": \"This is an example content\" }"))
+    assert(examples \ "type" === JString("json"))
+
+
+  }
+
   "ApiNameParser" should "parse name element" in {
     val apiNameParser = new ApiNameParser
 
@@ -226,6 +272,19 @@ class ParserSpec extends FlatSpec with Matchers{
     assert(parameter \ "allowedValue" === JArray(List(JString("\'abc\'"), JString("\'def\'"))))
   }
 
+  "ApiSampleRequestParser" should "parse success element" in {
+
+    val apiSampleRequestParser = new ApiSampleRequestParser
+
+    val Some(result) = apiSampleRequestParser.parseBlock("http://test.github.com")
+
+    val parameter = result \ "local" \ "sampleRequest"
+
+    assert(parameter \ "url" === JString("http://test.github.com"))
+
+  }
+
+
   "ApiSuccessParser" should "parse success element" in {
     import org.json4s.jackson.JsonMethods._
     val apiSuccessParser = new ApiSuccessParser
@@ -270,7 +329,7 @@ class ParserSpec extends FlatSpec with Matchers{
       )
     )
 
-    val result = Parser.parseBlockElementJson(detectedElement, "app/controllers/gathr/culpinteam/v1/Application.scala")
+    val result = Parser.parseBlockElement(detectedElement, "app/controllers/gathr/culpinteam/v1/Application.scala")
 
     val local = result(0) \ "local"
     assert(local \ "type" === JString("get"))

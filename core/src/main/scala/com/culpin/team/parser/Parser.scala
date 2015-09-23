@@ -13,7 +13,7 @@ trait Parser {
 
   val name: String
 
-  val regex: Regex
+  val regex: Regex = "".r
 
   protected def parse(input: String): List[Option[String]] = Parser.parse(regex)(input)
 
@@ -39,11 +39,10 @@ class ApiParser extends Parser {
 
 }
 
+
 class ApiDescriptionParser extends Parser {
 
   override val name = "apidescription"
-
-  override val regex = """""".r
 
   override def parseBlock(content: String): Option[JObject] = {
     val description = Util.trim(content)
@@ -62,7 +61,7 @@ class ApiErrorExampleParser extends ApiExampleParser {
 
     Some(("local" ->
       ("error" ->
-        ("examples" -> jsonProcessBlock(content))
+        ("examples" -> processBlock(content))
       )
     ))
   }
@@ -76,7 +75,7 @@ class ApiErrorParser extends ApiParamParser("Error 4xx") {
   override def buildPath(content: String): Option[JObject] = {
     Some(("local" ->
       ("error" ->
-        ("fields" -> jsonProcessBlock(content))
+        ("fields" -> processBlock(content))
       )
     ))
   }
@@ -89,7 +88,7 @@ class ApiExampleParser extends Parser {
 
   override val regex = """(@\w*)?(?:(?:\s*\{\s*([a-zA-Z0-9\.\/\\\[\]_-]+)\s*\}\s*)?\s*(.*)?)""".r
 
-  protected def jsonProcessBlock(content: String): JArray = {
+  protected def processBlock(content: String): JArray = {
     val trimmedSource = Util.trim(content)
 
     val matches = parse(trimmedSource)
@@ -112,7 +111,7 @@ class ApiExampleParser extends Parser {
   def buildPath(content: String): Option[JObject] =
     Some(("local" ->
       ("examples" ->
-        jsonProcessBlock(content)
+        processBlock(content)
       )
     ))
 
@@ -131,6 +130,36 @@ class ApiGroupParser extends Parser {
     else
       Some(("local" -> ("group" -> group.replaceAll("\\s+", "_"))))
   }
+}
+
+class ApiHeaderParser extends ApiParamParser("Header") {
+
+  override val name = "apiheader"
+
+
+  override def buildPath(content: String): Option[JObject] = {
+    Some(("local" ->
+      ("header" ->
+        ("fields" -> processBlock(content))
+        )
+      ))
+  }
+
+}
+
+class ApiHeaderExampleParser extends ApiExampleParser {
+
+  override val name = "apiheaderexample"
+
+
+  override def buildPath(content: String): Option[JObject] = {
+    Some(("local" ->
+      ("header" ->
+        ("examples" -> processBlock(content))
+        )
+      ))
+  }
+
 }
 
 class ApiNameParser extends Parser {
@@ -158,7 +187,7 @@ class ApiParamParser(val defaultGroup: String = "Parameter") extends Parser {
   val allowedValuesWithQuoteRegExp = """\'[^\']*[^\']\'""".r
   val allowedValuesRegExp = """[^,\s]+""".r
 
-  protected def jsonProcessBlock(content: String): JObject = {
+  protected def processBlock(content: String): JObject = {
     val c = Util.trim(content)
     val contentNoLineBreak = Parser.replaceLineWithUnicode(c)
     val matches = parse(contentNoLineBreak)
@@ -190,7 +219,7 @@ class ApiParamParser(val defaultGroup: String = "Parameter") extends Parser {
   def buildPath(content: String): Option[JObject] = {
     Some(("local" ->
       ("parameter" ->
-        ("fields" -> jsonProcessBlock(content))
+        ("fields" -> processBlock(content))
       )
     ))
   }
@@ -215,6 +244,24 @@ class ApiPermissionParser extends ApiUseParser {
   }
 }
 
+class ApiSampleRequestParser extends Parser{
+
+  override val name = "apisuccess"
+
+  override def parseBlock(content: String): Option[JObject] = {
+    val c = Util.trim(content)
+
+    if (c.isEmpty)
+      None
+    else
+      Some(("local" ->
+              ("sampleRequest" ->
+                ("url" -> c)
+                )
+          ))
+  }
+}
+
 class ApiSuccessParser extends ApiParamParser("Success 200") {
 
   override val name = "apisuccess"
@@ -222,7 +269,7 @@ class ApiSuccessParser extends ApiParamParser("Success 200") {
   override def buildPath(content: String): Option[JObject] = {
     Some(("local" ->
       ("success" ->
-        ("fields" -> jsonProcessBlock(content))
+        ("fields" -> processBlock(content))
       )
     ))
   }
@@ -236,7 +283,7 @@ class ApiSuccessExampleParser extends ApiExampleParser {
 
     Some(("local" ->
       ("success" ->
-        ("examples" -> jsonProcessBlock(content))
+        ("examples" -> processBlock(content))
       )
     ))
   }
@@ -291,7 +338,7 @@ object Parser {
     val elements = rawBlocks.map { b =>
       findElements(b)
     }
-    parseBlockElementJson(elements, file.getName)
+    parseBlockElement(elements, file.getName)
   }
 
   val parser = List(
@@ -300,17 +347,20 @@ object Parser {
     new ApiErrorParser,
     new ApiErrorExampleParser,
     new ApiExampleParser,
-    new ApiNameParser,
     new ApiGroupParser,
+    new ApiHeaderParser,
+    new ApiHeaderExampleParser,
+    new ApiNameParser,
     new ApiParamParser,
     new ApiPermissionParser,
+    new ApiSampleRequestParser,
     new ApiSuccessExampleParser,
     new ApiSuccessParser,
     new ApiUseParser,
     new ApiVersionParser
   )
 
-  def parseBlockElementJson(detectedElements: Seq[Seq[Element]], filename: String): JArray = {
+  def parseBlockElement(detectedElements: Seq[Seq[Element]], filename: String): JArray = {
     def isApiBlock(elements: Seq[Element]): Boolean = {
       val apiIgnore = elements.exists { elem =>
         val elementName = elem.name
@@ -338,6 +388,7 @@ object Parser {
       }
     }
   }
+
   /**
    * Determine Blocks
    */
