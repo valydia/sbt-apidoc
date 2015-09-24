@@ -7,9 +7,10 @@ import org.scalatest.{ Matchers, FlatSpec }
 
 import org.json4s.JsonAST.{ JArray, JObject, JNothing, JString }
 
+
 class ParserSpec extends FlatSpec with Matchers{
 
-  "Parser" should "should find block in file" in {
+  "Parser" should "find block in file" in {
     val string = "/**\n * Created by valydia on 26/07/15.\n */\npublic class JavaMain {\n    /**\n     * Block 1\n    " +
       " * @param arg\n     */\n    public static void main1 (String [] arg) {\n        for (String s: arg) {\n      " +
       "      System.out.println(s);\n        }\n    }\n}"
@@ -19,7 +20,8 @@ class ParserSpec extends FlatSpec with Matchers{
     assert(result === expected)
   }
 
-  "Parser" should "should find element in block" in {
+
+  "Parser" should "find element in block" in {
     val result = Parser.findElements("Block 1\n@param arg")
     val expected = List(Element("@param arg", "param", "param", "arg"))
     assert(result === expected)
@@ -64,6 +66,43 @@ class ParserSpec extends FlatSpec with Matchers{
     assert(local \ "type" === JString("get"))
     assert(local \ "url" === JString("/user/:id"))
     assert(local \ "title" === JString("some title"))
+  }
+
+  //Element(@apiDefine CreateUserError,apidefine,apiDefine,CreateUserError)
+  "ApiDefineParser" should "parse api define element" in {
+    val apiDescriptionParser = new ApiDefineParser
+    val Some(result) = apiDescriptionParser.parseBlock("CreateUserError")
+    println(result)
+  }
+
+  "ApiDefineParser" should "should parse define element" in {
+
+    val apiDefineParser = new ApiDefineParser
+
+    val Some(result) = apiDefineParser.parseBlock("admin This title is visible in version 0.1.0 and 0.2.0")
+
+    val define = result \ "global" \ "define"
+
+    assert(define \ "name" === JString("admin"))
+    assert(define \ "title" === JString("This title is visible in version 0.1.0 and 0.2.0"))
+    assert(define \ "description" === JString(""))
+
+  }
+
+  "ApiDefineParser" should "should parse define element with multiline" in {
+
+    val apiDefineParser = new ApiDefineParser
+
+    val Some(result) = apiDefineParser.parseBlock("admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.")
+
+    val define = result \ "global" \ "define"
+
+    println(define)
+    //TODO fixme
+//    assert(define \ "name" === JString("admin"))
+//    assert(define \ "title" === JString("This title is visible in version 0.1.0 and 0.2.0"))
+//    assert(define \ "description" === JString(""))
+
   }
 
   "ApiDescriptionParser" should "parse api description element" in {
@@ -286,7 +325,7 @@ class ParserSpec extends FlatSpec with Matchers{
 
 
   "ApiSuccessParser" should "parse success element" in {
-    import org.json4s.jackson.JsonMethods._
+
     val apiSuccessParser = new ApiSuccessParser
 
     val Some(result) = apiSuccessParser.parseBlock("{String} firstname Firstname of the User.")
@@ -315,6 +354,8 @@ class ParserSpec extends FlatSpec with Matchers{
     assert(examples \ "type" === JString("json"))
 
   }
+
+
 
   "Parser" should "parse block element" in {
 
@@ -371,6 +412,17 @@ class ParserSpec extends FlatSpec with Matchers{
 
     val global = blocks(0)(0) \ "global"
     assert(global === JObject())
+  }
+
+  "Parser" should "parse files 2" in {
+
+
+    val sources = Seq(new File(getClass.getResource("/_apidoc.js").getFile),
+                      new File(getClass.getResource("/full-example.js").getFile))
+    val blocks = Parser(sources)
+
+    import org.json4s.native.JsonMethods._
+    println(compact(render(blocks)))
   }
 
 }

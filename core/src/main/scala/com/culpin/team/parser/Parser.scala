@@ -6,7 +6,7 @@ import com.culpin.team.core._
 import com.culpin.team.util.Util
 import scala.util.matching.Regex
 
-import org.json4s.JsonAST.{ JArray, JString, JObject }
+import org.json4s.JsonAST.{JNothing, JArray, JString, JObject}
 import org.json4s.JsonDSL._
 
 trait Parser {
@@ -27,6 +27,7 @@ class ApiParser extends Parser {
   override val regex = """^(?:(?:\{(.+?)\})?\s*)?(.+?)(?:\s+(.+?))?$""".r
 
   override def parseBlock(content: String): Option[JObject] = {
+
     val matches = parse(content)
     if (matches.isEmpty)
       None
@@ -38,6 +39,45 @@ class ApiParser extends Parser {
   }
 
 }
+
+class ApiDefineParser extends Parser {
+
+  override val name = "apidefine"
+
+  override val regex = """(?m)^(\w*)(.*?)(?:\s+|$)(.*)$""".r
+
+  override def parseBlock(content: String): Option[JObject] = {
+    println("-------------------- ApiDefine")
+    println(content)
+    println("--------------------")
+    val matches = parse(content)
+    println(matches)
+    if (matches.isEmpty) None
+    else {
+      val name = matches(0)
+      val title = matches(2)
+//      val matches2 = Parser.parse(regex)(content)
+//      println(matches2)
+      val tail = matches.drop(3)
+      println(tail)
+      val description = if (tail.length <= 1) ""
+      else tail.foldLeft("") {
+        case (s, elem) =>
+           s + elem.getOrElse("") /*+ "\n"*/
+      }
+      Some( ("global" ->
+                ("define" ->
+                  ("name" -> name) ~ ("title" -> title) ~ ("description" -> (Util.unindent(description)))
+                )
+            )
+         )
+    }
+
+
+
+  }
+}
+
 
 
 class ApiDescriptionParser extends Parser {
@@ -226,6 +266,20 @@ class ApiParamParser(val defaultGroup: String = "Parameter") extends Parser {
 
 }
 
+class ApiParamExampleParser extends ApiExampleParser {
+
+  override val name = "apiparamexample"
+
+  override def buildPath(content: String): Option[JObject] = {
+    Some(("local" ->
+      ("parameter" ->
+        ("examples" -> processBlock(content))
+        )
+      ))
+  }
+
+}
+
 class ApiPermissionParser extends ApiUseParser {
 
   override val name = "apipermission"
@@ -343,6 +397,7 @@ object Parser {
 
   val parser = List(
     new ApiParser,
+    new ApiDefineParser,
     new ApiDescriptionParser,
     new ApiErrorParser,
     new ApiErrorExampleParser,
@@ -352,6 +407,7 @@ object Parser {
     new ApiHeaderExampleParser,
     new ApiNameParser,
     new ApiParamParser,
+    new ApiParamExampleParser,
     new ApiPermissionParser,
     new ApiSampleRequestParser,
     new ApiSuccessExampleParser,
@@ -373,18 +429,26 @@ object Parser {
       !apiIgnore && apiElem
     }
     val parserMap = parser.map(p => (p.name, p)).toMap
-    detectedElements.filter(isApiBlock).map { elements =>
+    detectedElements.zipWithIndex.filter{case (e,i) => isApiBlock(e)}.map { case (elements, index) =>
       val initialResult: JObject = ("global" -> JObject()) ~ ("local" -> JObject())
       elements.foldLeft(initialResult) {
         case (result, element) =>
 
           //TODO handle non existing parser
+
           val Some(elementParser) = parserMap.get(element.name)
 
           //TODO handle empty block
 
           val Some(values) = elementParser.parseBlock(element.content)
-          result merge values
+
+          val jVersion = if (element.name == "apiversion") values \ "local" \ "version" else JNothing
+          val jIndex: JObject = ("index" -> (index + 1)) ~ ("version" -> jVersion)
+//            values
+//          import org.json4s.native.JsonMethods._
+//          println("block parsed " + compact(render(result)))
+//          println("values parsed " + compact(render(values)))
+          result merge (values merge jIndex)
       }
     }
   }
