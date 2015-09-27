@@ -8,39 +8,48 @@ import org.scalatest.{ Matchers, FlatSpec }
 import org.json4s.JsonAST.{ JArray, JObject, JNothing, JString }
 
 
-class ParserSpec extends FlatSpec with Matchers{
+class ParserSpec extends FlatSpec with Matchers {
 
   "Parser" should "find block in file" in {
-    val string = "/**\n * Created by valydia on 26/07/15.\n */\npublic class JavaMain {\n    /**\n     * Block 1\n    " +
-      " * @param arg\n     */\n    public static void main1 (String [] arg) {\n        for (String s: arg) {\n      " +
-      "      System.out.println(s);\n        }\n    }\n}"
+
+    val string = "/**\n * Created by valydia on 26/07/15.\n */\npublic class JavaMain " +
+      "{\n    /**\n     * Block 1\n     * @param arg\n     */\n    public static void " +
+      "main1 (String [] arg) {\n        for (String s: arg) {\n            System.out." +
+      "println(s);\n        }\n    }\n}"
 
     val result = Parser.findBlocks(string)
     val expected = List("Created by valydia on 26/07/15.", "Block 1\n@param arg")
+
     assert(result === expected)
   }
 
 
   "Parser" should "find element in block" in {
+
     val result = Parser.findElements("Block 1\n@param arg")
     val expected = List(Element("@param arg", "param", "param", "arg"))
     assert(result === expected)
 
-    val result2 = Parser.findElements("More complex block\n@param arg The array of string\n@param theString the " +
-      "string\n@param theInt the int\n@return the result string")
-    val expected2 = List(Element("@param arg The array of string", "param", "param", "arg The array of string"),
+    val result2 = Parser.findElements("More complex block\n@param arg The array of string\n" +
+      "@param theString the string\n@param theInt the int\n@return the result string")
+
+    val expected2 = List(
+      Element("@param arg The array of string", "param", "param", "arg The array of string"),
       Element("@param theString the string", "param", "param", "theString the string"),
       Element("@param theInt the int", "param", "param", "theInt the int"),
-      Element("@return the result string", "return", "return", "the result string"))
+      Element("@return the result string", "return", "return", "the result string")
+    )
     assert(result2 === expected2)
 
     val result3 = Parser.findElements("Ignored block\n@apiIgnore Not finished Method\n" +
       "@param theString the string\n@param theInt the int\n@return the result string")
 
-    val expected3 = List(Element("@apiIgnore Not finished Method", "apiignore", "apiIgnore", "Not finished Method"),
+    val expected3 = List(
+      Element("@apiIgnore Not finished Method", "apiignore", "apiIgnore", "Not finished Method"),
       Element("@param theString the string", "param", "param", "theString the string"),
       Element("@param theInt the int", "param", "param", "theInt the int"),
-      Element("@return the result string", "return", "return", "the result string"))
+      Element("@return the result string", "return", "return", "the result string")
+    )
     assert(result3 === expected3)
 
     val result4 = Parser.findElements("Api block\n@apiParam")
@@ -69,11 +78,12 @@ class ParserSpec extends FlatSpec with Matchers{
   }
 
   //Element(@apiDefine CreateUserError,apidefine,apiDefine,CreateUserError)
-  "ApiDefineParser" should "parse api define element" in {
-    val apiDescriptionParser = new ApiDefineParser
-    val Some(result) = apiDescriptionParser.parseBlock("CreateUserError")
-    println(result)
-  }
+  //FIXME
+//  "ApiDefineParser" should "parse api define element" in {
+//    val apiDescriptionParser = new ApiDefineParser
+//    val Some(result) = apiDescriptionParser.parseBlock("CreateUserError")
+//    println(result)
+//  }
 
   "ApiDefineParser" should "should parse define element" in {
 
@@ -89,23 +99,23 @@ class ParserSpec extends FlatSpec with Matchers{
 
   }
 
-  "ApiDefineParser" should "should parse define element with multiline" in {
-
-    val apiDefineParser = new ApiDefineParser
-
-    val Some(result) = apiDefineParser.parseBlock("admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.")
-
-    val define = result \ "global" \ "define"
-
-    println(define)
-    //TODO fixme
-//    assert(define \ "name" === JString("admin"))
-//    assert(define \ "title" === JString("This title is visible in version 0.1.0 and 0.2.0"))
-//    assert(define \ "description" === JString(""))
-
-  }
+//  "ApiDefineParser" should "should parse define element with multiline" in {
+//
+//    val apiDefineParser = new ApiDefineParser
+//
+//    val Some(result) = apiDefineParser.parseBlock("admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.")
+//
+//    val define = result \ "global" \ "define"
+//
+//    //TODO fixme
+////    assert(define \ "name" === JString("admin"))
+////    assert(define \ "title" === JString("This title is visible in version 0.1.0 and 0.2.0"))
+////    assert(define \ "description" === JString(""))
+//
+//  }
 
   "ApiDescriptionParser" should "parse api description element" in {
+
     val apiDescriptionParser = new ApiDescriptionParser
     val Some(result) = apiDescriptionParser.parseBlock("Some Description")
     val local = result \ "local"
@@ -117,11 +127,11 @@ class ParserSpec extends FlatSpec with Matchers{
   }
 
   "ApiDescriptionParser" should "parse empty api description element " in {
+
     val apiDescriptionParser = new ApiDescriptionParser
     val result = apiDescriptionParser.parseBlock("")
     val expected = None
     assert(result === expected)
-
   }
 
   "ApiDescriptionParser" should "parse Word only api description element " in {
@@ -141,20 +151,19 @@ class ParserSpec extends FlatSpec with Matchers{
   }
 
   "ApiDescriptionParser" should "Trim multi line (spaces)" in {
+
     val apiDescriptionParser = new ApiDescriptionParser
     val Some(result) = apiDescriptionParser.parseBlock("    Text line 1 (Begin: 4xSpaces (3 removed)).\n   Text line 2 (Begin: 3xSpaces (3 removed), End: 2xSpaces).  ")
-    //  val expected = Block(description = Some("Text line 1 (Begin: 4xSpaces (3 removed)).\n   Text line 2 (Begin: 3xSpaces (3 removed), End: 2xSpaces)."))
     val local = result \ "local"
     assert(local \ "description" === JString("Text line 1 (Begin: 4xSpaces (3 removed)).\n   Text line 2 (Begin: 3xSpaces (3 removed), End: 2xSpaces)."))
-
   }
 
   "ApiDescriptionParser" should "Trim multi line (tabs)" in {
+
     val apiDescriptionParser = new ApiDescriptionParser
     val Some(result) = apiDescriptionParser.parseBlock("\t\t\tText line 1 (Begin: 3xTab (2 removed)).\n\t\tText line 2 (Begin: 2x Tab (2 removed), End: 1xTab).\t")
     val local = result \ "local"
     assert(local \ "description" === JString("Text line 1 (Begin: 3xTab (2 removed)).\n\t\tText line 2 (Begin: 2x Tab (2 removed), End: 1xTab)."))
-
   }
 
   "ApiExampleParser" should "parse example element" in {
@@ -169,6 +178,7 @@ class ParserSpec extends FlatSpec with Matchers{
   }
 
   "ApiHeaderParser" should "parse param element" in {
+
     val apiHeaderParser = new ApiHeaderParser
 
     val Some(result) = apiHeaderParser.parseBlock("{String} authorization Authorization value.")
@@ -181,10 +191,10 @@ class ParserSpec extends FlatSpec with Matchers{
     assert(header \ "description" === JString("Authorization value."))
     assert(header \ "size" === JNothing)
     assert(header \ "allowedValue" === JNothing)
-
   }
 
   "ApiHeaderParser" should "parse param element with group" in {
+
     val apiHeaderParser = new ApiHeaderParser
 
     val Some(result) = apiHeaderParser.parseBlock("(MyHeaderGroup) {String} authorization Authorization value.")
@@ -223,6 +233,7 @@ class ParserSpec extends FlatSpec with Matchers{
   }
 
   "ApiParamParser" should "parse param element - json " in {
+
     val apiParamParser = new ApiParamParser
 
     val Some(result) = apiParamParser.parseBlock("{String} country=\"DE\" Mandatory with default value \"DE\".")
@@ -250,6 +261,7 @@ class ParserSpec extends FlatSpec with Matchers{
   }
 
   "ApiParamParser" should "parse Simple fieldname only - json" in {
+
     val apiParamParser = new ApiParamParser
     val Some(result) = apiParamParser.parseBlock("simple")
 
@@ -261,6 +273,7 @@ class ParserSpec extends FlatSpec with Matchers{
   }
 
   "ApiParamParser" should "parse Type, Fieldname, Description" in {
+
     val apiParamParser = new ApiParamParser
 
     val Some(result) = apiParamParser.parseBlock("{String} name The users name.")
@@ -294,6 +307,7 @@ class ParserSpec extends FlatSpec with Matchers{
   }
 
   "ApiParamParser" should "parse all options, without optional-marker, without default value quotes" in {
+
     val apiParamParser = new ApiParamParser
     val content = "( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  " +
       "\\MyClass\\field.user_first-name = John_Doe Some description."
@@ -416,13 +430,13 @@ class ParserSpec extends FlatSpec with Matchers{
 
   "Parser" should "parse files 2" in {
 
-
     val sources = Seq(new File(getClass.getResource("/_apidoc.js").getFile),
                       new File(getClass.getResource("/full-example.js").getFile))
     val blocks = Parser(sources)
 
     import org.json4s.native.JsonMethods._
-    println(compact(render(blocks)))
+    //TODO test the result
+    //println(compact(render(blocks)))
   }
 
 }

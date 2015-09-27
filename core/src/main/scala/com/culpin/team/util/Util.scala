@@ -1,5 +1,7 @@
 package com.culpin.team.util
 
+import java.io.File
+
 import scala.util.matching.Regex
 
 import scala.language.postfixOps
@@ -33,6 +35,12 @@ object Util {
   def trim(s: String): String = {
     val trimRegex = """^\s*|\s*$""".r
     trimRegex.replaceAllIn(s, "")
+  }
+
+  def readFile(file: File): String = {
+    val source = scala.io.Source.fromFile(file)
+    val src = try source.mkString finally source.close()
+    src
   }
 
 }

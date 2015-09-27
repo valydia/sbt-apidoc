@@ -15,6 +15,8 @@ trait Parser {
 
   val regex: Regex = "".r
 
+  val extendRoot = false
+
   protected def parse(input: String): List[Option[String]] = Parser.parse(regex)(input)
 
   def parseBlock(content: String): Option[JObject] = None
@@ -47,11 +49,7 @@ class ApiDefineParser extends Parser {
   override val regex = """(?m)^(\w*)(.*?)(?:\s+|$)(.*)$""".r
 
   override def parseBlock(content: String): Option[JObject] = {
-    println("-------------------- ApiDefine")
-    println(content)
-    println("--------------------")
     val matches = parse(content)
-    println(matches)
     if (matches.isEmpty) None
     else {
       val name = matches(0)
@@ -59,7 +57,6 @@ class ApiDefineParser extends Parser {
 //      val matches2 = Parser.parse(regex)(content)
 //      println(matches2)
       val tail = matches.drop(3)
-      println(tail)
       val description = if (tail.length <= 1) ""
       else tail.foldLeft("") {
         case (s, elem) =>
@@ -368,7 +365,7 @@ class ApiVersionParser extends Parser {
 
   override val name = "apiversion"
 
-  override val regex: Regex = new Regex("")
+  override val extendRoot = true
 
   override def parseBlock(content: String): Option[JObject] = {
     val c = Util.trim(content)
@@ -442,7 +439,7 @@ object Parser {
 
           val Some(values) = elementParser.parseBlock(element.content)
 
-          val jVersion = if (element.name == "apiversion") values \ "local" \ "version" else JNothing
+          val jVersion = if (elementParser.extendRoot) values \ "local" \ "version" else JNothing
           val jIndex: JObject = ("index" -> (index + 1)) ~ ("version" -> jVersion)
 //            values
 //          import org.json4s.native.JsonMethods._
@@ -471,15 +468,10 @@ object Parser {
    * @return The list of blocks found
    */
   def findBlocks(file: File): Seq[String] = {
-    val src: String = readFile(file)
+    val src: String = Util.readFile(file)
     findBlocks(src)
   }
 
-  def readFile(file: File): String = {
-    val source = scala.io.Source.fromFile(file)
-    val src = try source.mkString finally source.close()
-    src
-  }
 
   /**
    * Find block in the string give as a parameter
