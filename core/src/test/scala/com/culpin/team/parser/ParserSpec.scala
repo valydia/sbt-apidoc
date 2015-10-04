@@ -77,13 +77,22 @@ class ParserSpec extends FlatSpec with Matchers {
     assert(local \ "title" === JString("some title"))
   }
 
-  //Element(@apiDefine CreateUserError,apidefine,apiDefine,CreateUserError)
-  //FIXME
-//  "ApiDefineParser" should "parse api define element" in {
-//    val apiDescriptionParser = new ApiDefineParser
-//    val Some(result) = apiDescriptionParser.parseBlock("CreateUserError")
-//    println(result)
-//  }
+
+  "ApiDefineParser" should "parse api define element" in {
+
+
+
+    val apiDefineParser = new ApiDefineParser
+    val Some(result) = apiDefineParser.parseBlock("CreateUserError")
+
+    val define = result \ "global" \ "define"
+
+    assert(define \ "name" === JString("CreateUserError"))
+    assert(define \ "title" === JString(""))
+    assert(define \ "description" === JString(""))
+
+
+  }
 
   "ApiDefineParser" should "should parse define element" in {
 
@@ -99,20 +108,22 @@ class ParserSpec extends FlatSpec with Matchers {
 
   }
 
-//  "ApiDefineParser" should "should parse define element with multiline" in {
-//
-//    val apiDefineParser = new ApiDefineParser
-//
-//    val Some(result) = apiDefineParser.parseBlock("admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.")
-//
-//    val define = result \ "global" \ "define"
-//
-//    //TODO fixme
-////    assert(define \ "name" === JString("admin"))
-////    assert(define \ "title" === JString("This title is visible in version 0.1.0 and 0.2.0"))
-////    assert(define \ "description" === JString(""))
-//
-//  }
+  "ApiDefineParser" should "should parse define element with multiline" in {
+
+    val apiDefineParser = new ApiDefineParser
+
+    val Some(result) = apiDefineParser.parseBlock("admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.")
+
+    val define = result \ "global" \ "define"
+
+
+
+    assert(define \ "name" === JString("admin"))
+    assert(define \ "title" === JString("Admin access rights needed."))
+    //fixme descritption not well formatted
+    assert(define \ "description" === JString("Optionallyyou can write here further Informations about the permission.An \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."))
+
+  }
 
   "ApiDescriptionParser" should "parse api description element" in {
 
@@ -166,6 +177,35 @@ class ParserSpec extends FlatSpec with Matchers {
     assert(local \ "description" === JString("Text line 1 (Begin: 3xTab (2 removed)).\n\t\tText line 2 (Begin: 2x Tab (2 removed), End: 1xTab)."))
   }
 
+  "ApiErrorExampleParser" should "parse error example element" in {
+
+
+    val apiErrorExampleParser = new ApiErrorExampleParser
+    val Some(result) = apiErrorExampleParser.parseBlock("{json} Error-Response:\n                 This is an example.")
+
+    val examples = (result \ "local" \ "error" \ "examples")(0)
+    assert(examples \ "title" === JString("Error-Response:"))
+    assert(examples \ "content" === JString("This is an example."))
+    assert(examples \ "type" === JString("json"))
+
+  }
+
+  "ApiErrorParser" should "parse error element" in {
+
+
+
+    val apiErrorParser = new ApiErrorParser
+    val Some(result) = apiErrorParser.parseBlock("UserNotFound The <code>id</code> of the User was not found.")
+
+
+    val errorFields = (result \ "local" \ "error" \ "fields" \ "Error 4xx")(0)
+    assert(errorFields \ "group" === JString("Error 4xx"))
+    assert(errorFields \ "optional" === JString("false"))
+    assert(errorFields \ "field" === JString("UserNotFound"))
+    assert(errorFields \ "description" === JString("The <code>id</code> of the User was not found."))
+
+  }
+
   "ApiExampleParser" should "parse example element" in {
 
     val apiExampleParser = new ApiExampleParser
@@ -176,6 +216,47 @@ class ParserSpec extends FlatSpec with Matchers {
     assert(examples \ "type" === JString("json"))
 
   }
+
+
+  "ApiGroupParser" should "parse group element" in {
+
+
+    val apiGroupParser = new ApiGroupParser
+    val Some(result) = apiGroupParser.parseBlock("User")
+
+    val local = result \ "local"
+    assert(local \ "group" === JString("User"))
+
+
+  }
+
+  "ApiHeaderExampleParser" should "parse header example element" in {
+
+    val apiHeaderExampleParser = new ApiHeaderExampleParser
+
+    val Some(result) = apiHeaderExampleParser.parseBlock("{json} Header-Example:\n    {\n      \"Accept-Encoding\": \"Accept-Encoding: gzip, deflate\"\n    }")
+
+
+    val headerExample = (result \ "local" \ "header" \ "examples")(0)
+    assert(headerExample \ "title" === JString("Header-Example:"))
+    assert(headerExample \ "content" === JString("{\n  \"Accept-Encoding\": \"Accept-Encoding: gzip, deflate\"\n}"))
+    assert(headerExample \ "type" === JString("json"))
+
+  }
+
+  "ApiHeaderExampleParser" should "parse header example element 2" in {
+    val apiHeaderExampleParser = new ApiHeaderExampleParser
+
+    val Some(result) = apiHeaderExampleParser.parseBlock("{json} Request-Example:\n{ \"content\": \"This is an example content\" }")
+
+    val examples = result \ "local" \ "header" \ "examples"
+    assert(examples \ "title" === JString("Request-Example:"))
+    assert(examples \ "content" === JString("{ \"content\": \"This is an example content\" }"))
+    assert(examples \ "type" === JString("json"))
+
+
+  }
+
 
   "ApiHeaderParser" should "parse param element" in {
 
@@ -211,18 +292,7 @@ class ParserSpec extends FlatSpec with Matchers {
 
   }
 
-  "ApiHeaderExampleParser" should "parse param elemen" in {
-    val apiHeaderExampleParser = new ApiHeaderExampleParser
 
-    val Some(result) = apiHeaderExampleParser.parseBlock("{json} Request-Example:\n{ \"content\": \"This is an example content\" }")
-
-    val examples = result \ "local" \ "header" \ "examples"
-    assert(examples \ "title" === JString("Request-Example:"))
-    assert(examples \ "content" === JString("{ \"content\": \"This is an example content\" }"))
-    assert(examples \ "type" === JString("json"))
-
-
-  }
 
   "ApiNameParser" should "parse name element" in {
     val apiNameParser = new ApiNameParser
@@ -230,6 +300,18 @@ class ParserSpec extends FlatSpec with Matchers {
     val Some(result) = apiNameParser.parseBlock("Welcome Page.")
     val local = result \ "local"
     assert(local \ "name" === JString("Welcome_Page."))
+  }
+
+  "ApiParamExampleParser" should "parse param example element" in {
+
+    val apiParamExampleParser = new ApiParamExampleParser
+    val Some(result) = apiParamExampleParser.parseBlock("{json} Request-Example:\n                 { \"content\": \"This is an example content\" }")
+
+
+    val example = (result \ "local" \ "parameter" \ "examples")(0)
+    assert(example \ "title" === JString("Request-Example:"))
+    assert(example \ "content" === JString("{ \"content\": \"This is an example content\" }"))
+    assert(example \ "type" === JString("json"))
   }
 
   "ApiParamParser" should "parse param element - json " in {
@@ -325,6 +407,19 @@ class ParserSpec extends FlatSpec with Matchers {
     assert(parameter \ "allowedValue" === JArray(List(JString("\'abc\'"), JString("\'def\'"))))
   }
 
+
+  "ApiPermissionParser" should "parse permission element" in {
+
+    val apiPermissionParser = new ApiPermissionParser
+
+    val Some(result) = apiPermissionParser.parseBlock("admin")
+
+    val permission = (result \ "local" \ "permission")(0)
+
+    assert(permission \ "name" === JString("admin"))
+
+  }
+
   "ApiSampleRequestParser" should "parse success element" in {
 
     val apiSampleRequestParser = new ApiSampleRequestParser
@@ -336,6 +431,21 @@ class ParserSpec extends FlatSpec with Matchers {
     assert(parameter \ "url" === JString("http://test.github.com"))
 
   }
+
+  "ApiSuccessExampleParser" should "parse success exemple element" in {
+
+    val apiSuccessExampleParser = new ApiSuccessExampleParser
+
+    val Some(result) = apiSuccessExampleParser.parseBlock("Success-Response:\n    HTTP/1.1 200 OK\n    HTML for welcome page\n    {\n      \"emailAvailable\": \"true\"\n    }\n")
+    val examples = result \ "local" \ "success" \ "examples"
+
+    assert(examples \ "title" === JString("Success-Response:"))
+    assert(examples \ "content" === JString("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"))
+    assert(examples \ "type" === JString("json"))
+
+  }
+
+
 
 
   "ApiSuccessParser" should "parse success element" in {
@@ -356,16 +466,28 @@ class ParserSpec extends FlatSpec with Matchers {
     assert(parameter \ "allowedValue" === JNothing)
   }
 
-  "ApiSuccessExampleParser" should "parse success exemple element" in {
 
-    val apiSuccessExampleParser = new ApiSuccessExampleParser
+  "ApiUseParser" should "parse user element" in {
 
-    val Some(result) = apiSuccessExampleParser.parseBlock("Success-Response:\n    HTTP/1.1 200 OK\n    HTML for welcome page\n    {\n      \"emailAvailable\": \"true\"\n    }\n")
-    val examples = result \ "local" \ "success" \ "examples"
+    val apiUseParser = new ApiUseParser
+    val Some(result) = apiUseParser.parseBlock("MySuccess")
 
-    assert(examples \ "title" === JString("Success-Response:"))
-    assert(examples \ "content" === JString("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"))
-    assert(examples \ "type" === JString("json"))
+    val use = (result \ "local" \ "use")(0)
+    assert(use \ "name" === JString("MySuccess"))
+
+  }
+
+
+  "ApiVersionParser" should "parse version element" in {
+
+    val apiVersionParser = new ApiVersionParser
+
+    val Some(result) = apiVersionParser.parseBlock("1.6.2")
+
+
+    val local = result \ "local"
+
+    assert(local \ "version" === JString("1.6.2"))
 
   }
 

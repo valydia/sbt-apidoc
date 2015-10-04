@@ -289,7 +289,7 @@ class ApiPermissionParser extends ApiUseParser {
     else
       Some(("local" ->
         ("permission" ->
-          ("name" -> c)
+          JArray(List(("name" -> c)))
         )
       ))
   }
@@ -355,7 +355,7 @@ class ApiUseParser extends Parser {
     else
       Some(("local" ->
         ("use" ->
-          ("name" -> c)
+          JArray(List(("name" -> c)))
         )
       ))
   }
