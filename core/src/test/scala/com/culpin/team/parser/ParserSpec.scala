@@ -3,9 +3,10 @@ package com.culpin.team.parser
 import java.io.File
 
 import com.culpin.team.core._
+import org.json4s.native.JsonMethods._
 import org.scalatest.{ Matchers, FlatSpec }
 
-import org.json4s.JsonAST.{ JArray, JObject, JNothing, JString }
+import org.json4s.JsonAST._
 
 
 class ParserSpec extends FlatSpec with Matchers {
@@ -554,11 +555,211 @@ class ParserSpec extends FlatSpec with Matchers {
 
     val sources = Seq(new File(getClass.getResource("/_apidoc.js").getFile),
                       new File(getClass.getResource("/full-example.js").getFile))
-    val blocks = Parser(sources)
+    val JArray(List(file1,file2)) = Parser(sources)
 
-    import org.json4s.native.JsonMethods._
-    //TODO test the result
-    //println(compact(render(blocks)))
+    val JArray(List(block1, block2, block3, block4, block5, block6)) = file1
+    val JArray(List(block2_1, block2_2, block2_3)) = file2
+
+    /////File 1
+
+    ///// Block1
+
+    assert( block1 \ "version" === JString("0.2.0"))
+    assert( block1 \ "index" === JInt(1))
+
+    val d1 = block1 \ "global" \ "define"
+
+    assert( d1 \ "name" === JString("CreateUserError"))
+    assert( d1 \ "title" === JString(""))
+    assert( d1 \ "description" === JString(""))
+    val l1 = block1 \ "local"
+
+    assert( l1 \ "version" ===  JString("0.2.0"))
+
+    val JArray(List(ef1,ef2)) = l1 \ "error" \"fields" \ "Error 4xx"
+    assert( ef1 \ "group" === JString("Error 4xx"))
+    assert( ef1 \ "optional" === JString("false"))
+    assert( ef1 \ "field" === JString("NoAccessRight"))
+    assert( ef1 \ "description" === JString("Only authenticated Admins can access the data."))
+
+    assert( ef2 \ "group" === JString("Error 4xx"))
+    assert( ef2 \ "optional" === JString("false"))
+    assert( ef2 \ "field" === JString("UserNameTooShort"))
+    assert( ef2 \ "description" === JString("Minimum of 5 characters required."))
+
+    val JArray(List(ex1)) = l1 \ "error" \"examples"
+
+
+    assert( ex1 \ "title" === JString("Response (example):"))
+    assert( ex1 \ "content" === JString("HTTP/1.1 400 Bad Request\n{\n  \"error\": \"UserNameTooShort\"\n}"))
+    assert( ex1 \ "type" === JString("json"))
+
+    ///// Block2
+
+    assert( block2 \ "version" === JString("0.3.0"))
+    assert( block2 \ "index" === JInt(2))
+
+    val d2 = block2 \ "global" \ "define"
+//
+    assert( d2 \ "name" === JString("admin"))
+    assert( d2 \ "title" === JString("Admin access rights needed."))
+    assert( d2 \ "description" === JString("Optionallyyou can write here further Informations about the permission.An \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."))
+//
+    val l2 = block2 \ "local"
+
+    assert( l2 \ "version" ===  JString("0.3.0"))
+
+    ///// Block3
+
+    assert( block3 \ "version" === JString("0.1.0"))
+    assert( block3 \ "index" === JInt(3))
+//
+    val d3 = block3 \ "global" \ "define"
+
+    assert( d3 \ "name" === JString("admin"))
+    assert( d3 \ "title" === JString("This title is visible in version 0.1.0 and 0.2.0"))
+    assert( d3 \ "description" === JString(""))
+    val l3 = block3 \ "local"
+
+
+    assert( l3 \ "version" ===  JString("0.1.0"))
+
+    ///// Block4
+
+    assert( block4 \ "version" === JString("0.2.0"))
+    assert( block4 \ "index" === JInt(4))
+    assert( block4 \ "global" === JObject())
+
+    val l4 = block4 \ "local"
+
+
+    assert( l4 \ "version" ===  JString("0.2.0"))
+    assert( l4 \ "type" === JString("get"))
+    assert( l4 \ "url" === JString("/user/:id"))
+    assert( l4 \ "title" === JString("Read data of a User"))
+    assert( l4 \ "name" === JString("GetUser"))
+    assert( l4 \ "group" === JString("User"))
+    assert( l4 \ "description" === JString("Here you can describe the function.\nMultilines are possible."))
+//
+    val JArray(List(per4)) = l4 \ "permission"
+    assert( per4 \ "name" === JString("admin"))
+
+    val JArray(List(par4_1)) = l4 \ "parameter" \ "fields" \ "Parameter"
+    assert( par4_1 \ "group" === JString("Parameter"))
+    assert( par4_1 \ "type" === JString("String"))
+    assert( par4_1 \ "optional" === JString("false"))
+    assert( par4_1 \ "field" === JString("id"))
+    assert( par4_1 \ "description" === JString("The Users-ID."))
+
+    val JArray(List(suc4_1, suc4_2)) = l4 \ "success" \ "fields" \ "Success 200"
+    assert( suc4_1 \ "group" === JString("Success 200"))
+    assert( suc4_1 \ "type" === JString("String"))
+    assert( suc4_1 \ "optional" === JString("false"))
+    assert( suc4_1 \ "field" === JString("id"))
+    assert( suc4_1 \ "description" === JString("The Users-ID."))
+
+
+    assert( suc4_2 \ "group" === JString("Success 200"))
+    assert( suc4_2 \ "type" === JString("Date"))
+    assert( suc4_2 \ "optional" === JString("false"))
+    assert( suc4_2 \ "field" === JString("name"))
+    assert( suc4_2 \ "description" === JString("Fullname of the User."))
+
+    val JArray(List(ef4_1)) = l4 \ "error" \ "fields" \ "Error 4xx"
+    assert( ef4_1 \ "group" === JString("Error 4xx"))
+    assert( ef4_1 \ "optional" === JString("false"))
+    assert( ef4_1 \ "field" === JString("UserNotFound"))
+    assert( ef4_1 \ "description" === JString("The <code>id</code> of the User was not found."))
+
+
+
+    ///// Block5
+
+    assert( block5 \ "version" === JString("0.1.0"))
+    assert( block5 \ "index" === JInt(5))
+    assert( block5 \ "global" === JObject())
+
+    val l5 = block5 \ "local"
+
+    assert( l5 \ "version" ===  JString("0.1.0"))
+    assert( l5 \ "type" === JString("get"))
+    assert( l5 \ "url" === JString("/user/:id"))
+    assert( l5 \ "title" === JString("Read data of a User"))
+    assert( l5 \ "name" === JString("GetUser"))
+    assert( l5 \ "group" === JString("User"))
+    assert( l5 \ "description" === JString("Here you can describe the function.\nMultilines are possible."))
+    //
+    val JArray(List(per5)) = l5 \ "permission"
+    assert( per5 \ "name" === JString("admin"))
+
+    val JArray(List(par5_1)) = l5 \ "parameter" \ "fields" \ "Parameter"
+    assert( par5_1 \ "group" === JString("Parameter"))
+    assert( par5_1 \ "type" === JString("String"))
+    assert( par5_1 \ "optional" === JString("false"))
+    assert( par5_1 \ "field" === JString("id"))
+    assert( par5_1 \ "description" === JString("The Users-ID."))
+
+    val JArray(List(suc5_1, suc5_2)) = l5 \ "success" \ "fields" \ "Success 200"
+    assert( suc5_1 \ "group" === JString("Success 200"))
+    assert( suc5_1 \ "type" === JString("String"))
+    assert( suc5_1 \ "optional" === JString("false"))
+    assert( suc5_1 \ "field" === JString("id"))
+    assert( suc5_1 \ "description" === JString("The Users-ID."))
+
+
+    assert( suc5_2 \ "group" === JString("Success 200"))
+    assert( suc5_2 \ "type" === JString("Date"))
+    assert( suc5_2 \ "optional" === JString("false"))
+    assert( suc5_2 \ "field" === JString("name"))
+    assert( suc5_2 \ "description" === JString("Fullname of the User."))
+
+    val JArray(List(ef5_1)) = l5 \ "error" \ "fields" \ "Error 4xx"
+    assert( ef5_1 \ "group" === JString("Error 4xx"))
+    assert( ef5_1 \ "optional" === JString("false"))
+    assert( ef5_1 \ "field" === JString("UserNotFound"))
+    assert( ef5_1 \ "description" === JString("The error description text in version 0.1.0."))
+
+
+
+    ///// Block6
+
+    assert( block6 \ "version" === JString("0.2.0"))
+    assert( block6 \ "index" === JInt(6))
+    assert( block6 \ "global" === JObject())
+
+    val l6 = block6 \ "local"
+
+    println(compact(render(l6)))
+
+    assert( l6 \ "version" ===  JString("0.2.0"))
+    assert( l6 \ "type" === JString("post"))
+    assert( l6 \ "url" === JString("/user"))
+    assert( l6 \ "title" === JString("Create a User"))
+    assert( l6 \ "name" === JString("PostUser"))
+    assert( l6 \ "group" === JString("User"))
+    assert( l6 \ "description" === JString("In this case \"apiErrorStructure\" is defined and used.\nDefine blocks with params that will be used in several functions, so you dont have to rewrite them."))
+
+    val JArray(List(per6)) = l6 \ "permission"
+    assert( per6 \ "name" === JString("none"))
+
+    val JArray(List(par6_1)) = l6 \ "parameter" \ "fields" \ "Parameter"
+    assert( par6_1 \ "group" === JString("Parameter"))
+    assert( par6_1 \ "type" === JString("String"))
+    assert( par6_1 \ "optional" === JString("false"))
+    assert( par6_1 \ "field" === JString("name"))
+    assert( par6_1 \ "description" === JString("Name of the User."))
+
+    val JArray(List(suc6)) = l6 \ "success" \ "fields" \ "Success 200"
+    assert( suc6 \ "group" === JString("Success 200"))
+    assert( suc6 \ "type" === JString("String"))
+    assert( suc6 \ "optional" === JString("false"))
+    assert( suc6 \ "field" === JString("id"))
+    assert( suc6 \ "description" === JString("The Users-ID."))
+
+
+    val JArray(List(u6)) = l6 \ "use"
+    assert( u6 \ "name" === JString("CreateUserError"))
+
   }
 
 }

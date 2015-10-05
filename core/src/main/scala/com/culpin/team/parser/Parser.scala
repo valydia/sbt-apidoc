@@ -54,8 +54,6 @@ class ApiDefineParser extends Parser {
     else {
       val name = matches(0)
       val title = matches(2)
-//      val matches2 = Parser.parse(regex)(content)
-//      println(matches2)
       val tail = matches.drop(3)
       val description = if (tail.length <= 1) ""
       else tail.foldLeft("") {
