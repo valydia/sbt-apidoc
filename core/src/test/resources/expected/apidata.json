@@ -4,9 +4,9 @@
   "title" : "Read data of a User",
   "version" : "0.3.0",
   "name" : "GetUser",
-  "permission" : {
+  "permission" : [ {
     "name" : "admin"
-  },
+  } ],
   "description" : "Compare Verison 0.3.0 with 0.2.0 and you will see the green markers with new items in version 0.3.0 and red markers with removed items since 0.2.0.",
   "parameter" : {
     "fields" : {
