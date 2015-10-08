@@ -379,8 +379,8 @@ class ApiVersionParser extends Parser {
 
 object Parser {
 
-  def apply(sources: Seq[File]): JArray =
-    sources.map { s => parseFile(s) }
+  def apply(sources: Seq[File]): (JArray, Seq[String]) =
+    (sources.map { s => (parseFile(s)) }, (sources map (_.getName)))
 
   def parseFile(file: File): JArray = {
     val rawBlocks = findBlocks(file)
@@ -424,7 +424,9 @@ object Parser {
       !apiIgnore && apiElem
     }
     val parserMap = parser.map(p => (p.name, p)).toMap
-    detectedElements.zipWithIndex.filter{case (e,i) => isApiBlock(e)}.map { case (elements, index) =>
+    detectedElements.zipWithIndex
+      .filter{ case (e,i) => isApiBlock(e)}
+      .map { case (elements, index) =>
       val initialResult: JObject = ("global" -> JObject()) ~ ("local" -> JObject())
       elements.foldLeft(initialResult) {
         case (result, element) =>
@@ -439,10 +441,6 @@ object Parser {
 
           val jVersion = if (elementParser.extendRoot) values \ "local" \ "version" else JNothing
           val jIndex: JObject = ("index" -> (index + 1)) ~ ("version" -> jVersion)
-//            values
-//          import org.json4s.native.JsonMethods._
-//          println("block parsed " + compact(render(result)))
-//          println("values parsed " + compact(render(values)))
           result merge (values merge jIndex)
       }
     }

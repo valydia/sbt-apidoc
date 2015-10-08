@@ -1,0 +1,177 @@
+{
+   "defineErrorStructure":{
+
+   },
+   "defineErrorTitle":{
+      "CreateUserError":{
+         "0.2.0":{
+            "name":"CreateUserError",
+            "title":"",
+            "description":""
+         }
+      },
+      "admin":{
+         "0.3.0":{
+            "name":"admin",
+            "title":"Admin access rights needed.",
+            "description":"Optionallyyou can write here further Informations about the permission.An \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."
+         },
+         "0.1.0":{
+            "name":"admin",
+            "title":"This title is visible in version 0.1.0 and 0.2.0",
+            "description":""
+         }
+      }
+   },
+   "defineGroup":{
+      "CreateUserError":{
+         "0.2.0":{
+            "name":"CreateUserError",
+            "title":"",
+            "description":""
+         }
+      },
+      "admin":{
+         "0.3.0":{
+            "name":"admin",
+            "title":"Admin access rights needed.",
+            "description":"Optionallyyou can write here further Informations about the permission.An \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."
+         },
+         "0.1.0":{
+            "name":"admin",
+            "title":"This title is visible in version 0.1.0 and 0.2.0",
+            "description":""
+         }
+      }
+   },
+   "defineHeaderStructure":{
+
+   },
+   "defineHeaderTitle":{
+      "CreateUserError":{
+         "0.2.0":{
+            "name":"CreateUserError",
+            "title":"",
+            "description":""
+         }
+      },
+      "admin":{
+         "0.3.0":{
+            "name":"admin",
+            "title":"Admin access rights needed.",
+            "description":"Optionallyyou can write here further Informations about the permission.An \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."
+         },
+         "0.1.0":{
+            "name":"admin",
+            "title":"This title is visible in version 0.1.0 and 0.2.0",
+            "description":""
+         }
+      }
+   },
+   "defineParamTitle":{
+      "CreateUserError":{
+         "0.2.0":{
+            "name":"CreateUserError",
+            "title":"",
+            "description":""
+         }
+      },
+      "admin":{
+         "0.3.0":{
+            "name":"admin",
+            "title":"Admin access rights needed.",
+            "description":"Optionallyyou can write here further Informations about the permission.An \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."
+         },
+         "0.1.0":{
+            "name":"admin",
+            "title":"This title is visible in version 0.1.0 and 0.2.0",
+            "description":""
+         }
+      }
+   },
+   "definePermission":{
+      "CreateUserError":{
+         "0.2.0":{
+            "name":"CreateUserError",
+            "title":"",
+            "description":""
+         }
+      },
+      "admin":{
+         "0.3.0":{
+            "name":"admin",
+            "title":"Admin access rights needed.",
+            "description":"Optionallyyou can write here further Informations about the permission.An \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."
+         },
+         "0.1.0":{
+            "name":"admin",
+            "title":"This title is visible in version 0.1.0 and 0.2.0",
+            "description":""
+         }
+      }
+   },
+   "defineSuccessStructure":{
+
+   },
+   "defineSuccessTitle":{
+      "CreateUserError":{
+         "0.2.0":{
+            "name":"CreateUserError",
+            "title":"",
+            "description":""
+         }
+      },
+      "admin":{
+         "0.3.0":{
+            "name":"admin",
+            "title":"Admin access rights needed.",
+            "description":"Optionallyyou can write here further Informations about the permission.An \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."
+         },
+         "0.1.0":{
+            "name":"admin",
+            "title":"This title is visible in version 0.1.0 and 0.2.0",
+            "description":""
+         }
+      }
+   },
+   "define":{
+      "CreateUserError":{
+         "0.2.0":{
+            "version":"0.2.0",
+            "error":{
+               "fields":{
+                  "Error 4xx":[
+                     {
+                        "group":"Error 4xx",
+                        "optional":"false",
+                        "field":"NoAccessRight",
+                        "description":"Only authenticated Admins can access the data."
+                     },
+                     {
+                        "group":"Error 4xx",
+                        "optional":"false",
+                        "field":"UserNameTooShort",
+                        "description":"Minimum of 5 characters required."
+                     }
+                  ]
+               },
+               "examples":[
+                  {
+                     "title":"Response (example):",
+                     "content":"HTTP/1.1 400 Bad Request\n{\n  \"error\": \"UserNameTooShort\"\n}",
+                     "type":"json"
+                  }
+               ]
+            }
+         }
+      },
+      "admin":{
+         "0.3.0":{
+            "version":"0.3.0"
+         },
+         "0.1.0":{
+            "version":"0.1.0"
+         }
+      }
+   }
+}

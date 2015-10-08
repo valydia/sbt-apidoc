@@ -28,7 +28,7 @@ object Apidoc {
    */
   def apply(sources: Seq[File], config: SbtApidocConfiguration): Try[Option[(String, String)]] = {
 
-    val blocks = Parser(sources)
+    val (blocks,filenames) = Parser(sources)
     val filteredBlocks = Filter(blocks)
     if (filteredBlocks.children == List(JNothing))
       Success(None)
