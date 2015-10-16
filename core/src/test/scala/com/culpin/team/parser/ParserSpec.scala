@@ -429,7 +429,7 @@ class ParserSpec extends FlatSpec with Matchers {
 
     val Some(result) = apiSampleRequestParser.parseBlock("http://test.github.com")
 
-    val parameter = result \ "local" \ "sampleRequest"
+    val parameter = (result \ "local" \ "sampleRequest")(0)
 
     assert(parameter \ "url" === JString("http://test.github.com"))
 

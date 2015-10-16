@@ -293,9 +293,10 @@ class ApiPermissionParser extends ApiUseParser {
   }
 }
 
+//TODO Test
 class ApiSampleRequestParser extends Parser{
 
-  override val name = "apisuccess"
+  override val name = "apisamplerequest"
 
   override def parseBlock(content: String): Option[JObject] = {
     val c = Util.trim(content)
@@ -305,7 +306,7 @@ class ApiSampleRequestParser extends Parser{
     else
       Some(("local" ->
               ("sampleRequest" ->
-                ("url" -> c)
+                JArray(List("url" -> c))
                 )
           ))
   }
@@ -432,7 +433,6 @@ object Parser {
         case (result, element) =>
 
           //TODO handle non existing parser
-
           val Some(elementParser) = parserMap.get(element.name)
 
           //TODO handle empty block
