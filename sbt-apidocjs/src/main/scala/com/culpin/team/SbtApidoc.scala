@@ -45,7 +45,7 @@ object SbtApidoc extends AutoPlugin {
     //getting the source files
     val sourcesFiles = (sources in Compile).value
 
-    val config = SbtApidocConfiguration(apidocName.value, apidocDescription.value, apidocSampleURL.value.isDefined, apidocVersion.value.getOrElse("1.0.0"))
+    val config = SbtApidocConfiguration(apidocName.value, apidocDescription.value, apidocSampleURL.value.map(_.toString), apidocVersion.value.getOrElse("1.0.0"))
 
     val parseResult = Apidoc(sourcesFiles, config)
     val maybeFolder = parseResult match {

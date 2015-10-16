@@ -2,6 +2,7 @@ package com.culpin.team.worker
 
 import java.io.File
 
+import com.culpin.team.core.SbtApidocConfiguration
 import com.culpin.team.parser.Parser
 import com.culpin.team.util.Util
 import org.json4s.JsonAST.JArray
@@ -11,6 +12,8 @@ import org.json4s._
 import org.json4s.native.JsonMethods._
 
 class WorkerSpec  extends FlatSpec with Matchers {
+
+  val conf = SbtApidocConfiguration("name", "description", Option("https://api.github.com/v1"), "1.2")
 
   "ApiParamTitleWorker" should " preProcess parsed Files" in {
     val file = new File(getClass.getResource("/expected/parsedFiles.json").getFile)
@@ -180,10 +183,75 @@ class WorkerSpec  extends FlatSpec with Matchers {
       val JArray(l) = parse(parsedFileString)
       val worker = new ApiParamTitleWorker
 
-      val result = worker.postProcess(JArray(l), preProcessJson)
+      val result = worker.postProcess(JArray(l),List(), preProcessJson, conf )
 
       assert(result === JArray(l))
   }
 
+  "ApiUser Worker" should " postprocess" in {
+
+    val preProcessFiles = new File(getClass.getResource("/expected/preprocess.json").getFile)
+    val preProcessString = Util.readFile(preProcessFiles)
+    val preProcessJson = parse(preProcessString)
+
+    val parsedFilesFiles = new File(getClass.getResource("/parsedFiles-filename.json").getFile)
+    val parsedFileString = Util.readFile(parsedFilesFiles)
+
+    val JArray(l) = parse(parsedFileString)
+    val worker = new ApiUseWorker
+
+    val result = worker.postProcess(JArray(l), List(), preProcessJson, conf)
+
+   // println(pretty(render(result)))
+  }
+
+  "ApiSampleRequestWorker" should " postprocess - local url with sampleURL" in {
+
+    val preProcessFiles = new File(getClass.getResource("/expected/preprocess.json").getFile)
+    val preProcessString = Util.readFile(preProcessFiles)
+    val preProcessJson = parse(preProcessString)
+
+    val parsedFilesFiles = new File(getClass.getResource("/parsedFiles-filename.json").getFile)
+    val parsedFileString = Util.readFile(parsedFilesFiles)
+
+    val JArray(l) = parse(parsedFileString)
+    val worker = new ApiSampleRequestWorker
+
+    val result = worker.postProcess(JArray(l), List("_apidoc.js", "full-example.js"), preProcessJson, conf)
+
+    println(pretty(render(result)))
+  }
+
+  "ApiSampleRequestWorker" should " postprocess with sampleURL" in {
+
+    val (parsedFiles, filenames)= Parser.apply(Seq(new File(getClass.getResource("/sampleRequest.js").getFile)))
+
+    val worker = new ApiSampleRequestWorker
+
+    val result = worker.postProcess(parsedFiles, filenames.toList, JObject(), conf)
+
+    val JArray(List(block1, block2, block3)) = result(0)
+    assert((block1 \ "local" \ "sampleRequest")(0) \ "url" === JString("http://www.example.com/user/4711"))
+    assert((block2 \ "local" \ "sampleRequest")(0) \ "url" === JString("https://api.github.com/v1/car/4711"))
+    assert(block3 \ "local" \ "sampleRequest" === JNothing)
+  }
+
+
+  "ApiSampleRequestWorker" should " postprocess without sampleURL" in {
+
+    val (parsedFiles, filenames)= Parser.apply(Seq(new File(getClass.getResource("/sampleRequest.js").getFile)))
+
+    val worker = new ApiSampleRequestWorker
+
+    val conf2 = SbtApidocConfiguration("name", "description", None, "1.2")
+
+    val result = worker.postProcess(parsedFiles, filenames.toList, JObject(), conf2)
+
+    val file1 = result(0)
+    val JArray(List(block1, block2, block3)) = file1
+    assert((block1 \ "local" \ "sampleRequest")(0) \ "url" === JString("http://www.example.com/user/4711"))
+    assert((block2 \ "local" \ "sampleRequest")(0) \ "url" === JString("/car/4711"))
+    assert(block3 \ "local" \ "sampleRequest" === JNothing)
+  }
 
 }

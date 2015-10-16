@@ -1,7 +1,10 @@
 package com.culpin.team.worker
 
+import com.culpin.team.core.SbtApidocConfiguration
+import com.culpin.team.parser.Parser
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
+import org.json4s.native.JsonMethods._
 
 /**
  * @author
@@ -36,7 +39,9 @@ trait Worker {
   def source(target: String): String
 
 
-  def postProcess(parsedFiles: JArray,preProcess: JValue, source: String, target: String): JValue = ???
+  def postProcess(parsedFiles: JArray, filenames: List[String],
+      preProcess: JValue, packageInfos: SbtApidocConfiguration,
+      source: String, target: String): JArray = parsedFiles
 
 }
 
@@ -64,6 +69,25 @@ class ApiGroupWorker extends ApiParamTitleWorker {
     super.preProcess(parsedFiles,target)
 
 
+  override def postProcess(parsedFiles: JArray, filenames: List[String], preProcess: JValue,
+                           packageInfos: SbtApidocConfiguration, source: String = "defineGroup", target: String = "group"): JArray = {
+    Worker.mapBlock(parsedFiles, filenames){ case (block,filename) =>
+      if ((block \ "global").children.nonEmpty) block
+      else {
+        val group = block \ "local" \ target match {
+          case JString(g) => g
+          case _ => filename
+        }
+
+        val valToAppend: JObject = ("local" ->
+                                      (target -> group.replaceAll("""[^\w]""", "_"))
+                                      )
+        block merge valToAppend
+      }
+    }
+
+  }
+
 }
 
 
@@ -79,6 +103,54 @@ class ApiHeaderTitleWorker extends ApiParamTitleWorker {
 
   override def preProcess(parsedFiles: JArray, target: String = "defineHeaderTitle"): JValue =
     super.preProcess(parsedFiles, "defineHeaderTitle")
+
+}
+
+class ApiNameWorker extends Worker {
+
+  override def preProcess(parsedFiles: JArray, target: String = "name"): JValue = JObject()
+
+  override def produceValueToAppend(block: JValue, source: String, r: JValue): JValue = JNothing
+
+  override def source(target: String): String = ""
+
+
+  override def postProcess(parsedFiles: JArray, filenames: List[String], preProcess: JValue,
+               packageInfos: SbtApidocConfiguration,  source: String = "define", target: String = "name"): JArray = {
+    parsedFiles.arr.zipWithIndex.map { case(parsedFile, parsedFileIndex) =>
+      parsedFile match {
+        case JArray(blocks) => blocks.map { postProcessBlock(_, preProcess, source, target)}
+        case _ => throw new IllegalArgumentException
+      }
+    }
+  }
+
+  def postProcessBlock(block: JValue, preProcess: JValue, source: String = "define", target: String = "name"): JValue = {
+      if ((block \ "global").children.nonEmpty) block
+      else {
+        val name = block \ "local" \ target match {
+          case JString(n) => n
+          case _ =>
+            val JString(theType) = block \ "local" \ "type"
+            val JString(url) = block \ "local" \ "url"
+            //TODO handle case type and match are 1 parameter only
+            val initName = theType.charAt(0).toUpper + theType.take(1).toLowerCase()
+
+            val matches = Parser.parseAndFilterNullGroup("""[\w]+""".r)(url)
+            matches.foldLeft(initName){ case (acc, theMatch) =>
+              acc + theMatch.charAt(0).toUpper + theMatch.take(1).toLowerCase()
+            }
+        }
+        val newVal: JObject = ("local" ->
+                        ("target" -> name.replaceAll("""[^\w]""", "_"))
+                      )
+          block merge newVal
+      }
+
+  }
+
+
+
 
 }
 
@@ -188,7 +260,8 @@ class ApiParamTitleWorker extends Worker {
     }
   }
 
-  override def postProcess(parsedFiles: JArray,preProcess: JValue, source: String = "define", target: String = "parameter"): JArray = {
+  override def postProcess(parsedFiles: JArray, filenames: List[String],
+                           preProcess: JValue, packageInfos: SbtApidocConfiguration, source: String = "define", target: String = "parameter"): JArray = {
     parsedFiles.arr.zipWithIndex.map { case(parsedFile, parsedFileIndex) =>
       parsedFile match {
         case JArray(blocks) => blocks.map { postProcessBlock(_, preProcess, source, target)}
@@ -196,6 +269,64 @@ class ApiParamTitleWorker extends Worker {
       }
     }
 
+  }
+
+
+}
+
+class ApiSampleRequestWorker extends Worker {
+  override def produceValueToAppend(block: JValue, source: String, r: JValue): JValue = JNothing
+
+  override def source(target: String): String = ""
+
+  override def postProcess(parsedFiles: JArray, filenames: List[String],
+                  preProcess: JValue, packageInfos: SbtApidocConfiguration, source: String = "", target: String = "sampleRequest"): JArray = {
+    def appendSampleUrl(url: String): JObject = {
+      if(packageInfos.sampleUrl.isDefined && url.length >= 4 && !url.toLowerCase.startsWith("http")){
+        val Some(sampleUrl) = packageInfos.sampleUrl
+        ("url" -> (sampleUrl + url))
+      }
+      else ("url" -> url)
+    }
+
+    Worker.mapBlock(parsedFiles,filenames) { case (block,filename) =>
+
+      val sampleBlock = block \ "local" \ target
+      val newBlock = sampleBlock match {
+        case JArray(entries) => JArray(entries
+          .filter{ entry =>
+              val JString(url) = entry \ "url"
+              !url.equals("off")
+          } map { entry =>
+            val JString(url) = entry \ "url"
+            appendSampleUrl(url)
+        })
+        case _ =>
+          if (packageInfos.sampleUrl.isDefined && block \ "local" \ "url" != JNothing){
+                    val Some(sampleUrl) = packageInfos.sampleUrl
+                    val JString(url) = block \ "local" \ "url"
+            val value: JObject = ("url" -> (sampleUrl + url))
+            JArray(List(value))
+                  }
+                  else JArray(List())
+      }
+
+
+        if (newBlock.children.isEmpty){
+            println("reomving")
+            block removeField{
+              case ("sampleRequest", _) => true
+              case (_, _) => false
+              }
+        }
+        else {
+
+          block transformField { case ("sampleRequest", _) =>
+            ("sampleRequest" -> newBlock)
+          }
+        }
+
+    }
   }
 
 
@@ -287,22 +418,26 @@ class ApiUseWorker extends Worker {
           case JString(v) => v
           case _ => "0.0.0"
         }
-        if (preProcess \ source == JNothing || preProcess \ source \ name == JNothing)
+        if (preProcess \ source \ name == JNothing)
           throw new IllegalArgumentException
         else {
           val matchedData = matchData(preProcess, source, name, version)
 
-          val cleanedUpBlock = block removeField { case (key, value) => key == target}
+          val fieldToRemove = block \ "local" \ target
+          val cleanedUpBlock = block remove { _ == fieldToRemove}
 
-          val valueToAppend = block \ "local" merge matchedData
-          //TODO recursive merge
-          block merge valueToAppend
+          val localMatchedData: JValue = ("local" -> matchedData)
+          val valueToAppend = cleanedUpBlock merge localMatchedData
+
+
+          cleanedUpBlock merge valueToAppend
 
         }
       }
   }
 
-  override def postProcess(parsedFiles: JArray,preProcess: JValue, source: String = "define", target: String = "use"): JArray = {
+  override def postProcess(parsedFiles: JArray, filenames: List[String], preProcess: JValue,
+                           packageInfos: SbtApidocConfiguration, source: String = "define", target: String = "use"): JArray = {
     parsedFiles.arr.zipWithIndex.map { case(parsedFile, parsedFileIndex) =>
       parsedFile match {
         case JArray(blocks) => blocks.map { postProcessBlock(_, preProcess, source, target)}
@@ -330,49 +465,53 @@ object Worker {
                   new ApiUseWorker
                   )
 
-  def processFilename(parsedFiles: JArray, filenames: List[String]): JArray = {
-
-    parsedFiles.arr.zipWithIndex.map{ case (JArray(parsedFile), index) =>
-      parsedFile.map { block =>
-       if ( (block \ "global").children.isEmpty && (block \ "local").children.nonEmpty) {
-//         import org.json4s.native.JsonMethods._
-//         println("--- " + index)
-//         println(compact(render(block)))
-
-          val newType = block \ "local" \ "type" match {
-            case JString(theType) => theType
-            case _ => ""
-          }
-
-         val newUrl = block \ "local" \ "url" match {
-           case JString(url) => url
-           case _ => ""
-         }
-
-         val newVersion = block \ "local" \ "version" match {
-           case JString(version) => version
-           case _ => "0.0.0"
-         }
-
-         val newFilename = block \ "local" \ "filename" match {
-           case JString(fileName) => fileName
-           case _ => filenames(index)
-         }
-
-         val newLocal: JObject = ("local" ->
-                                    ("type" -> newType) ~
-                                    ("url" -> newUrl)   ~
-                                    ("version" -> newVersion) ~
-                                    ("filename" -> newFilename)
-                                  )
-            block merge newLocal
-       }
-        else
-         block
-      }
-        case _ => throw new IllegalArgumentException()
+  def mapBlock(parsedFiles: JArray, filenames: List[String])(f: (JValue, String) => JValue): JArray = {
+    parsedFiles.arr.zipWithIndex.map{
+      case (JArray(parsedFile), index) =>
+        parsedFile.map { block => f(block, filenames(index))}
+      case _ => throw new IllegalArgumentException()
     }
   }
+
+    def processFilenameBlock(block: JValue, filename: String): JValue = {
+      if ( (block \ "global").children.isEmpty && (block \ "local").children.nonEmpty) {
+
+
+        val newType = block \ "local" \ "type" match {
+          case JString(theType) => theType
+          case _ => ""
+        }
+
+        val newUrl = block \ "local" \ "url" match {
+          case JString(url) => url
+          case _ => ""
+        }
+
+        val newVersion = block \ "local" \ "version" match {
+          case JString(version) => version
+          case _ => "0.0.0"
+        }
+
+        val newFilename = block \ "local" \ "filename" match {
+          case JString(fileName) => fileName
+          case _ => filename
+        }
+
+        val newLocal: JObject = ("local" ->
+          ("type" -> newType) ~
+            ("url" -> newUrl)   ~
+            ("version" -> newVersion) ~
+            ("filename" -> newFilename)
+          )
+        block merge newLocal
+      }
+      else
+        block
+  }
+
+    def processFilename(parsedFiles: JArray, filenames: List[String]): JArray =
+      mapBlock(parsedFiles,filenames)(processFilenameBlock)
+
 
 
   def preProcess(parsedFiles: JArray) : JValue = {

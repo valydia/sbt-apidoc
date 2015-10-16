@@ -293,7 +293,6 @@ class ApiPermissionParser extends ApiUseParser {
   }
 }
 
-//TODO Test
 class ApiSampleRequestParser extends Parser{
 
   override val name = "apisamplerequest"

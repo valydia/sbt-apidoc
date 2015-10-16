@@ -17,7 +17,7 @@ import scala.util.{ Success, Try }
 
 case class Element(source: String, name: String, sourceName: String, content: String)
 
-case class SbtApidocConfiguration(name: String, description: String, sampleUrl: Boolean, version: String)
+case class SbtApidocConfiguration(name: String, description: String, sampleUrl: Option[String], version: String)
 
 object Apidoc {
 
