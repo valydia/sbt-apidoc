@@ -11,6 +11,8 @@ import org.scalatest.{Matchers, FlatSpec}
 import org.json4s._
 import org.json4s.native.JsonMethods._
 
+import scala.collection.generic.SeqFactory
+
 class WorkerSpec  extends FlatSpec with Matchers {
 
   val conf = SbtApidocConfiguration("name", "description", Option("https://api.github.com/v1"), "1.2")
@@ -168,10 +170,7 @@ class WorkerSpec  extends FlatSpec with Matchers {
 
   }
 
-
-
-
-    "ApiParmaTitle Worker" should " postprocess" in {
+    "ApiParamTitle Worker" should " postprocess" in {
 
       val preProcessFiles = new File(getClass.getResource("/expected/preprocess.json").getFile)
       val preProcessString = Util.readFile(preProcessFiles)
@@ -219,7 +218,6 @@ class WorkerSpec  extends FlatSpec with Matchers {
 
     val result = worker.postProcess(JArray(l), List("_apidoc.js", "full-example.js"), preProcessJson, conf)
 
-    println(pretty(render(result)))
   }
 
   "ApiSampleRequestWorker" should " postprocess with sampleURL" in {
@@ -253,5 +251,68 @@ class WorkerSpec  extends FlatSpec with Matchers {
     assert((block2 \ "local" \ "sampleRequest")(0) \ "url" === JString("/car/4711"))
     assert(block3 \ "local" \ "sampleRequest" === JNothing)
   }
+
+
+  "ApiGroupWorker" should " postprocess" in {
+
+    val parsedFilesFiles = new File(getClass.getResource("/parsedFiles-filename.json").getFile)
+    val parsedFileString = Util.readFile(parsedFilesFiles)
+
+
+    val preProcessFiles = new File(getClass.getResource("/expected/preprocess.json").getFile)
+    val preProcessString = Util.readFile(preProcessFiles)
+    val preProcessJson = parse(preProcessString)
+
+    val JArray(l) = parse(parsedFileString)
+    val worker = new ApiGroupWorker
+
+
+   val result = worker.postProcess(JArray(l), List("_apidoc.js", "full-example.js"), preProcessJson, conf)
+
+    val JArray(List(file1,file2)) = result
+
+    val JArray(List(_, _, _, block4, block5, block6)) = file1
+    val JArray(List(block2_1, block2_2, block2_3)) = file2
+    assert( block4 \ "local" \ "groupTitle" === JString("User"))
+    assert( block5 \ "local" \ "groupTitle" === JString("User"))
+    assert( block6 \ "local" \ "groupTitle" === JString("User"))
+    assert( block2_1 \ "local" \ "groupTitle" === JString("User"))
+    assert( block2_2 \ "local" \ "groupTitle" === JString("User"))
+    assert( block2_3 \ "local" \ "groupTitle" === JString("User"))
+    assert( (result \\ "groupTitle").children.size === 6 )
+
+
+  }
+
+
+  "ApiNameWorker" should " postprocess" in {
+
+    val parsedFilesFiles = new File(getClass.getResource("/parsedFiles-filename.json").getFile)
+    val parsedFileString = Util.readFile(parsedFilesFiles)
+
+
+    val preProcessFiles = new File(getClass.getResource("/expected/preprocess.json").getFile)
+    val preProcessString = Util.readFile(preProcessFiles)
+    val preProcessJson = parse(preProcessString)
+
+    val JArray(l) = parse(parsedFileString)
+    val worker = new ApiNameWorker
+
+
+    val result = worker.postProcess(JArray(l), List("_apidoc.js", "full-example.js"), preProcessJson, conf)
+
+    val JArray(List(file1,file2)) = result
+
+    val JArray(List(_, _, _, block4, block5, block6)) = file1
+    val JArray(List(block2_1, block2_2, block2_3)) = file2
+    assert( block4 \ "local" \ "name" === JString("GetUser"))
+    assert( block5 \ "local" \ "name" === JString("GetUser"))
+    assert( block6 \ "local" \ "name" === JString("PostUser"))
+    assert( block2_1 \ "local" \ "name" === JString("GetUser"))
+    assert( block2_2 \ "local" \ "name" === JString("PostUser"))
+    assert( block2_3 \ "local" \ "name" === JString("PutUser"))
+
+  }
+
 
 }

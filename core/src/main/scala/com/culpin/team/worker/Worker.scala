@@ -69,20 +69,88 @@ class ApiGroupWorker extends ApiParamTitleWorker {
     super.preProcess(parsedFiles,target)
 
 
+
+  override def matchData(preProcess: JValue, source: String = "define", name: String,  version: String = "0.0.0") = {
+    if (preProcess \ source \ name \ version != JNothing)
+      preProcess \ source \ name \ version
+    else {
+      import com.gilt.gfc.semver.SemVer
+      val versionKeys = (preProcess \ source \ name) match {
+        case JObject(l) => JObject(l).values.keys.toList
+        case _ => List()
+      }
+
+      // find nearest matching version
+      var foundIndex = -1;
+      var lastVersion = "0.0.0";
+      versionKeys.zipWithIndex.foreach { case (currentVersion, versionIndex) =>
+        if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
+          ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
+          foundIndex = versionIndex
+          lastVersion = currentVersion
+        }
+      }
+
+      val versionName = versionKeys(foundIndex)
+      preProcess \ source \ name \ versionName
+
+    }
+  }
+
+  override def postProcessBlock(block: JValue, preProcess: JValue, source: String = "defineGroup", target: String = "group"): JValue = {
+
+    val localTarget: JValue = block \ "local" \ target
+    if (localTarget == JNothing) block
+    else {
+      val JString(name) = localTarget
+      val version = block \ "version" match {
+        case JString(v) => v
+        case _ => "0.0.0"
+      }
+      val matchedData: JValue =
+      if (preProcess \ source \ name == JNothing){
+        ("title" -> localTarget)
+      }
+      else {
+         matchData(preProcess, source, name, version)
+      }
+
+     val value : JObject = ("local" ->
+                              ("groupTitle" -> matchedData \ "title") ~
+                               ("groupDescription" -> matchedData \ "description")
+                            )
+        println("adding group ----" +  pretty(render(matchedData)))
+        block merge value
+      }
+    }
+
+
+
+
+
   override def postProcess(parsedFiles: JArray, filenames: List[String], preProcess: JValue,
                            packageInfos: SbtApidocConfiguration, source: String = "defineGroup", target: String = "group"): JArray = {
-    Worker.mapBlock(parsedFiles, filenames){ case (block,filename) =>
-      if ((block \ "global").children.nonEmpty) block
-      else {
-        val group = block \ "local" \ target match {
-          case JString(g) => g
-          case _ => filename
-        }
+    def setGroupNameIfEmpty: JArray = {
+      Worker.mapBlock(parsedFiles, filenames) { case (block, filename) =>
+        if ((block \ "global").children.nonEmpty) block
+        else {
+          val group = block \ "local" \ target match {
+            case JString(g) => g
+            case _ => filename
+          }
 
-        val valToAppend: JObject = ("local" ->
-                                      (target -> group.replaceAll("""[^\w]""", "_"))
-                                      )
-        block merge valToAppend
+          val valToAppend: JObject = ("local" ->
+            (target -> group.replaceAll("""[^\w]""", "_"))
+            )
+          block merge valToAppend
+        }
+      }
+    }
+
+      setGroupNameIfEmpty.arr.zipWithIndex.map { case(parsedFile, parsedFileIndex) =>
+      parsedFile match {
+        case JArray(blocks) => blocks.map { postProcessBlock(_, preProcess, source, target)}
+        case _ => throw new IllegalArgumentException
       }
     }
 
@@ -142,8 +210,9 @@ class ApiNameWorker extends Worker {
             }
         }
         val newVal: JObject = ("local" ->
-                        ("target" -> name.replaceAll("""[^\w]""", "_"))
+                        ("name" -> name.replaceAll("""[^\w]""", "_"))
                       )
+          println("adding name ---" + pretty(render(newVal)))
           block merge newVal
       }
 
