@@ -532,7 +532,7 @@ class ParserSpec extends FlatSpec with Matchers {
 
   "Parser" should "parse file" in {
 
-    val sources = Seq(new File(getClass.getResource("/Application.scala").getFile))
+    val sources = List(new File(getClass.getResource("/Application.scala").getFile))
     val (blocks, filenames) = Parser(sources)
     assert(filenames === List("Application.scala"))
    // val block = blocks(0)(0)
@@ -556,7 +556,7 @@ class ParserSpec extends FlatSpec with Matchers {
 
   "Parser" should "parse files 2" in {
 
-    val sources = Seq(new File(getClass.getResource("/_apidoc.js").getFile),
+    val sources = List(new File(getClass.getResource("/_apidoc.js").getFile),
                       new File(getClass.getResource("/full-example.js").getFile))
 
     val (JArray(List(file1,file2)), filenames) = Parser(sources)

@@ -379,7 +379,7 @@ class ApiVersionParser extends Parser {
 
 object Parser {
 
-  def apply(sources: Seq[File]): (JArray, Seq[String]) =
+  def apply(sources: List[File]): (JArray, List[String]) =
     (sources.map { s => (parseFile(s)) }, (sources map (_.getName)))
 
   def parseFile(file: File): JArray = {

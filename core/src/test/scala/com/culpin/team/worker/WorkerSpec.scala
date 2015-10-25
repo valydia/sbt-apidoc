@@ -122,7 +122,7 @@ class WorkerSpec  extends FlatSpec with Matchers {
 
   "Worker" should " process filename" in {
 
-    val sources = Seq(new File(getClass.getResource("/_apidoc.js").getFile),
+    val sources = List(new File(getClass.getResource("/_apidoc.js").getFile),
       new File(getClass.getResource("/full-example.js").getFile))
 
     val (json,filenames) = Parser(sources)
@@ -148,7 +148,7 @@ class WorkerSpec  extends FlatSpec with Matchers {
     "Worker" should " preProcess " in {
 
 
-      val sources = Seq(new File(getClass.getResource("/_apidoc.js").getFile),
+      val sources = List(new File(getClass.getResource("/_apidoc.js").getFile),
         new File(getClass.getResource("/full-example.js").getFile))
 
       val (json,filenames) = Parser(sources)
@@ -222,7 +222,7 @@ class WorkerSpec  extends FlatSpec with Matchers {
 
   "ApiSampleRequestWorker" should " postprocess with sampleURL" in {
 
-    val (parsedFiles, filenames)= Parser.apply(Seq(new File(getClass.getResource("/sampleRequest.js").getFile)))
+    val (parsedFiles, filenames)= Parser.apply(List(new File(getClass.getResource("/sampleRequest.js").getFile)))
 
     val worker = new ApiSampleRequestWorker
 
@@ -237,7 +237,7 @@ class WorkerSpec  extends FlatSpec with Matchers {
 
   "ApiSampleRequestWorker" should " postprocess without sampleURL" in {
 
-    val (parsedFiles, filenames)= Parser.apply(Seq(new File(getClass.getResource("/sampleRequest.js").getFile)))
+    val (parsedFiles, filenames)= Parser.apply(List(new File(getClass.getResource("/sampleRequest.js").getFile)))
 
     val worker = new ApiSampleRequestWorker
 

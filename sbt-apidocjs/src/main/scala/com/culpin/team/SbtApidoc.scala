@@ -43,7 +43,7 @@ object SbtApidoc extends AutoPlugin {
     val log = streams.value.log
 
     //getting the source files
-    val sourcesFiles = (sources in Compile).value
+    val sourcesFiles = (sources in Compile).value.toList
 
     val config = SbtApidocConfiguration(apidocName.value, apidocDescription.value, apidocSampleURL.value.map(_.toString), apidocVersion.value.getOrElse("1.0.0"))
 
