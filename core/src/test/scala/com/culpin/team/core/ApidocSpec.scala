@@ -27,6 +27,7 @@ class ApidocSpec extends FlatSpec with Matchers {
       "ailAvailable\\\": \\\"true\\\"\\n}\",\n      \"type\" : \"json\"\n    } ]\n  }\n} ]"
     assert(apidata === expectedApiData)
 
+    println(apiconfig)
     //FIXME custom writer for sampleURl
 //    val expectedConf = "{\n  \"name\":\"name\",\n  \"description\":\"description\",\n  \"" +
 //      "sampleUrl\":false,\n  \"version\":\"1.0\"\n}"
@@ -36,12 +37,12 @@ class ApidocSpec extends FlatSpec with Matchers {
 
     "Apidoc" should " parse basic input file and configuration" in {
       val sources = List(new File(getClass.getResource("/simple-example.js").getFile))
-      val conf = SbtApidocConfiguration("name", "description", None, "1.0")
+      val conf = SbtApidocConfiguration("name", "description", Some("http://api.github.com"), "1.0")
       val USuccess(Some((apidata, apiconfig))) = Apidoc(sources, conf)
 
 
 
-
+      println(apiconfig)
       val expectedApiData = Util.readFile(new File(getClass.getResource("/expected/apidata.json").getFile))
       assert(apidata === expectedApiData)
       //FIXME custom writer for sampleURl
