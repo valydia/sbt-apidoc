@@ -11,6 +11,7 @@ import org.json4s.native.JsonMethods._
  */
 trait Worker {
 
+  val name: String
 
   def preProcess(parsedFiles: JArray, target: String = "define"): JValue = {
 
@@ -46,19 +47,34 @@ trait Worker {
 
 class ApiErrorStructureWorker extends ApiUseWorker {
 
+  override val name = "api-error-structure"
+
   override def preProcess(parsedFiles: JArray, target: String = "defineErrorStructure"): JValue =
     super.preProcess(parsedFiles, "defineErrorStructure")
+
+  override val source: String = "defineErrorStructure"
+  override val target: String = "errorStructure"
+
+
 
 }
 
 class ApiErrorTitleWorker extends ApiParamTitleWorker {
 
+  override val name = "api-error-title"
+
   override def preProcess(parsedFiles: JArray, target: String = "defineErrorTitle"): JValue =
       super.preProcess(parsedFiles, "defineErrorTitle")
+
+
+  override val source: String = "defineErrorTitle"
+  override val target: String = "error"
 
 }
 
 class ApiGroupWorker extends ApiParamTitleWorker {
+
+  override val name = "api-group"
 
   override def preProcess(parsedFiles: JArray, target: String = "defineGroup"): JValue =
     super.preProcess(parsedFiles,target)
@@ -75,8 +91,8 @@ class ApiGroupWorker extends ApiParamTitleWorker {
       }
 
       // find nearest matching version
-      var foundIndex = -1;
-      var lastVersion = "0.0.0";
+      var foundIndex = -1
+      var lastVersion = "0.0.0"
       versionKeys.zipWithIndex.foreach { case (currentVersion, versionIndex) =>
         if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
           ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
@@ -154,20 +170,33 @@ class ApiGroupWorker extends ApiParamTitleWorker {
 
 class ApiHeaderStructureWorker extends ApiUseWorker {
 
+  override val name = "api-header-structure"
+
   override def preProcess(parsedFiles: JArray, target: String = "defineHeaderStructure"): JValue =
     super.preProcess(parsedFiles, "defineHeaderStructure")
+
+  override val source: String = "defineHeaderStructure"
+  override val target: String = "headerStructure"
 
 }
 
 
 class ApiHeaderTitleWorker extends ApiParamTitleWorker {
 
+  override val name = "api-header-title"
+
   override def preProcess(parsedFiles: JArray, target: String = "defineHeaderTitle"): JValue =
     super.preProcess(parsedFiles, "defineHeaderTitle")
+
+
+  override val source: String = "defineHeaderTitle"
+  override val target: String = "header"
 
 }
 
 class ApiNameWorker extends Worker {
+
+  override val name = "api-name"
 
   override def preProcess(parsedFiles: JArray, target: String = "name"): JValue = JObject()
 
@@ -226,13 +255,21 @@ class ApiNameWorker extends Worker {
 
 class ApiPermissionWorker extends ApiParamTitleWorker {
 
+  override val name = "api-permission"
+
   override def preProcess(parsedFiles: JArray, target: String = "definePermission"): JValue =
    super.preProcess(parsedFiles,target)
+
+  override val source: String = "definePermission"
+  //TODO post process
+  //override val target: String = "header"
 
 }
 
 
 class ApiParamTitleWorker extends Worker {
+
+  val name = "api-param-title"
 
   override def preProcess(parsedFiles: JArray, target: String = "defineParamTitle"): JValue =
     super.preProcess(parsedFiles, target)
@@ -345,6 +382,9 @@ class ApiParamTitleWorker extends Worker {
 }
 
 class ApiSampleRequestWorker extends Worker {
+
+  override val name = "api-sample-request"
+
   override def preprocessValue(block: JValue, source: String, r: JValue): JValue = JNothing
 
   override def source(target: String): String = ""
@@ -405,8 +445,13 @@ class ApiSampleRequestWorker extends Worker {
 
 class ApiStructureWorker extends ApiUseWorker {
 
+  override val name = "api-structure"
+
   override def preProcess(parsedFiles: JArray, target: String = "defineStructure"): JValue =
     super.preProcess(parsedFiles, "defineStructure")
+
+  override val source: String = "defineStructure"
+  override val target: String = "structure"
 
 
 }
@@ -414,14 +459,21 @@ class ApiStructureWorker extends ApiUseWorker {
 
 class ApiSuccessStructureWorker extends ApiUseWorker {
 
+
+  override val name = "api-success-structure"
+
   override def preProcess(parsedFiles: JArray, target: String = "defineSuccessStructure"): JValue =
     super.preProcess(parsedFiles, "defineSuccessStructure")
 
-
+  override val source: String = "defineSuccessStructure"
+  override val target: String = "successStructure"
 }
 
 
 class ApiSuccessTitleWorker extends ApiParamTitleWorker {
+
+
+  override val name = "api-success-title"
 
   override def preProcess(parsedFiles: JArray, target: String = "defineSuccessTitle"): JValue =
     super.preProcess(parsedFiles, "defineSuccessTitle")
@@ -430,6 +482,9 @@ class ApiSuccessTitleWorker extends ApiParamTitleWorker {
 }
 
 class ApiUseWorker extends Worker {
+
+
+  override val name = "api-use"
 
   def preprocessValue(block: JValue, source: String, r: JValue): JValue = {
     val sourceNode = block \ "global" \ source
@@ -484,11 +539,14 @@ class ApiUseWorker extends Worker {
       val localTarget: JValue = block \ "local" \ target
         if (localTarget == JNothing) block
       else {
+
         val JString(name) = localTarget \ "name"
         val version = block \ "version" match {
           case JString(v) => v
           case _ => "0.0.0"
         }
+
+//         println("postProcess  block" + pretty(render(block)) + " preprocess " + pretty(render(preProcess)))
         if (preProcess \ source \ name == JNothing)
           throw new IllegalArgumentException
         else {
@@ -592,6 +650,8 @@ object Worker {
   def preProcess(parsedFiles: JArray) : JValue = {
     val initResult: JValue = JObject()
     workers.foldLeft(initResult){ case (preProcessResult, worker) =>
+      println("worker preprocess " + worker.name)
+       // println("result --->" + pretty(render(worker.preProcess(parsedFiles))))
        preProcessResult merge worker.preProcess(parsedFiles)
     }
   }
@@ -599,6 +659,7 @@ object Worker {
   def postProcess(parsedFiles: JArray, filenames: List[String],
                   preProcess: JValue, packageInfos: SbtApidocConfiguration): JArray = {
     workers.foldLeft(parsedFiles) { case (pf, worker) =>
+      println("worker postprocess " + worker.name)
         worker.postProcess(pf, filenames, preProcess, packageInfos)
     }
   }
