@@ -8,6 +8,21 @@ trait Filter {
   def postFilter(parsedFiles: JArray, filenames: List[String], tagName: String = ""): JArray
 }
 
+class ApiErrorFilter extends ApiParamFilter {
+  override def postFilter(parsedFiles: JArray, filenames: List[String], tagName: String = "error"): JArray =
+    super.postFilter(parsedFiles,filenames,"error")
+}
+
+class ApiHeaderFilter extends ApiParamFilter {
+  override def postFilter(parsedFiles: JArray, filenames: List[String], tagName: String = "header"): JArray =
+    super.postFilter(parsedFiles,filenames,"header")
+}
+
+class ApiSuccessFilter extends ApiParamFilter {
+  override def postFilter(parsedFiles: JArray, filenames: List[String], tagName: String = "success"): JArray =
+    super.postFilter(parsedFiles,filenames,"success")
+}
+
 class ApiParamFilter extends Filter {
 
 
@@ -38,13 +53,17 @@ object Filter {
     val obj: List[(String,JValue)] = jobject.obj
     .groupBy{case (key,value) => key}
     .mapValues(_.head)
+//     .mapValues{l => if ( l.length > 1) println("Filtering out" + l.tail.mkString(", ")); l.head}
     .valuesIterator.toList
 
     JObject(obj)
   }
 
   val filters = List(
-    new ApiParamFilter
+    new ApiErrorFilter,
+    new ApiHeaderFilter,
+    new ApiParamFilter,
+    new ApiSuccessFilter
   )
 
   def apply(parsedFiles: JArray, filenames: List[String] ): JArray = {
@@ -54,14 +73,9 @@ object Filter {
 
     val res = filteredFiles.arr.flatMap{
       case JArray(parsedFile) =>
-         parsedFile
-        .filter{ block =>
-          (block \ "global").children.isEmpty && (block \ "local").children.nonEmpty
-        }
-        .map { block =>
-          block \ "local"
-        }
-
+         parsedFile.collect{ case block if (block \ "global").children.isEmpty && (block \ "local").children.nonEmpty =>
+           block \ "local"
+         }
       case _ => List()
     }
     JArray(res)
