@@ -4,7 +4,9 @@ import java.io.File
 
 import com.culpin.team.filter.Filter
 import com.culpin.team.parser.Parser
-import org.json4s.{DefaultFormats, FieldSerializer, NoTypeHints}
+import com.culpin.team.worker.Worker
+import com.gilt.gfc.semver.SemVer
+import org.json4s.{FieldSerializer, NoTypeHints}
 
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.writePretty
@@ -13,7 +15,7 @@ import org.json4s.jackson.JsonMethods._
 
 import scala.util.{ Success, Try }
 
-import org.json4s.JsonAST.{JNothing, JField, JString, JObject}
+import org.json4s.JsonAST.{JString, JArray, JNothing}
 
 case class Element(source: String, name: String, sourceName: String, content: String)
 
@@ -23,10 +25,6 @@ case class SbtApidocConfiguration(name: String, description: String, sampleUrl: 
 
 
 object Apidoc {
-
-
-
-  //implicit val formats = DefaultFormats + sbtApidocConfigurationSerializer
   
   /**
    * @param sources the sources file to process
@@ -34,21 +32,57 @@ object Apidoc {
    * @return A Some(Pair) of JSon string if there are some apidoc comment, None if not
    */
   def apply(sources: List[File], config: SbtApidocConfiguration): Try[Option[(String, String)]] = {
-
+    println("run  parser")
     val (blocks,filenames) = Parser(sources)
-    val filteredBlocks = Filter(blocks, filenames)
 
-    if (filteredBlocks.children.isEmpty || filteredBlocks.children == List(JNothing))
+    println("run  worker")
+    val processedFiles = Worker(blocks, filenames, config)
+
+    println("run  filter")
+    val filteredBlocks = Filter(processedFiles, filenames)
+
+    val sortedBlocks = sortBlock(filteredBlocks)
+
+    if (sortedBlocks.children.isEmpty || sortedBlocks.children == List(JNothing))
       Success(None)
     else {
 
-
-      
       implicit val formats = Serialization.formats(NoTypeHints) + buildSbtApidocSerializer
-      Success(Some((pretty(filteredBlocks), writePretty(config))))
+      Success(Some((pretty(sortedBlocks), writePretty(config))))
     }
   }
-  
+  //TODO test
+  // sort by group ASC, name ASC, version DESC
+  def sortBlock(blocks: JArray): JArray = {
+    val sortedChildren = blocks.arr.sortWith{ case (a,b) =>
+      val JString(groupA) = a \ "group"
+      val JString(nameA) = a \ "name"
+
+
+      val JString(groupB) = b \ "group"
+      val JString(nameB) = b \ "name"
+
+
+      val labelA = groupA + nameA
+      val labelB = groupB + nameB
+
+
+      if (labelA.equals(labelB)){
+        val JString(versionA) = a \ "version"
+        val JString(versionB) = b \ "version"
+        (SemVer(versionA) compareTo SemVer(versionB)) >= 0
+      }
+      else {
+        (labelA compareTo labelB) <= 0
+      }
+     }
+    JArray(sortedChildren)
+  }
+
+
+
+
+
   def buildSbtApidocSerializer:FieldSerializer[SbtApidocConfiguration] = {
 
     val emptySampleUrl: PartialFunction[(String, Any), Option[(String, Any)]] = { case ("sampleUrl",None) => Some("sampleUrl","false") }
