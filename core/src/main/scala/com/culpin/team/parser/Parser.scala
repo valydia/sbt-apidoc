@@ -425,23 +425,22 @@ object Parser {
     }
     val parserMap = parser.map(p => (p.name, p)).toMap
     detectedElements.zipWithIndex
-      .filter{ case (e,i) => isApiBlock(e)}
-      .map { case (elements, index) =>
-      val initialResult: JObject = ("global" -> JObject()) ~ ("local" -> JObject())
-      elements.foldLeft(initialResult) {
-        case (result, element) =>
+      .collect{ case (elements, index) if isApiBlock(elements) =>
+        val initialResult: JObject = ("global" -> JObject()) ~ ("local" -> JObject())
+        elements.foldLeft(initialResult) {
+          case (result, element) =>
 
-          //TODO handle non existing parser
-          val Some(elementParser) = parserMap.get(element.name)
+            //TODO handle non existing parser
+            val Some(elementParser) = parserMap.get(element.name)
 
-          //TODO handle empty block
+            //TODO handle empty block
 
-          val Some(values) = elementParser.parseBlock(element.content)
+            val Some(values) = elementParser.parseBlock(element.content)
 
-          val jVersion = if (elementParser.extendRoot) values \ "local" \ "version" else JNothing
-          val jIndex: JObject = ("index" -> (index + 1)) ~ ("version" -> jVersion)
-          result merge (values merge jIndex)
-      }
+            val jVersion = if (elementParser.extendRoot) values \ "local" \ "version" else JNothing
+            val jIndex: JObject = ("index" -> (index + 1)) ~ ("version" -> jVersion)
+            result merge (values merge jIndex)
+        }
     }
   }
 
