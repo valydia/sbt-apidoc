@@ -85,5 +85,3 @@ object SbtApidoc extends AutoPlugin {
   }
 
 }
-
-//case class SbtApidocConfiguration(name: String, description: String, sampleUrl: Boolean, version: String)

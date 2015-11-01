@@ -108,5 +108,8 @@
       "content" : "HTTP/1.1 401 Not Authenticated\n{\n  \"error\": \"NoAccessRight\"\n}",
       "type" : "json"
     } ]
-  }
+  },
+  "filename" : "simple-example.js",
+  "group" : "simple_example_js",
+  "groupTitle" : "simple_example_js"
 } ]
