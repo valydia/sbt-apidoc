@@ -31,16 +31,13 @@ class ApiParamFilter extends Filter {
         if (block \ "local" \ tagName \ "fields" == JNothing) block
         else {
           val JObject(bf) = block \ "local" \ tagName \ "fields"
-
-//          block transformField { case ("fields", _) =>
-//            ("fields", Filter.filterDuplicateKeys(JObject(bf)))
-//          }
-          val value: JObject = ("local" ->
-                        (tagName ->
-                          ("fields" -> Filter.filterDuplicateKeys(JObject(bf)))
-                         )
-                      )
-          block merge value
+//          val value: JObject = ("local" ->
+//                        (tagName ->
+//                          ("fields" -> Filter.filterDuplicateKeys(JObject(bf)))
+//                         )
+//                      )
+//          block merge value
+          block.replace(List("local", tagName, "fields"),  Filter.filterDuplicateKeys(JObject(bf)))
         }
     }
   }
