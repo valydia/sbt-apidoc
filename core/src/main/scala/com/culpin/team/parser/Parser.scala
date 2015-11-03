@@ -34,8 +34,6 @@ class ApiParser extends Parser {
     if (matches.isEmpty)
       None
     else {
-      //TODO
-      // List("type", "url", "title") zip matches map {case (key,value) => key -> value}
       Some(("local" -> ("type" -> matches(0)) ~ ("url" -> matches(1)) ~ ("title" -> matches(2))))
     }
   }

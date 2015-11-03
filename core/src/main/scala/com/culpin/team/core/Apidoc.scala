@@ -51,7 +51,7 @@ object Apidoc {
       Success(Some((pretty(sortedBlocks), writePretty(config))))
     }
   }
-  //TODO test
+
   // sort by group ASC, name ASC, version DESC
   def sortBlock(blocks: JArray): JArray = {
     val sortedChildren = blocks.arr.sortWith{ case (a,b) =>

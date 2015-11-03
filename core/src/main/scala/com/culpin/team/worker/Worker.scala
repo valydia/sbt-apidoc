@@ -261,7 +261,7 @@ class ApiPermissionWorker extends ApiParamTitleWorker {
    super.preProcess(parsedFiles,target)
 
   override val source: String = "definePermission"
-  //TODO post process
+
   override val target: String = "permission"
 
   override def postProcessBlock(block: JValue, preProcess: JValue): JValue = {

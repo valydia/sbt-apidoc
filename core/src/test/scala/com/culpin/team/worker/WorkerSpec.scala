@@ -147,6 +147,32 @@ class WorkerSpec  extends FlatSpec with Matchers {
 
     "Worker" should " preProcess " in {
 
+      def checkCreateUser(createUserField: JValue) = {
+        assert(createUserField \ "name" === JString("CreateUserError"))
+        assert(createUserField \ "title" === JString(""))
+        assert(createUserField \ "description" === JString(""))
+      }
+
+      def checkAdmin3(admin0_3_0: JValue) = {
+        assert(admin0_3_0 \ "name" === JString("admin"))
+        assert(admin0_3_0 \ "title" === JString("Admin access rights needed."))
+        assert(admin0_3_0 \ "description" === JString( """Optionallyyou can write here further Informations about the permission.An "apiDefinePermission"-block can have an "apiVersion", so you can attach the block to a specific version."""))
+      }
+
+      def checkAdmin1(admin0_1_0: JValue) = {
+        assert(admin0_1_0 \ "name" === JString("admin"))
+        assert(admin0_1_0 \ "title" === JString("This title is visible in version 0.1.0 and 0.2.0"))
+        assert(admin0_1_0 \ "description" === JString(""))
+      }
+
+      def checkDefinition(definition: JValue) {
+        val createUserError0_2_0 = definition \ "CreateUserError" \ "0.2.0"
+        checkCreateUser(createUserError0_2_0)
+        val admin0_3_0 = definition \ "admin" \ "0.3.0"
+        checkAdmin3(admin0_3_0)
+        val admin0_1_0 = definition \ "admin" \ "0.1.0"
+        checkAdmin1(admin0_1_0)
+      }
 
       val sources = List(new File(getClass.getResource("/_apidoc.js").getFile),
         new File(getClass.getResource("/full-example.js").getFile))
@@ -162,11 +188,55 @@ class WorkerSpec  extends FlatSpec with Matchers {
       assert(preProcessResults \ "defineErrorStructure" === JObject())
       assert(preProcessResults \ "defineHeaderStructure" === JObject())
       assert(preProcessResults \ "defineSuccessStructure" === JObject())
-      assert(preProcessResults \ "defineErrorTitle" \ "CreateUserError"  !== JNothing)
-      assert(preProcessResults \ "defineErrorTitle" \ "admin"  !== JNothing)
 
-    //TODO more test
-//      println(compact(render(preProcessResults)))
+      val defineErrorTitle = preProcessResults \ "defineErrorTitle"
+
+      checkDefinition(defineErrorTitle)
+
+      val defineGroup = preProcessResults \ "defineGroup"
+
+      checkDefinition(defineGroup)
+
+      val defineParamTitle = preProcessResults \ "defineParamTitle"
+
+      checkDefinition(defineParamTitle)
+
+      val definePermission = preProcessResults \ "definePermission"
+
+      checkDefinition(definePermission)
+
+      val defineSuccessTitle = preProcessResults \ "defineSuccessTitle"
+
+      checkDefinition(defineSuccessTitle)
+
+      val define = preProcessResults \ "define"
+
+      val createUserField = define \ "CreateUserError" \ "0.2.0"
+
+      assert(createUserField \ "version" === JString("0.2.0"))
+
+      val error = createUserField \ "error" \ "fields" \ "Error 4xx"
+      assert( error(0) \ "group" === JString("Error 4xx"))
+      assert( error(0) \ "optional" === JString("false"))
+      assert( error(0) \ "field" === JString("NoAccessRight"))
+      assert( error(0) \ "description" === JString("Only authenticated Admins can access the data."))
+
+      assert( error(1) \ "group" === JString("Error 4xx"))
+      assert( error(1) \ "optional" === JString("false"))
+      assert( error(1) \ "field" === JString("UserNameTooShort"))
+      assert( error(1) \ "description" === JString("Minimum of 5 characters required."))
+
+
+      val example = createUserField \ "error" \ "examples"
+      assert( example(0) \ "title" === JString("Response (example):"))
+      assert( example(0) \ "content" === JString("HTTP/1.1 400 Bad Request\n{\n  \"error\": \"UserNameTooShort\"\n}"))
+      assert( example(0) \ "type" === JString("json"))
+
+      assert( example(0) \ "type" === JString("json"))
+
+
+     assert(define \ "admin" \ "0.3.0" \ "version" === JString("0.3.0"))
+     assert(define \ "admin" \ "0.1.0" \ "version" === JString("0.1.0"))
 
   }
 
