@@ -262,7 +262,52 @@ class ApiPermissionWorker extends ApiParamTitleWorker {
 
   override val source: String = "definePermission"
   //TODO post process
-  //override val target: String = "header"
+  override val target: String = "permission"
+
+  override def postProcessBlock(block: JValue, preProcess: JValue): JValue = {
+    if (block \ "local" \ target == JNothing) block
+    else {
+
+      val definitions = block \ "local" \ target
+
+
+      val initPermission = JArray(List())
+      val newPermission = definitions.children.foldLeft(initPermission){ case (permission,definition) =>
+
+        val JString(name) = definition \ "name"
+        val version = block \ "version" match {
+          case JString(v) => v
+          case _ => "0.0.0"
+        }
+
+        val metadata =
+          if (preProcess \ source \ name == JNothing)
+            ("name" -> name) ~ ("title" -> definition \ "title") ~ ("description" -> definition \ "description")
+          else
+            matchData(preProcess, source, name, version)
+
+        val JArray(r) = permission merge JArray(List(metadata))
+        JArray(r)
+      }
+
+      val valToAppend: JObject = ("local" ->
+        (target -> newPermission)
+        )
+      block.replace("local"::target::Nil,newPermission)
+    }
+  }
+
+
+  override def postProcess(parsedFiles: JArray, filenames: List[String],
+                           preProcess: JValue, packageInfos: SbtApidocConfiguration): JArray = {
+    parsedFiles.arr.zipWithIndex.map { case(parsedFile, parsedFileIndex) =>
+      parsedFile match {
+        case JArray(blocks) => blocks.map { postProcessBlock(_, preProcess)}
+        case _ => throw new IllegalArgumentException
+      }
+    }
+
+  }
 
 }
 
@@ -285,7 +330,7 @@ class ApiParamTitleWorker extends Worker {
         r.transformField { case (target, _) =>
           (target ->
             (name ->
-              (version -> block \ "global" \ source)
+              (version -> sourceNode)
               )
             )
         }
