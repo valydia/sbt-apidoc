@@ -71,13 +71,13 @@ class ApidocSpec extends FlatSpec with Matchers {
   }
 
 
-//  "Apidoc" should " parse complete input file and configuration" in {
-//    val sources = List(new File(getClass.getResource("/_apidoc.js").getFile),
-//                       new File(getClass.getResource("/full-example.js").getFile))
-//    val conf = SbtApidocConfiguration("name", "description", Some("http://api.github.com"), "1.0")
-//    val USuccess(Some((apidata, apiconfig))) = Apidoc(sources, conf)
-//    //println(apidata)
-//    //TODO test
-//
-//  }
+  "Apidoc" should " parse complete input file and configuration" in {
+    val sources = List(new File(getClass.getResource("/_apidoc.js").getFile),
+                       new File(getClass.getResource("/full-example.js").getFile))
+    val conf = SbtApidocConfiguration("name", "description", Some("http://api.github.com"), "1.0")
+    val Success(Some((apidata, apiconfig))) = Apidoc(sources, conf)
+    //println(apidata)
+    //TODO test
+
+  }
 }

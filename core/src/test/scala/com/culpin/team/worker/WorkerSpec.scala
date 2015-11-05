@@ -10,8 +10,7 @@ import org.scalatest.{Matchers, FlatSpec}
 
 import org.json4s._
 import org.json4s.native.JsonMethods._
-
-import scala.collection.generic.SeqFactory
+import org.json4s.JsonDSL._
 
 class WorkerSpec  extends FlatSpec with Matchers {
 
@@ -132,7 +131,6 @@ class WorkerSpec  extends FlatSpec with Matchers {
 
     val JArray(blocks1) = file1
 
-    //blocks1(3)
     assert(blocks1(3) \ "local" \ "filename" === JString("_apidoc.js"))
     assert(blocks1(4) \ "local" \ "filename" === JString("_apidoc.js"))
     assert(blocks1(5) \ "local" \ "filename" === JString("_apidoc.js"))
@@ -259,19 +257,40 @@ class WorkerSpec  extends FlatSpec with Matchers {
 
   "ApiUser Worker" should " postprocess" in {
 
-    val preProcessFiles = new File(getClass.getResource("/expected/preprocess.json").getFile)
+    val preProcessFiles = new File(getClass.getResource("/apiusePreprocess.json").getFile)
     val preProcessString = Util.readFile(preProcessFiles)
     val preProcessJson = parse(preProcessString)
 
-    val parsedFilesFiles = new File(getClass.getResource("/parsedFiles-filename.json").getFile)
-    val parsedFileString = Util.readFile(parsedFilesFiles)
+    val blocksFiles = new File(getClass.getResource("/apiuseBlocks.json").getFile)
+    val blocksString = Util.readFile(blocksFiles)
 
-    val JArray(l) = parse(parsedFileString)
+    val JArray(l) = parse(blocksString)
     val worker = new ApiUseWorker
 
     val result = worker.postProcess(JArray(l), List(), preProcessJson, conf)
+    val error = result \ "local" \ "error"
 
-   // println(pretty(render(result)))
+    val error4XX = error \ "fields" \ "Error 4xx"
+    assert(error4XX(0) \ "group" === JString("Error 4xx"))
+    assert(error4XX(0) \ "optional" === JString("false"))
+    assert(error4XX(0) \ "field" === JString("NoAccessRight"))
+    assert(error4XX(0) \ "description" === JString("Only authenticated Admins can access the data."))
+
+    assert(error4XX(1) \ "group" === JString("Error 4xx"))
+    assert(error4XX(1) \ "optional" === JString("false"))
+    assert(error4XX(1) \ "field" === JString("UserNameTooShort"))
+    assert(error4XX(1) \ "description" === JString("Minimum of 5 characters required."))
+
+    val examples = error \ "examples"
+    assert(examples(0) \ "title" === JString("Response (example):"))
+    assert(examples(0) \ "content" === JString("HTTP/1.1 400 Bad Request\n{\n  \"error\": \"UserNameTooShort\"\n}"))
+    assert(examples(0) \ "type" === JString("json"))
+
+    val actual:JObject = ("local" ->
+                            ("error" -> error)
+                          )
+
+    assert(actual === JArray(l).diff(result).added)
   }
 
   "ApiSampleRequestWorker" should " postprocess - local url with sampleURL" in {
@@ -287,6 +306,7 @@ class WorkerSpec  extends FlatSpec with Matchers {
     val worker = new ApiSampleRequestWorker
 
     val result = worker.postProcess(JArray(l), List("_apidoc.js", "full-example.js"), preProcessJson, conf)
+    assert(result === JArray(l))
 
   }
 
@@ -296,7 +316,7 @@ class WorkerSpec  extends FlatSpec with Matchers {
 
     val worker = new ApiSampleRequestWorker
 
-    val result = worker.postProcess(parsedFiles, filenames.toList, JObject(), conf)
+    val result = worker.postProcess(parsedFiles, filenames, JObject(), conf)
 
     val JArray(List(block1, block2, block3)) = result(0)
     assert((block1 \ "local" \ "sampleRequest")(0) \ "url" === JString("http://www.example.com/user/4711"))

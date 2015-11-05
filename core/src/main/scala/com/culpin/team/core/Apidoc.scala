@@ -39,7 +39,7 @@ object Apidoc {
     val processedFiles = Worker(blocks, filenames, config)
 
     println("run  filter")
-    val filteredBlocks = Filter(processedFiles, filenames)
+    val filteredBlocks = Filter(processedFiles)
 
     val sortedBlocks = sortBlock(filteredBlocks)
 

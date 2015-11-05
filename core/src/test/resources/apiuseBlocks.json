@@ -1,0 +1,57 @@
+[
+   [
+      {
+         "global":{
+
+         },
+         "local":{
+            "type":"post",
+            "url":"/user",
+            "title":"Create a User",
+            "version":"0.2.0",
+            "name":"PostUser",
+            "group":"User",
+            "permission":[
+               {
+                  "name":"none"
+               }
+            ],
+            "description":"In this case \"apiErrorStructure\" is defined and used.\nDefine blocks with params that will be used in several functions, so you dont have to rewrite them.",
+            "parameter":{
+               "fields":{
+                  "Parameter":[
+                     {
+                        "group":"Parameter",
+                        "type":"String",
+                        "optional":"false",
+                        "field":"name",
+                        "description":"Name of the User."
+                     }
+                  ]
+               }
+            },
+            "success":{
+               "fields":{
+                  "Success 200":[
+                     {
+                        "group":"Success 200",
+                        "type":"String",
+                        "optional":"false",
+                        "field":"id",
+                        "description":"The Users-ID."
+                     }
+                  ]
+               }
+            },
+            "use":[
+               {
+                  "name":"CreateUserError"
+               }
+            ],
+            "filename":"_apidoc.js"
+         },
+         "index":6,
+         "version":"0.2.0"
+      }
+   ]
+]
