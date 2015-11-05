@@ -11,7 +11,7 @@ organization := "com.culpin.team"
 name := """sbt-apidoc"""
 
 //Change to the version
-version := "0.4-SNAPSHOT"
+version := "0.5-SNAPSHOT"
 
 scalaVersion := "2.10.4"
 //scalaVersion := "2.11.7"
@@ -36,7 +36,14 @@ libraryDependencies ++= Seq(
 // Scripted - sbt plugin tests
 scriptedSettings
 
-scriptedLaunchOpts += "-Dproject.version=" + version.value
+//scriptedLaunchOpts += "-Dproject.version=" + version.value
+ScriptedPlugin.scriptedSettings
+
+scriptedLaunchOpts := { scriptedLaunchOpts.value ++
+  Seq("-Xmx1024M", "-XX:MaxPermSize=256M", "-Dplugin.version=" + version.value, "-Dproject.version=" + version.value)
+}
+
+scriptedBufferLog := false
 
 //Scalariform
 scalariformSettings

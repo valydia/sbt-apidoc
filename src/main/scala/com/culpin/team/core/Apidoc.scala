@@ -12,6 +12,7 @@ import org.json4s.native.Serialization
 import org.json4s.native.Serialization.writePretty
 
 import org.json4s.jackson.JsonMethods._
+import sbt.Logger
 
 import scala.util.{ Success, Try }
 
@@ -28,14 +29,14 @@ object Apidoc {
    * @param config the apidoc configuration
    * @return A Some(Pair) of JSon string if there are some apidoc comment, None if not
    */
-  def apply(sources: List[File], config: SbtApidocConfiguration): Try[Option[(String, String)]] = {
-    println("run  parser")
+  def apply(sources: List[File], config: SbtApidocConfiguration, log: Logger): Try[Option[(String, String)]] = {
+    log.info("run  parser")
     val (blocks, filenames) = Parser(sources)
 
-    println("run  worker")
+    log.info("run  worker")
     val processedFiles = Worker(blocks, filenames, config)
 
-    println("run  filter")
+    log.info("run  filter")
     val filteredBlocks = Filter(processedFiles)
 
     val sortedBlocks = sortBlock(filteredBlocks)

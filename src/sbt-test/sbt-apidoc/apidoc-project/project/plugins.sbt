@@ -1,1 +1,1 @@
-addSbtPlugin("com.culpin.team" % "sbt-apidocjs" % sys.props("project.version"))
+addSbtPlugin("com.culpin.team" % "sbt-apidoc" % sys.props("project.version"))
