@@ -385,4 +385,67 @@ class WorkerSpec extends FlatSpec with Matchers {
 
   }
 
+  "ApiPermissionWorker" should " postprocess" in {
+
+    val parsedFilesFiles = new File(getClass.getResource("/parsedFiles-filename.json").getFile)
+    val parsedFileString = Util.readFile(parsedFilesFiles)
+
+    val preProcessFiles = new File(getClass.getResource("/expected/preprocess.json").getFile)
+    val preProcessString = Util.readFile(preProcessFiles)
+    val preProcessJson = parse(preProcessString)
+
+    val JArray(l) = parse(parsedFileString)
+    val worker = new ApiPermissionWorker
+
+    val result = worker.postProcess(JArray(l), List("_apidoc.js", "full-example.js"), preProcessJson, conf)
+
+    val JArray(List(file1, file2)) = result
+    val JArray(List(_, _, _, block4, block5, block6)) = file1
+
+
+
+    val permission4 = block4 \ "local" \ "permission"
+    assert(permission4(0) \ "name" === JString("admin"))
+    assert(permission4(0) \ "title" === JString("This title is visible in version 0.1.0 and 0.2.0"))
+    assert(permission4(0) \ "description" === JString(""))
+
+    val permission5 = block5 \ "local" \ "permission"
+
+    assert(permission5(0) \ "name" === JString("admin"))
+    assert(permission5(0) \ "title" === JString("This title is visible in version 0.1.0 and 0.2.0"))
+    assert(permission5(0) \ "description" === JString(""))
+
+    val permission6 = block6 \ "local" \ "permission"
+
+    assert(permission6(0) \ "name" === JString("none"))
+    assert(permission6(0) \ "title" === JNothing)
+    assert(permission6(0) \ "description" === JNothing)
+
+   val JArray(List(block1, block2, block3)) = file2
+
+//    println(pretty(render(block1)))
+
+    val permission1 = block1 \ "local" \ "permission"
+
+    assert(permission1(0) \ "name" === JString("admin"))
+    assert(permission1(0) \ "title" === JString("Admin access rights needed."))
+    assert(permission1(0) \ "description" === JString("Optionallyyou can write here further Informations about the permission.An \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."))
+
+    val permission2 = block2 \ "local" \ "permission"
+
+    assert(permission2(0) \ "name" === JString("none"))
+    assert(permission2(0) \ "title" === JNothing)
+    assert(permission2(0) \ "description" === JNothing)
+
+    val permission3 = block3 \ "local" \ "permission"
+
+    assert(permission3(0) \ "name" === JString("none"))
+    assert(permission3(0) \ "title" === JNothing)
+    assert(permission3(0) \ "description" === JNothing)
+
+    assert(JArray(l).diff(result).deleted === JNothing)
+    assert(JArray(l).diff(result).changed === JNothing)
+
+  }
+
 }
