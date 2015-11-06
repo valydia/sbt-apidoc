@@ -402,8 +402,6 @@ class WorkerSpec extends FlatSpec with Matchers {
     val JArray(List(file1, file2)) = result
     val JArray(List(_, _, _, block4, block5, block6)) = file1
 
-
-
     val permission4 = block4 \ "local" \ "permission"
     assert(permission4(0) \ "name" === JString("admin"))
     assert(permission4(0) \ "title" === JString("This title is visible in version 0.1.0 and 0.2.0"))
@@ -421,9 +419,9 @@ class WorkerSpec extends FlatSpec with Matchers {
     assert(permission6(0) \ "title" === JNothing)
     assert(permission6(0) \ "description" === JNothing)
 
-   val JArray(List(block1, block2, block3)) = file2
+    val JArray(List(block1, block2, block3)) = file2
 
-//    println(pretty(render(block1)))
+    //    println(pretty(render(block1)))
 
     val permission1 = block1 \ "local" \ "permission"
 

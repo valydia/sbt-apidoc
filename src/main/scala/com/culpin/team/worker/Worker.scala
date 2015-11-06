@@ -191,7 +191,7 @@ class ApiNameWorker extends Worker {
   override val name = "api-name"
 
   //Not used
-  override def preProcess(parsedFiles: JArray, target: String = "name"): JValue = JObject()
+  override def preProcess(parsedFiles: JArray, target: String = "name"): JValue = JNothing
 
   //Not used
   override def preprocessBlock(block: JValue, source: String, r: JValue): JValue = JNothing
@@ -204,14 +204,13 @@ class ApiNameWorker extends Worker {
 
   override def postProcess(parsedFiles: JArray, filenames: List[String], preProcess: JValue,
     packageInfos: SbtApidocConfiguration): JArray = {
-    parsedFiles.arr.zipWithIndex.map {
-      case (parsedFile, parsedFileIndex) =>
-        val JArray(blocks) = parsedFile
-        blocks.map { postProcessBlock(_, preProcess, source, target) }
+    parsedFiles.arr.map { parsedFile =>
+      val JArray(blocks) = parsedFile
+      blocks.map { postProcessBlock(_, preProcess) }
     }
   }
 
-  def postProcessBlock(block: JValue, preProcess: JValue, source: String = "define", target: String = "name"): JValue = {
+  def postProcessBlock(block: JValue, preProcess: JValue): JValue = {
     def capitalize(string: String): String = {
       string.length() match {
         case 0 => ""
@@ -303,7 +302,10 @@ class ApiParamTitleWorker extends Worker {
       case JNothing => JNothing
       case _ => {
         val JString(name) = (sourceNode \ "name")
-        val JString(version) = (block \ "version")
+        val version = (block \ "version") match {
+          case JString(v) => v
+          case _ => "0.0.0"
+        }
 
         r.transformField {
           case (target, _) =>
@@ -352,7 +354,7 @@ class ApiParamTitleWorker extends Worker {
 
   def postProcessBlock(block: JValue, preProcess: JValue): JValue = {
 
-    if (block \ "local" \ target == JNothing || block \ "local" \ target \ "fields" == JNothing) block
+    if (block \ "local" \ target \ "fields" == JNothing) block
     else {
 
       val fields = block \ "local" \ target \ "fields" match {
@@ -395,8 +397,8 @@ class ApiParamTitleWorker extends Worker {
   override def postProcess(parsedFiles: JArray, filenames: List[String],
     preProcess: JValue, packageInfos: SbtApidocConfiguration): JArray = {
     parsedFiles.arr.map { parsedFile =>
-        val JArray(blocks) = parsedFile
-        blocks.map { postProcessBlock(_, preProcess) }
+      val JArray(blocks) = parsedFile
+      blocks.map { postProcessBlock(_, preProcess) }
     }
   }
 
@@ -427,13 +429,12 @@ class ApiSampleRequestWorker extends Worker {
         val sampleBlock = block \ "local" \ target
         val newBlock = sampleBlock match {
           case JArray(entries) => JArray(entries
-            .filter { entry =>
-              val JString(url) = entry \ "url"
-              !url.equals("off")
-            } map { entry =>
-              val JString(url) = entry \ "url"
-              appendSampleUrl(url)
+            .collect {
+              case entry if { val JString(url) = entry \ "url"; !url.equals("off") } =>
+                val JString(url) = entry \ "url"
+                appendSampleUrl(url)
             })
+
           case _ =>
             if (packageInfos.sampleUrl.isDefined && block \ "local" \ "url" != JNothing) {
               val Some(sampleUrl) = packageInfos.sampleUrl
@@ -445,8 +446,7 @@ class ApiSampleRequestWorker extends Worker {
 
         if (newBlock.children.isEmpty) {
           block removeField {
-            case ("sampleRequest", _) => true
-            case (_, _) => false
+            case (key, _) => key == "sampleRequest"
           }
         } else {
 
@@ -524,9 +524,9 @@ class ApiUseWorker extends Worker {
       preProcess \ source \ name \ version
     else {
       import com.gilt.gfc.semver.SemVer
-      val versionKeys = (preProcess \ source \ name) match {
-        case JObject(l) => JObject(l).values.keys.toList
-        case _ => List()
+      val versionKeys = {
+        val JObject(l) = preProcess \ source \ name
+        JObject(l).values.keys.toList
       }
 
       // find nearest matching version
@@ -559,7 +559,6 @@ class ApiUseWorker extends Worker {
         case _ => "0.0.0"
       }
 
-      //         println("postProcess  block" + pretty(render(block)) + " preprocess " + pretty(render(preProcess)))
       if (preProcess \ source \ name == JNothing)
         throw new IllegalArgumentException
       else {
@@ -569,9 +568,8 @@ class ApiUseWorker extends Worker {
         val cleanedUpBlock = block remove { _ == fieldToRemove }
 
         val localMatchedData: JValue = ("local" -> matchedData)
-        //println("matched data " + pretty(render(matchedData)))
-        val valueToAppend = cleanedUpBlock merge localMatchedData
 
+        val valueToAppend = cleanedUpBlock merge localMatchedData
         cleanedUpBlock merge valueToAppend
 
       }
@@ -583,10 +581,9 @@ class ApiUseWorker extends Worker {
 
   override def postProcess(parsedFiles: JArray, filenames: List[String], preProcess: JValue,
     packageInfos: SbtApidocConfiguration): JArray = {
-    parsedFiles.arr.zipWithIndex.map {
-      case (parsedFile, parsedFileIndex) =>
-        val JArray(blocks) = parsedFile
-        blocks.map { postProcessBlock(_, preProcess) }
+    parsedFiles.arr.map { parsedFile =>
+      val JArray(blocks) = parsedFile
+      blocks.map { postProcessBlock(_, preProcess) }
     }
   }
 

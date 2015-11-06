@@ -26,7 +26,6 @@ class FilterSpec extends FlatSpec with Matchers {
     val JArray(json) = parse(Util.readFile(rawblocks))
     val filteredBlocks = Filter(JArray(json))
 
-    // println(pretty(render(filteredBlocks)))
-    //TODO test
+    assert(filteredBlocks.children.size === 6)
   }
 }
