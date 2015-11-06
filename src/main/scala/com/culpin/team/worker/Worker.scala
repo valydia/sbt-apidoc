@@ -394,8 +394,7 @@ class ApiParamTitleWorker extends Worker {
 
   override def postProcess(parsedFiles: JArray, filenames: List[String],
     preProcess: JValue, packageInfos: SbtApidocConfiguration): JArray = {
-    parsedFiles.arr.zipWithIndex.map {
-      case (parsedFile, parsedFileIndex) =>
+    parsedFiles.arr.map { parsedFile =>
         val JArray(blocks) = parsedFile
         blocks.map { postProcessBlock(_, preProcess) }
     }
