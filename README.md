@@ -6,12 +6,22 @@ An attempt to port the [apidocjs plugin][apidocjs] to sbt
 
 [![Build Status](https://api.travis-ci.org/valydia/sbt-apidoc.png)](http://travis-ci.org/valydia/sbt-apidoc)
 
-### Resources
+### Installation
 
-[SBT-Plugin Best Practices](http://www.scala-sbt.org/0.13/docs/Plugins-Best-Practices.html)
+Add the following to your `project/plugins.sbt` or `~/.sbt/0.13/plugins/plugins.sbt` file:
 
-[Building Scala/SBT Projects with Travis CI](http://docs.travis-ci.com/user/languages/scala/)
+    import sbt._
+ 
+    lazy val root = Project("plugins", file(".")).dependsOn(plugin)
+ 
+    lazy val plugin = uri("https://github.com/valydia/sbt-apidoc.git")
 
-[SBT AutoPlugins Tutorial](http://mukis.de/pages/sbt-autoplugins-tutorial/)
+### Using SBT Apidoc
 
-[testing sbt plugins](http://eed3si9n.com/testing-sbt-plugins)
+Annotate your comments as described in this [page][apidocjs]
+
+### Running
+
+    >sbt
+    
+    >apidoc
