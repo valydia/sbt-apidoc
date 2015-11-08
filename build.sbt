@@ -4,18 +4,15 @@ import sbt.Keys._
 
 sbtPlugin := true
 
-//Change to your organization
 organization := "com.culpin.team"
 
-//Change to your plugin name
 name := """sbt-apidoc"""
 
-//Change to the version
 version := "0.5-SNAPSHOT"
 
-//scalaVersion := "2.10.4"
+scalaVersion := "2.10.4"
 
-//crossScalaVersions := Seq("2.9.2", "2.10.0", "2.11.7")
+crossScalaVersions := Seq("2.9.2", "2.10.0", "2.11.7")
 
 scalacOptions ++= Seq("-deprecation", "-feature")
 
