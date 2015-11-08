@@ -13,10 +13,9 @@ name := """sbt-apidoc"""
 //Change to the version
 version := "0.5-SNAPSHOT"
 
-scalaVersion := "2.10.4"
-//scalaVersion := "2.11.7"
+//scalaVersion := "2.10.4"
 
-crossScalaVersions := Seq("2.9.2", "2.10.0", "2.11.7")
+//crossScalaVersions := Seq("2.9.2", "2.10.0", "2.11.7")
 
 scalacOptions ++= Seq("-deprecation", "-feature")
 
@@ -33,10 +32,6 @@ libraryDependencies ++= Seq(
   "org.mockito"        %  "mockito-core"     % "1.8.5"   % "test"
 )
 
-// Scripted - sbt plugin tests
-scriptedSettings
-
-//scriptedLaunchOpts += "-Dproject.version=" + version.value
 ScriptedPlugin.scriptedSettings
 
 scriptedLaunchOpts := { scriptedLaunchOpts.value ++

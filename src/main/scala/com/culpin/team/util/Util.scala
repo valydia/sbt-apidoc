@@ -9,7 +9,7 @@ import scala.language.postfixOps
 object Util {
 
   def unindent(s: String): String = {
-    val lines = s.split('\n');
+    val lines = s.split('\n')
     val nonWhiteSpaceRegex = """\S""".r
 
     val xs = lines.filter(matches(nonWhiteSpaceRegex, _)).sorted
