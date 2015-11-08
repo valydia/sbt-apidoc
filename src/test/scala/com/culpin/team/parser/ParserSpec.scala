@@ -467,8 +467,8 @@ class ParserSpec extends FlatSpec with Matchers {
 
   "Parser" should "parse block element" in {
 
-    val detectedElement = Seq(
-      Seq(
+    val detectedElement = List(
+      List(
         Element("@api {get} / Home page.", "api", "api", "{get} / Home page."),
         Element("@apiName Welcome Page.", "apiname", "apiName", "Welcome Page."),
         Element("@apiGroup Application", "apigroup", "apiGroup", "Application"),
