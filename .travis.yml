@@ -3,7 +3,6 @@ sudo: false
 
 language: scala
 scala:
-   - 2.9.3
    - 2.10.4
    - 2.11.7
 
@@ -11,4 +10,12 @@ jdk:
   - openjdk7
   - openjdk6
 
-script: sbt ++$TRAVIS_SCALA_VERSION test scripted
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt/boot/scala-$TRAVIS_SCALA_VERSION
+
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION test scripted
+  - find $HOME/.sbt -name "*.lock" | xargs rm
+  - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm

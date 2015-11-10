@@ -6,7 +6,7 @@ import com.culpin.team.filter.Filter
 import com.culpin.team.parser.Parser
 import com.culpin.team.worker.Worker
 import com.gilt.gfc.semver.SemVer
-import org.json4s.{ FieldSerializer, NoTypeHints }
+import org.json4s.{ JField, FieldSerializer, NoTypeHints }
 
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.writePretty
@@ -84,10 +84,9 @@ object Apidoc {
 
     val serializer: PartialFunction[(String, Any), Option[(String, Any)]] = nameSerializer orElse descriptionSerializer orElse definedSampleUrlSerializer orElse emptySampleUrl orElse versionSerializer
 
-    FieldSerializer[SbtApidocConfiguration](
-      serializer,
-      PartialFunction.empty
-    )
+    // val deserializer: PartialFunction[JField, JField] = Map()
+    val deserializer: PartialFunction[JField, JField] = PartialFunction.empty[JField, JField]
+    FieldSerializer[SbtApidocConfiguration](serializer, deserializer)
   }
 
 }
