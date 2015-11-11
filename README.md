@@ -15,6 +15,10 @@ Add the following to your `project/plugins.sbt` or `~/.sbt/0.13/plugins/plugins.
     lazy val root = Project("plugins", file(".")).dependsOn(plugin)
  
     lazy val plugin = uri("https://github.com/valydia/sbt-apidoc.git")
+    
+Add at the top of the `build.sbt` file:
+
+    val root = (project in file(".")).enablePlugins(SbtApidoc)
 
 ### Using SBT Apidoc
 

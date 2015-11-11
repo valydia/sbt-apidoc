@@ -21,11 +21,11 @@ licenses := Seq("MIT License" -> url("http://opensource.org/licenses/mit-license
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
-//val json4s_version = "3.3.0"
-val json4s_version = "3.2.11"
+val json4s_version = "3.3.0"
+
 
 libraryDependencies ++= Seq(
-//  "org.json4s"         %% "json4s-native"    % json4s_version,
+  "org.json4s"         %% "json4s-native"    % json4s_version,
   "org.json4s"         %% "json4s-jackson"   % json4s_version,
   "com.gilt"           %% "gfc-semver"       % "0.1.0",
   "org.scalatest"      %% "scalatest"        % "2.2.4"   % "test",
