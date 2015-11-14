@@ -19,6 +19,8 @@ Add the following to your `project/plugins.sbt` or `~/.sbt/0.13/plugins/plugins.
 Add at the top of the `build.sbt` file:
 
     val root = (project in file(".")).enablePlugins(SbtApidoc)
+    
+Only support sbt versions from 0.13.5 until 0.13.7 because [this](https://github.com/json4s/json4s/issues/236) issue
 
 ### Using SBT Apidoc
 

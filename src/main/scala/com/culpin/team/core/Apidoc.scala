@@ -11,7 +11,8 @@ import org.json4s.{ JField, FieldSerializer, NoTypeHints }
 import org.json4s.native.Serialization
 import org.json4s.native.Serialization.writePretty
 
-import org.json4s.jackson.JsonMethods._
+//import org.json4s.jackson.JsonMethods._
+import org.json4s.native.JsonMethods._
 import sbt.Logger
 
 import scala.util.{ Success, Try }
@@ -45,8 +46,8 @@ object Apidoc {
       Success(None)
     else {
 
-      implicit val formats = Serialization.formats(NoTypeHints) + buildSbtApidocSerializer
-      Success(Some((pretty(sortedBlocks), writePretty(config))))
+      implicit val formats = Serialization.formats(NoTypeHints) //+ buildSbtApidocSerializer
+      Success(Some((writePretty(sortedBlocks), writePretty(config))))
     }
   }
 
@@ -74,19 +75,19 @@ object Apidoc {
     JArray(sortedChildren)
   }
 
-  def buildSbtApidocSerializer: FieldSerializer[SbtApidocConfiguration] = {
-
-    val emptySampleUrl: PartialFunction[(String, Any), Option[(String, Any)]] = { case ("sampleUrl", None) => Some("sampleUrl", "false") }
-    val definedSampleUrlSerializer: PartialFunction[(String, Any), Option[(String, Any)]] = { case ("sampleUrl", Some(url)) => Some("sampleUrl", url) }
-    val nameSerializer: PartialFunction[(String, Any), Option[(String, Any)]] = { case ("name", name) => Some("name", name) }
-    val descriptionSerializer: PartialFunction[(String, Any), Option[(String, Any)]] = { case ("description", description) => Some("description", description) }
-    val versionSerializer: PartialFunction[(String, Any), Option[(String, Any)]] = { case ("version", version) => Some("version", version) }
-
-    val serializer: PartialFunction[(String, Any), Option[(String, Any)]] = nameSerializer orElse descriptionSerializer orElse definedSampleUrlSerializer orElse emptySampleUrl orElse versionSerializer
-
-    // val deserializer: PartialFunction[JField, JField] = Map()
-    val deserializer: PartialFunction[JField, JField] = PartialFunction.empty[JField, JField]
-    FieldSerializer[SbtApidocConfiguration](serializer, deserializer)
-  }
+  //  def buildSbtApidocSerializer: FieldSerializer[SbtApidocConfiguration] = {
+  //
+  //    val emptySampleUrl: PartialFunction[(String, Any), Option[(String, Any)]] = { case ("sampleUrl", None) => Some("sampleUrl", "false") }
+  //    val definedSampleUrlSerializer: PartialFunction[(String, Any), Option[(String, Any)]] = { case ("sampleUrl", Some(url)) => Some("sampleUrl", url) }
+  //    val nameSerializer: PartialFunction[(String, Any), Option[(String, Any)]] = { case ("name", name) => Some("name", name) }
+  //    val descriptionSerializer: PartialFunction[(String, Any), Option[(String, Any)]] = { case ("description", description) => Some("description", description) }
+  //    val versionSerializer: PartialFunction[(String, Any), Option[(String, Any)]] = { case ("version", version) => Some("version", version) }
+  //
+  //    val serializer: PartialFunction[(String, Any), Option[(String, Any)]] = nameSerializer orElse descriptionSerializer orElse definedSampleUrlSerializer orElse emptySampleUrl orElse versionSerializer
+  //
+  //    // val deserializer: PartialFunction[JField, JField] = Map()
+  //    val deserializer: PartialFunction[JField, JField] = PartialFunction.empty[JField, JField]
+  //    FieldSerializer[SbtApidocConfiguration](serializer)
+  //  }
 
 }
