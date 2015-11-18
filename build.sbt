@@ -18,7 +18,7 @@ licenses := Seq("MIT License" -> url("http://opensource.org/licenses/mit-license
 
 
 val json4s_version = "3.3.0"
-//val json4s_version = "3.2.9"
+//val json4s_version = "3.2.10"
 
 
 libraryDependencies ++= Seq(

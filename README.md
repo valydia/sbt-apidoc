@@ -16,9 +16,7 @@ Add the following to your `project/plugins.sbt` or `~/.sbt/0.13/plugins/plugins.
  
     lazy val plugin = uri("https://github.com/valydia/sbt-apidoc.git")
     
-Add at the top of the `build.sbt` file:
-
-    val root = (project in file(".")).enablePlugins(SbtApidoc)
+It's an auto-plugin so nothing else needs to be added to your `build.sbt`  
     
 Only support sbt versions from 0.13.5 until 0.13.7 because [this](https://github.com/json4s/json4s/issues/236) issue
 

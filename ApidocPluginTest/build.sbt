@@ -1,5 +1,3 @@
-val root = (project in file(".")).enablePlugins(SbtApidoc)
-
 import SbtApidoc._
 
 name := """Test plugin"""

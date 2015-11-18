@@ -32,6 +32,8 @@ object SbtApidoc extends AutoPlugin {
     apidocSampleURL := None
   )
 
+  override def trigger = allRequirements
+
   /**
    * Provide default settings
    */
