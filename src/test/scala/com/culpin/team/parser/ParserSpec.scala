@@ -9,6 +9,8 @@ import org.scalatest.{ Matchers, FlatSpec }
 
 import org.json4s.JsonAST._
 
+import scala.util.Success
+
 class ParserSpec extends FlatSpec with Matchers {
 
   "Parser" should "find block in file" in {
@@ -478,7 +480,7 @@ class ParserSpec extends FlatSpec with Matchers {
       )
     )
 
-    val result = Parser.parseBlockElement(detectedElement, "app/controllers/gathr/culpinteam/v1/Application.scala")
+    val Success(result) = Parser.parseBlockElement(detectedElement, "app/controllers/gathr/culpinteam/v1/Application.scala")
 
     val local = result(0) \ "local"
     assert(local \ "type" === JString("get"))
@@ -496,6 +498,18 @@ class ParserSpec extends FlatSpec with Matchers {
 
     val global = result(0) \ "global"
     assert(global === JObject())
+
+  }
+
+  "Parser" should "parse block element - with non existing element" in {
+    val detectedElement = List(
+      List(
+        Element("@apiUnknown {get} / Home page.", "apiunknown", "apiUnknown", "{get} / Home page.")
+      )
+    )
+
+    val result = Parser.parseBlockElement(detectedElement, "app/controllers/gathr/culpinteam/v1/Application.scala")
+    println(result)
 
   }
 
