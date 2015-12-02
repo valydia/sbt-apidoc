@@ -9,7 +9,7 @@ import org.scalatest.{ Matchers, FlatSpec }
 
 import org.json4s.JsonAST._
 
-import scala.util.Success
+import scala.util.{ Failure, Success }
 
 class ParserSpec extends FlatSpec with Matchers {
 
@@ -480,7 +480,7 @@ class ParserSpec extends FlatSpec with Matchers {
       )
     )
 
-    val Success(result) = Parser.parseBlockElement(detectedElement, "app/controllers/gathr/culpinteam/v1/Application.scala")
+    val Success(result) = Parser.parseBlockElement(detectedElement)
 
     val local = result(0) \ "local"
     assert(local \ "type" === JString("get"))
@@ -508,17 +508,16 @@ class ParserSpec extends FlatSpec with Matchers {
       )
     )
 
-    val result = Parser.parseBlockElement(detectedElement, "app/controllers/gathr/culpinteam/v1/Application.scala")
-    println(result)
+    val Failure(ex) = Parser.parseBlockElement(detectedElement)
+    assert(ex.getMessage === "Incorrect element apiUnknown")
 
   }
 
   "Parser" should "parse file" in {
 
     val sources = List(new File(getClass.getResource("/Application.scala").getFile))
-    val (blocks, filenames) = Parser(sources)
+    val (Success(blocks), filenames) = Parser(sources)
     assert(filenames === List("Application.scala"))
-    // val block = blocks(0)(0)
     val local = blocks(0)(0) \ "local"
     assert(local \ "type" === JString("get"))
     assert(local \ "url" === JString("/"))
@@ -542,7 +541,7 @@ class ParserSpec extends FlatSpec with Matchers {
     val sources = List(new File(getClass.getResource("/_apidoc.js").getFile),
       new File(getClass.getResource("/full-example.js").getFile))
 
-    val (JArray(List(file1, file2)), filenames) = Parser(sources)
+    val (Success(JArray(List(file1, file2))), filenames) = Parser(sources)
 
     assert(filenames === List("_apidoc.js", "full-example.js"))
 

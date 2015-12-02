@@ -4,7 +4,7 @@ import java.io.File
 
 import com.culpin.team.core._
 import com.culpin.team.util.Util
-import scala.util.{Try, Failure, Success}
+import scala.util.{ Try, Failure, Success }
 import scala.util.matching.Regex
 
 import org.json4s.JsonAST.{ JNothing, JArray, JString, JObject }
@@ -370,8 +370,7 @@ class ApiVersionParser extends Parser {
 object Parser {
 
   def apply(sources: List[File]): (Try[JArray], List[String]) = {
-//    (sources.map { s => (parseFile(s)) }, (sources map (_.getName)))
-    ???
+    (Util.sequence(sources.map { s => (parseFile(s)) }).map(JArray(_)), (sources map (_.getName)))
   }
 
   def parseFile(file: File): Try[JArray] = {
@@ -379,7 +378,7 @@ object Parser {
     val elements = rawBlocks.map { b =>
       findElements(b)
     }
-    parseBlockElement(elements, file.getName)
+    parseBlockElement(elements)
   }
 
   val parser = List(
@@ -403,7 +402,7 @@ object Parser {
     new ApiVersionParser
   )
 
-  def parseBlockElement(detectedElements: List[List[Element]], filename: String): Try[JArray] = {
+  def parseBlockElement(detectedElements: List[List[Element]]): Try[JArray] = {
 
     def isApiBlock(elements: Seq[Element]): Boolean = {
       val apiIgnore = elements.exists { elem =>
@@ -416,38 +415,26 @@ object Parser {
     }
     val parserMap = parser.map(p => (p.name, p)).toMap
 
-    detectedElements.zipWithIndex
+    Util.sequence(detectedElements.zipWithIndex
       .collect {
         case (elements, index) if isApiBlock(elements) =>
-//          val initialResult: JObject = ("global" -> JObject()) ~ ("local" -> JObject())
-          val initialResult: Try[JObject] = Success("global" -> JObject()) ~ ("local" -> JObject())
-          elements.foldLeft(initialResult) {
+          val initialResult: JObject = ("global" -> JObject()) ~ ("local" -> JObject())
+          val tryInitialResult: Try[JObject] = Success(initialResult)
+          elements.foldLeft(tryInitialResult) {
             case (result, element) =>
-
-              result match {
-                case Success(r) => parserMap.get(element.name).map{ elementParser =>
+              result.map { r =>
+                parserMap.get(element.name).map { elementParser =>
                   //TODO handle empty block
                   val Some(values) = elementParser.parseBlock(element.content)
 
                   val jVersion = if (elementParser.extendRoot) values \ "local" \ "version" else JNothing
                   val jIndex: JObject = ("index" -> (index + 1)) ~ ("version" -> jVersion)
-                  Success(r merge (values merge jIndex))
-                }.getOrElse(Failure(new IllegalArgumentException("Incorrect element " + element.sourceName)))
-                case Failure(ex) => Failure(ex)
+                  r merge (values merge jIndex)
+                }.getOrElse(throw new IllegalArgumentException("Incorrect element " + element.sourceName))
               }
 
-
-//              //TODO handle non existing parser
-//              val Some(elementParser) = parserMap.get(element.name)
-//
-//              //TODO handle empty block
-//              val Some(values) = elementParser.parseBlock(element.content)
-//
-//              val jVersion = if (elementParser.extendRoot) values \ "local" \ "version" else JNothing
-//              val jIndex: JObject = ("index" -> (index + 1)) ~ ("version" -> jVersion)
-//              result merge (values merge jIndex)
           }
-      }
+      }).map(JArray(_))
   }
 
   /**

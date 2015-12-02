@@ -12,6 +12,8 @@ import org.json4s._
 import org.json4s.native.JsonMethods._
 import org.json4s.JsonDSL._
 
+import scala.util.Success
+
 class WorkerSpec extends FlatSpec with Matchers {
 
   val conf = SbtApidocConfiguration("name", "description", Option("https://api.github.com/v1"), "1.2")
@@ -117,7 +119,7 @@ class WorkerSpec extends FlatSpec with Matchers {
     val sources = List(new File(getClass.getResource("/_apidoc.js").getFile),
       new File(getClass.getResource("/full-example.js").getFile))
 
-    val (json, filenames) = Parser(sources)
+    val (Success(json), filenames) = Parser(sources)
 
     val JArray(List(file1, file2)) = Worker.processFilename(json, filenames.toList)
 
@@ -167,7 +169,7 @@ class WorkerSpec extends FlatSpec with Matchers {
     val sources = List(new File(getClass.getResource("/_apidoc.js").getFile),
       new File(getClass.getResource("/full-example.js").getFile))
 
-    val (json, filenames) = Parser(sources)
+    val (Success(json), filenames) = Parser(sources)
 
     val parsedFiles = Worker.processFilename(json, filenames.toList)
 
@@ -301,7 +303,7 @@ class WorkerSpec extends FlatSpec with Matchers {
 
   "ApiSampleRequestWorker" should " postprocess with sampleURL" in {
 
-    val (parsedFiles, filenames) = Parser.apply(List(new File(getClass.getResource("/sampleRequest.js").getFile)))
+    val (Success(parsedFiles), filenames) = Parser.apply(List(new File(getClass.getResource("/sampleRequest.js").getFile)))
 
     val worker = new ApiSampleRequestWorker
 
@@ -315,7 +317,7 @@ class WorkerSpec extends FlatSpec with Matchers {
 
   "ApiSampleRequestWorker" should " postprocess without sampleURL" in {
 
-    val (parsedFiles, filenames) = Parser.apply(List(new File(getClass.getResource("/sampleRequest.js").getFile)))
+    val (Success(parsedFiles), filenames) = Parser.apply(List(new File(getClass.getResource("/sampleRequest.js").getFile)))
 
     val worker = new ApiSampleRequestWorker
 

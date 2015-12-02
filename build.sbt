@@ -25,8 +25,8 @@ libraryDependencies ++= Seq(
   "org.json4s"         %% "json4s-native"    % json4s_version,
  // "org.json4s"         %% "json4s-jackson"   % json4s_version,
   "com.gilt"           %% "gfc-semver"       % "0.1.0",
-  "org.scalatest"      %% "scalatest"        % "2.2.4"   % "test",
-  "org.mockito"        %  "mockito-core"     % "1.8.5"   % "test"
+  "org.scalatest"      %% "scalatest"        % "2.2.4"   % "test"
+  //"org.mockito"        %  "mockito-core"     % "1.8.5"   % "test"
 )
 
 dependencyOverrides += "org.json4s"  %% "json4s-native" % json4s_version

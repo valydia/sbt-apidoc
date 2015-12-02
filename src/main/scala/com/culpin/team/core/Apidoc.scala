@@ -13,9 +13,9 @@ import org.json4s.native.Serialization.writePretty
 
 //import org.json4s.jackson.JsonMethods._
 import org.json4s.native.JsonMethods._
-import sbt.Logger
 
-import scala.util.{ Success, Try }
+
+import scala.util.Try
 
 import org.json4s.JsonAST.{ JString, JArray, JNothing }
 
@@ -30,24 +30,22 @@ object Apidoc {
    * @param config the apidoc configuration
    * @return A Some(Pair) of JSon string if there are some apidoc comment, None if not
    */
-  def apply(sources: List[File], config: SbtApidocConfiguration, log: Logger): Try[Option[(String, String)]] = {
-    log.info("run  parser")
+  def apply(sources: List[File], config: SbtApidocConfiguration): Try[Option[(String, String)]] = {
     val (blocks, filenames) = Parser(sources)
 
-    log.info("run  worker")
-    val processedFiles = Worker(blocks, filenames, config)
+    blocks.map { b =>
 
-    log.info("run  filter")
-    val filteredBlocks = Filter(processedFiles)
+      val processedFiles = Worker(b, filenames, config)
 
-    val sortedBlocks = sortBlock(filteredBlocks)
+      val filteredBlocks = Filter(processedFiles)
 
-    if (sortedBlocks.children.isEmpty || sortedBlocks.children == List(JNothing))
-      Success(None)
-    else {
-
-      implicit val formats = Serialization.formats(NoTypeHints) //+ buildSbtApidocSerializer
-      Success(Some((writePretty(sortedBlocks), writePretty(config))))
+      val sortedBlocks = sortBlock(filteredBlocks)
+      if (sortedBlocks.children.isEmpty || sortedBlocks.children == List(JNothing))
+        None
+      else {
+        implicit val formats = Serialization.formats(NoTypeHints) //+ buildSbtApidocSerializer
+        Some((writePretty(sortedBlocks), writePretty(config)))
+      }
     }
   }
 

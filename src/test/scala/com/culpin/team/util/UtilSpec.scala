@@ -2,6 +2,8 @@ package com.culpin.team.util
 
 import org.scalatest.{ FlatSpec, Matchers }
 
+import scala.util.{ Failure, Success }
+
 class UtilSpec extends FlatSpec with Matchers {
 
   "Util unindent" should "strip common leading spaces " in {
@@ -34,5 +36,48 @@ class UtilSpec extends FlatSpec with Matchers {
     val s = "    a\n   b\nc   d\n   e"
     assert(Util.unindent("\ta\n\t  b\n\t c") === "a\n  b\n c")
   }
+
+  "Util" should "sequence list of try - success" in {
+    val list = List(
+      Success(1),
+      Success(2),
+      Success(3)
+    )
+
+    assert(Util.sequence(list) === Success(List(1, 2, 3)))
+
+  }
+
+  "Util" should "sequence list of try - failure" in {
+    val list = List(
+      Success(1),
+      Failure(new IllegalArgumentException("ex")),
+      Success(3)
+    )
+
+    val Failure(ex) = Util.sequence(list)
+    assert(ex.isInstanceOf[IllegalArgumentException])
+    assert(ex.getMessage === "ex")
+
+  }
+
+  "Util" should "sequence list of try - failure 2" in {
+    val list = List(
+      Success(1),
+      Failure(new IllegalArgumentException("ex")),
+      Failure(new IllegalArgumentException("ex2"))
+    )
+
+    val Failure(ex) = Util.sequence(list)
+    assert(ex.isInstanceOf[IllegalArgumentException])
+    assert(ex.getMessage === "ex")
+
+  }
+  //TODO
+  //  "Util" should "sequence list of try - edge case" in {
+  //
+  //    assert(Util.sequence(List()) === Success())
+  //
+  //  }
 
 }

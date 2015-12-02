@@ -2,6 +2,9 @@ package com.culpin.team.util
 
 import java.io.File
 
+import org.json4s.scalap.Success
+
+import scala.util.{ Failure, Try, Success => USuccess }
 import scala.util.matching.Regex
 
 import scala.language.postfixOps
@@ -41,6 +44,16 @@ object Util {
     val source = scala.io.Source.fromFile(file)
     val src = try source.mkString finally source.close()
     src
+  }
+
+  def sequence[T](list: List[Try[T]]): Try[List[T]] = {
+    val (successes, failures) = list.partition(_.isSuccess)
+    if (failures.nonEmpty) {
+      val Failure(ex) = failures.head
+      Failure(ex)
+    } else {
+      USuccess(successes.collect { case USuccess(x) => x })
+    }
   }
 
 }

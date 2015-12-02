@@ -657,8 +657,6 @@ object Worker {
     val initResult: JValue = JObject()
     workers.foldLeft(initResult) {
       case (preProcessResult, worker) =>
-        println("worker preprocess " + worker.name)
-        // println("result --->" + pretty(render(worker.preProcess(parsedFiles))))
         preProcessResult merge worker.preProcess(parsedFiles)
     }
   }
@@ -667,7 +665,6 @@ object Worker {
     preProcess: JValue, packageInfos: SbtApidocConfiguration): JArray = {
     workers.foldLeft(parsedFiles) {
       case (pf, worker) =>
-        println("worker postprocess " + worker.name)
         worker.postProcess(pf, filenames, preProcess, packageInfos)
     }
   }
