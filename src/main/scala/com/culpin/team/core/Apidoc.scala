@@ -14,7 +14,6 @@ import org.json4s.native.Serialization.writePretty
 //import org.json4s.jackson.JsonMethods._
 import org.json4s.native.JsonMethods._
 
-
 import scala.util.Try
 
 import org.json4s.JsonAST.{ JString, JArray, JNothing }

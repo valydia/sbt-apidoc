@@ -1,6 +1,7 @@
 package com.culpin.team.worker
 
 import com.culpin.team.core.SbtApidocConfiguration
+import com.culpin.team.exception.WorkerException
 import com.culpin.team.parser.Parser
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
@@ -41,6 +42,12 @@ trait Worker {
 
   def postProcess(parsedFiles: JArray, filenames: List[String],
     preProcess: JValue, packageInfos: SbtApidocConfiguration): JArray = parsedFiles
+
+  val errorMap: Map[String, String] = Map(
+    "element" -> "apiUse",
+    "usage" -> "@apiUse group",
+    "example" -> "@apiDefine MyValidGroup Some title\n@apiUse MyValidGroup"
+  )
 
 }
 
@@ -548,7 +555,6 @@ class ApiUseWorker extends Worker {
   }
 
   def postProcessBlock(block: JValue, preProcess: JValue): JValue = {
-
     val localTarget: JValue = block \ "local" \ target
     if (localTarget == JNothing) block
     else {
@@ -559,9 +565,11 @@ class ApiUseWorker extends Worker {
         case _ => "0.0.0"
       }
 
-      if (preProcess \ source \ name == JNothing)
-        throw new IllegalArgumentException
-      else {
+      if (preProcess \ source \ name == JNothing) {
+        val JInt(index) = block \ "index"
+        val JString(filename) = block \ "local" \ "filename"
+        throw new WorkerException(filename, index, errorMap)
+      } else {
         val matchedData = matchData(preProcess, source, name, version)
 
         val fieldToRemove = block \ "local" \ target

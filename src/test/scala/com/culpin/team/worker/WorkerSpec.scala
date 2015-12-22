@@ -258,7 +258,7 @@ class WorkerSpec extends FlatSpec with Matchers {
     val JArray(l) = parse(blocksString)
     val worker = new ApiUseWorker
 
-    val result = worker.postProcess(JArray(l), List(), preProcessJson, conf)
+    val result = worker.postProcess(JArray(l), List("SomeFileName"), preProcessJson, conf)
     val error = result \ "local" \ "error"
 
     val error4XX = error \ "fields" \ "Error 4xx"
