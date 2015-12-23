@@ -2,27 +2,34 @@ package com.culpin.team.filter
 
 import org.json4s.JsonAST._
 import org.json4s.JsonDSL._
+import sbt.Logger
 
 trait Filter {
+
+  val name: String
+
   def postFilter(parsedFiles: JArray, tagName: String = ""): JArray
 }
 
-class ApiErrorFilter extends ApiParamFilter {
+case class ApiErrorFilter(override val name: String = "apierror") extends ApiParamFilter(name) {
+
   override def postFilter(parsedFiles: JArray, tagName: String = "error"): JArray =
     super.postFilter(parsedFiles, "error")
 }
 
-class ApiHeaderFilter extends ApiParamFilter {
+case class ApiHeaderFilter(override val name: String = "apiheader") extends ApiParamFilter(name) {
+
   override def postFilter(parsedFiles: JArray, tagName: String = "header"): JArray =
     super.postFilter(parsedFiles, "header")
 }
 
-class ApiSuccessFilter extends ApiParamFilter {
+case class ApiSuccessFilter(override val name: String = "apisuccess") extends ApiParamFilter(name) {
+
   override def postFilter(parsedFiles: JArray, tagName: String = "success"): JArray =
     super.postFilter(parsedFiles, "success")
 }
 
-class ApiParamFilter extends Filter {
+class ApiParamFilter(val name: String = "apiparam") extends Filter {
 
   def postFilter(parsedFiles: JArray, tagName: String = "parameter"): JArray = {
     parsedFiles.arr.map { parsedFileArray =>
@@ -39,6 +46,10 @@ class ApiParamFilter extends Filter {
 
 }
 
+object ApiParamFilter {
+  def apply(name: String = "apiparam"): ApiParamFilter = new ApiParamFilter(name)
+}
+
 object Filter {
 
   def filterDuplicateKeys(jobject: JObject): JObject = {
@@ -51,15 +62,16 @@ object Filter {
   }
 
   val filters = List(
-    new ApiErrorFilter,
-    new ApiHeaderFilter,
-    new ApiParamFilter,
-    new ApiSuccessFilter
+    ApiErrorFilter(),
+    ApiHeaderFilter(),
+    ApiParamFilter(),
+    ApiSuccessFilter()
   )
 
-  def apply(parsedFiles: JArray): JArray = {
+  def apply(parsedFiles: JArray, logger: Logger): JArray = {
     val filteredFiles = filters.foldLeft(parsedFiles) {
       case (pf, filter) =>
+        logger.verbose("filter postFilter: " + filter.name)
         filter.postFilter(pf)
     }
     val res = filteredFiles.arr.flatMap {

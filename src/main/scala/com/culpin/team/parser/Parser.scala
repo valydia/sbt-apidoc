@@ -4,6 +4,7 @@ import java.io.File
 
 import com.culpin.team.core._
 import com.culpin.team.util.Util
+import sbt.Logger
 import scala.util.{ Try, Failure, Success }
 import scala.util.matching.Regex
 
@@ -369,16 +370,37 @@ class ApiVersionParser extends Parser {
 
 object Parser {
 
-  def apply(sources: List[File]): (Try[JArray], List[String]) = {
-    (Util.sequence(sources.map { s => (parseFile(s)) }).map(JArray(_)), (sources map (_.getName)))
+  def apply(sources: List[File], logger: Logger): (Try[JArray], List[String]) = {
+    (parseFiles(sources, logger), (sources map (_.getName)))
   }
 
-  def parseFile(file: File): Try[JArray] = {
+  def parseFiles(sources: List[File], logger: Logger): Try[JArray] = {
+    Util.sequence(sources.map {
+      s =>
+        logger.info("parse file: " + s.getName)
+        (parseFile(s, logger))
+
+    }).map(JArray(_))
+  }
+
+  def parseFile(file: File, logger: Logger): Try[JArray] = {
+
+    logger.debug("inspect file" + file.getName)
+    logger.debug("size: " + file.length() + " bytes")
     val rawBlocks = findBlocks(file)
-    val elements = rawBlocks.map { b =>
-      findElements(b)
+    if (rawBlocks.nonEmpty)
+      //app.log.debug('count blocks: ' + self.blocks.length);
+      logger.debug("count blocks: " + rawBlocks.length)
+
+    val elements = rawBlocks.zipWithIndex.map {
+      case (b, i) =>
+        val element = findElements(b)
+        //TODO improve this logging
+        //app.log.debug('count elements in block ' + i + ': ' + elements.length);
+        //logger.debug("count elements in block " + i + ": " + element.length)
+        element
     }
-    parseBlockElement(elements)
+    parseBlockElement(elements, logger)
   }
 
   val parser = List(
@@ -402,7 +424,7 @@ object Parser {
     new ApiVersionParser
   )
 
-  def parseBlockElement(detectedElements: List[List[Element]]): Try[JArray] = {
+  def parseBlockElement(detectedElements: List[List[Element]], logger: Logger): Try[JArray] = {
 
     def isApiBlock(elements: Seq[Element]): Boolean = {
       val apiIgnore = elements.exists { elem =>
@@ -424,13 +446,18 @@ object Parser {
             case (result, element) =>
               result.map { r =>
                 parserMap.get(element.name).map { elementParser =>
+                  logger.debug("found @" + element.sourceName + " in block: " + index)
+
                   //TODO handle empty block
                   val Some(values) = elementParser.parseBlock(element.content)
 
                   val jVersion = if (elementParser.extendRoot) values \ "local" \ "version" else JNothing
                   val jIndex: JObject = ("index" -> (index + 1)) ~ ("version" -> jVersion)
                   r merge (values merge jIndex)
-                }.getOrElse(throw new IllegalArgumentException("Incorrect element " + element.sourceName))
+                }.getOrElse {
+                  logger.warn("parser plugin \'" + element.name + "\' not found in block: " + index)
+                  r
+                }
               }
 
           }
