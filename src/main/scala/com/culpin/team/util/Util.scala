@@ -2,7 +2,7 @@ package com.culpin.team.util
 
 import java.io.File
 
-import org.json4s.scalap.Success
+//import org.json4s.scalap.Success
 
 import scala.util.{ Failure, Try, Success => USuccess }
 import scala.util.matching.Regex
