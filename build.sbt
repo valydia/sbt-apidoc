@@ -2,19 +2,22 @@ import com.typesafe.sbt.SbtScalariform._
 import sbt.Keys._
 
 
+
 sbtPlugin := true
 
 organization := "com.culpin.team"
 
 name := """sbt-apidoc"""
 
-version := "0.5-SNAPSHOT"
+version := "0.5"
 
 ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
 
 scalacOptions ++= Seq("-deprecation", "-feature")
 
 licenses := Seq("MIT License" -> url("http://opensource.org/licenses/mit-license.php/"))
+
+
 
 
 val json4s_version = "3.3.0"
