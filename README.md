@@ -29,3 +29,7 @@ Annotate your comments as described in this [page][apidocjs]
     >sbt
     
     >apidoc
+    
+The output is generated under target/apidoc.  
+
+Check out the ApidocPluginTest project.  
