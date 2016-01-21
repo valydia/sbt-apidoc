@@ -33,12 +33,12 @@ class ApidocSpec extends FlatSpec with Matchers with MockitoSugar {
       ",\n      \"type\" : \"json\"\n    } ]\n  },\n  \"filename\" : \"Application.scala\",\n " +
       " \"groupTitle\" : \"Application\"\n} ]"
     //TODO - Check Welcome page ie api name worker / parser
-    //    assert(apidata === expectedApiData)
+    //        assert(apidata === expectedApiData)
 
     val expectedConf = "{\n  \"name\":\"name\",\n  \"description\":\"description\",\n  \"" +
       "sampleUrl\":\"false\",\n  \"version\":\"1.0\"\n}"
     //FIXME
-    //    assert(apiconfig === expectedConf)
+    assert(apiconfig === expectedConf)
   }
 
   "Apidoc" should " parse basic input file and configuration" in {

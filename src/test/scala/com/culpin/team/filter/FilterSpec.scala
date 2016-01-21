@@ -4,11 +4,15 @@ import java.io.File
 
 import com.culpin.team.util.Util
 import org.json4s.JsonAST.JArray
+import org.scalatest.mock.MockitoSugar
 import org.scalatest.{ Matchers, FlatSpec }
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
+import sbt.Logger
 
-class FilterSpec extends FlatSpec with Matchers {
+class FilterSpec extends FlatSpec with Matchers with MockitoSugar {
+
+  val mockLogger = mock[Logger]
 
   "Filter" should "leave unchanged a Jobject with now duplicate" in {
     val v = ("key1" -> "value1") ~ ("key2" -> "value2") ~ ("key3" -> "value3")
@@ -24,7 +28,7 @@ class FilterSpec extends FlatSpec with Matchers {
 
     val rawblocks = new File(getClass.getResource("/rawblocks.json").getFile)
     val JArray(json) = parse(Util.readFile(rawblocks))
-    val filteredBlocks = Filter(JArray(json))
+    val filteredBlocks = Filter(JArray(json), mockLogger)
 
     assert(filteredBlocks.children.size === 6)
   }

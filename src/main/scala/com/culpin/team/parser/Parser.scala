@@ -4,6 +4,8 @@ import java.io.File
 
 import com.culpin.team.core._
 import com.culpin.team.util.Util
+import sbt.Logger
+import scala.util.{ Try, Failure, Success }
 import scala.util.matching.Regex
 
 import org.json4s.JsonAST.{ JNothing, JArray, JString, JObject }
@@ -368,15 +370,37 @@ class ApiVersionParser extends Parser {
 
 object Parser {
 
-  def apply(sources: List[File]): (JArray, List[String]) =
-    (sources.map { s => (parseFile(s)) }, (sources map (_.getName)))
+  def apply(sources: List[File], logger: Logger): (Try[JArray], List[String]) = {
+    (parseFiles(sources, logger), (sources map (_.getName)))
+  }
 
-  def parseFile(file: File): JArray = {
+  def parseFiles(sources: List[File], logger: Logger): Try[JArray] = {
+    Util.sequence(sources.map {
+      s =>
+        logger.info("parse file: " + s.getName)
+        (parseFile(s, logger))
+
+    }).map(JArray(_))
+  }
+
+  def parseFile(file: File, logger: Logger): Try[JArray] = {
+
+    logger.debug("inspect file" + file.getName)
+    logger.debug("size: " + file.length() + " bytes")
     val rawBlocks = findBlocks(file)
-    val elements = rawBlocks.map { b =>
-      findElements(b)
+    if (rawBlocks.nonEmpty)
+      //app.log.debug('count blocks: ' + self.blocks.length);
+      logger.debug("count blocks: " + rawBlocks.length)
+
+    val elements = rawBlocks.zipWithIndex.map {
+      case (b, i) =>
+        val element = findElements(b)
+        //TODO improve this logging
+        //app.log.debug('count elements in block ' + i + ': ' + elements.length);
+        //logger.debug("count elements in block " + i + ": " + element.length)
+        element
     }
-    parseBlockElement(elements, file.getName)
+    parseBlockElement(elements, logger)
   }
 
   val parser = List(
@@ -400,7 +424,7 @@ object Parser {
     new ApiVersionParser
   )
 
-  def parseBlockElement(detectedElements: List[List[Element]], filename: String): JArray = {
+  def parseBlockElement(detectedElements: List[List[Element]], logger: Logger): Try[JArray] = {
 
     def isApiBlock(elements: Seq[Element]): Boolean = {
       val apiIgnore = elements.exists { elem =>
@@ -413,24 +437,31 @@ object Parser {
     }
     val parserMap = parser.map(p => (p.name, p)).toMap
 
-    detectedElements.zipWithIndex
+    Util.sequence(detectedElements.zipWithIndex
       .collect {
         case (elements, index) if isApiBlock(elements) =>
           val initialResult: JObject = ("global" -> JObject()) ~ ("local" -> JObject())
-          elements.foldLeft(initialResult) {
+          val tryInitialResult: Try[JObject] = Success(initialResult)
+          elements.foldLeft(tryInitialResult) {
             case (result, element) =>
+              result.map { r =>
+                parserMap.get(element.name).map { elementParser =>
+                  logger.debug("found @" + element.sourceName + " in block: " + index)
 
-              //TODO handle non existing parser
-              val Some(elementParser) = parserMap.get(element.name)
+                  //TODO handle empty block
+                  val Some(values) = elementParser.parseBlock(element.content)
 
-              //TODO handle empty block
-              val Some(values) = elementParser.parseBlock(element.content)
+                  val jVersion = if (elementParser.extendRoot) values \ "local" \ "version" else JNothing
+                  val jIndex: JObject = ("index" -> (index + 1)) ~ ("version" -> jVersion)
+                  r merge (values merge jIndex)
+                }.getOrElse {
+                  logger.warn("parser plugin \'" + element.name + "\' not found in block: " + index)
+                  r
+                }
+              }
 
-              val jVersion = if (elementParser.extendRoot) values \ "local" \ "version" else JNothing
-              val jIndex: JObject = ("index" -> (index + 1)) ~ ("version" -> jVersion)
-              result merge (values merge jIndex)
           }
-      }
+      }).map(JArray(_))
   }
 
   /**

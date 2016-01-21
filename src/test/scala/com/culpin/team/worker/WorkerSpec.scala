@@ -6,15 +6,21 @@ import com.culpin.team.core.SbtApidocConfiguration
 import com.culpin.team.parser.Parser
 import com.culpin.team.util.Util
 import org.json4s.JsonAST.JArray
+import org.scalatest.mock.MockitoSugar
 import org.scalatest.{ Matchers, FlatSpec }
 
 import org.json4s._
 import org.json4s.native.JsonMethods._
 import org.json4s.JsonDSL._
+import sbt.Logger
 
-class WorkerSpec extends FlatSpec with Matchers {
+import scala.util.Success
+
+class WorkerSpec extends FlatSpec with Matchers with MockitoSugar {
 
   val conf = SbtApidocConfiguration("name", "description", Option("https://api.github.com/v1"), "1.2")
+
+  val mockLogger = mock[Logger]
 
   "ApiParamTitleWorker" should " preProcess parsed Files" in {
     val file = new File(getClass.getResource("/expected/parsedFiles.json").getFile)
@@ -117,7 +123,7 @@ class WorkerSpec extends FlatSpec with Matchers {
     val sources = List(new File(getClass.getResource("/_apidoc.js").getFile),
       new File(getClass.getResource("/full-example.js").getFile))
 
-    val (json, filenames) = Parser(sources)
+    val (Success(json), filenames) = Parser(sources, mockLogger)
 
     val JArray(List(file1, file2)) = Worker.processFilename(json, filenames.toList)
 
@@ -167,7 +173,7 @@ class WorkerSpec extends FlatSpec with Matchers {
     val sources = List(new File(getClass.getResource("/_apidoc.js").getFile),
       new File(getClass.getResource("/full-example.js").getFile))
 
-    val (json, filenames) = Parser(sources)
+    val (Success(json), filenames) = Parser(sources, mockLogger)
 
     val parsedFiles = Worker.processFilename(json, filenames.toList)
 
@@ -256,7 +262,7 @@ class WorkerSpec extends FlatSpec with Matchers {
     val JArray(l) = parse(blocksString)
     val worker = new ApiUseWorker
 
-    val result = worker.postProcess(JArray(l), List(), preProcessJson, conf)
+    val result = worker.postProcess(JArray(l), List("SomeFileName"), preProcessJson, conf)
     val error = result \ "local" \ "error"
 
     val error4XX = error \ "fields" \ "Error 4xx"
@@ -301,7 +307,7 @@ class WorkerSpec extends FlatSpec with Matchers {
 
   "ApiSampleRequestWorker" should " postprocess with sampleURL" in {
 
-    val (parsedFiles, filenames) = Parser.apply(List(new File(getClass.getResource("/sampleRequest.js").getFile)))
+    val (Success(parsedFiles), filenames) = Parser.apply(List(new File(getClass.getResource("/sampleRequest.js").getFile)), mockLogger)
 
     val worker = new ApiSampleRequestWorker
 
@@ -315,7 +321,7 @@ class WorkerSpec extends FlatSpec with Matchers {
 
   "ApiSampleRequestWorker" should " postprocess without sampleURL" in {
 
-    val (parsedFiles, filenames) = Parser.apply(List(new File(getClass.getResource("/sampleRequest.js").getFile)))
+    val (Success(parsedFiles), filenames) = Parser.apply(List(new File(getClass.getResource("/sampleRequest.js").getFile)), mockLogger)
 
     val worker = new ApiSampleRequestWorker
 

@@ -11,7 +11,9 @@ name := """sbt-apidoc"""
 
 version := "0.5"
 
-ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
+scalaVersion := "2.10.6"
+
+ivyLoggingLevel := UpdateLogging.Quiet
 
 scalacOptions ++= Seq("-deprecation", "-feature")
 
@@ -19,8 +21,7 @@ licenses := Seq("MIT License" -> url("http://opensource.org/licenses/mit-license
 
 
 
-
-val json4s_version = "3.3.0"
+val json4s_version = "3.2.11"
 
 
 libraryDependencies ++= Seq(
@@ -30,11 +31,10 @@ libraryDependencies ++= Seq(
   "org.mockito"        %  "mockito-core"     % "1.8.5"   % "test"
 )
 
+
 dependencyOverrides += "org.json4s"  %% "json4s-native" % json4s_version
 
-
 resolvers += Resolver.bintrayRepo("giltgroupe", "maven")
-
 
 
 //Scalariform

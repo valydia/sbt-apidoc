@@ -5,11 +5,17 @@ import java.io.File
 import com.culpin.team.core._
 import com.culpin.team.util.Util
 import org.json4s.native.JsonMethods._
+import org.scalatest.mock.MockitoSugar
 import org.scalatest.{ Matchers, FlatSpec }
 
 import org.json4s.JsonAST._
+import sbt.Logger
 
-class ParserSpec extends FlatSpec with Matchers {
+import scala.util.{ Failure, Success }
+
+class ParserSpec extends FlatSpec with Matchers with MockitoSugar {
+
+  val mockLogger = mock[Logger]
 
   "Parser" should "find block in file" in {
 
@@ -478,7 +484,7 @@ class ParserSpec extends FlatSpec with Matchers {
       )
     )
 
-    val result = Parser.parseBlockElement(detectedElement, "app/controllers/gathr/culpinteam/v1/Application.scala")
+    val Success(result) = Parser.parseBlockElement(detectedElement, mockLogger)
 
     val local = result(0) \ "local"
     assert(local \ "type" === JString("get"))
@@ -499,12 +505,22 @@ class ParserSpec extends FlatSpec with Matchers {
 
   }
 
+  "Parser" should "parse block element - with non existing element" in {
+    val detectedElements = List(
+      List(
+        Element("@apiUnknown {get} / Home page.", "apiunknown", "apiUnknown", "{get} / Home page.")
+      )
+    )
+
+    assert(Parser.parseBlockElement(detectedElements, mockLogger).isSuccess === true)
+
+  }
+
   "Parser" should "parse file" in {
 
     val sources = List(new File(getClass.getResource("/Application.scala").getFile))
-    val (blocks, filenames) = Parser(sources)
+    val (Success(blocks), filenames) = Parser(sources, mockLogger)
     assert(filenames === List("Application.scala"))
-    // val block = blocks(0)(0)
     val local = blocks(0)(0) \ "local"
     assert(local \ "type" === JString("get"))
     assert(local \ "url" === JString("/"))
@@ -528,7 +544,7 @@ class ParserSpec extends FlatSpec with Matchers {
     val sources = List(new File(getClass.getResource("/_apidoc.js").getFile),
       new File(getClass.getResource("/full-example.js").getFile))
 
-    val (JArray(List(file1, file2)), filenames) = Parser(sources)
+    val (Success(JArray(List(file1, file2))), filenames) = Parser(sources, mockLogger)
 
     assert(filenames === List("_apidoc.js", "full-example.js"))
 

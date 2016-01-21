@@ -1,0 +1,5 @@
+
+/**
+ * @apiUse CreateUserError
+ */
+def postUser() = ???

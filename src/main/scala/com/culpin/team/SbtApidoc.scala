@@ -52,7 +52,7 @@ object SbtApidoc extends AutoPlugin {
     val maybeFolder = parseResult match {
       case Success(Some((apiData, apiProject))) => Some(generateApidoc(apiData, apiProject, apidocOutputDir.value, log))
       case Success(None) => None
-      case Failure(ex) => None
+      case Failure(ex) => log.error(ex.getMessage); None
     }
 
     log.info("Done.")
