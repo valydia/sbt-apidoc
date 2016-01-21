@@ -9,7 +9,7 @@ organization := "com.culpin.team"
 
 name := """sbt-apidoc"""
 
-version := "0.5"
+version := "0.5.1"
 
 scalaVersion := "2.10.6"
 
