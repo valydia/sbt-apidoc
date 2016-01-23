@@ -77,10 +77,10 @@ object Filter {
     val res = filteredFiles.arr.flatMap {
       case JArray(parsedFile) =>
         parsedFile
-          .collect {
-            case block if (block \ "global").children.isEmpty && (block \ "local").children.nonEmpty =>
-              block \ "local"
-          }
+        .collect {
+          case block if (block \ "global").children.isEmpty && (block \ "local").children.nonEmpty =>
+            block \ "local"
+        }
       case _ => List()
     }
     JArray(res)

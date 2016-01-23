@@ -45,7 +45,6 @@ object Apidoc {
         None
       else {
         implicit val formats = Serialization.formats(NoTypeHints) + buildSbtApidocSerializer
-        println(writePretty(config))
         Some((writePretty(sortedBlocks), writePretty(config)))
       }
     }
@@ -67,9 +66,9 @@ object Apidoc {
         if (labelA.equals(labelB)) {
           val JString(versionA) = a \ "version"
           val JString(versionB) = b \ "version"
-          (SemVer(versionA) compareTo SemVer(versionB)) >= 0
+          SemVer(versionA) >= SemVer(versionB)
         } else {
-          (labelA compareTo labelB) <= 0
+          labelA <= labelB
         }
     }
     JArray(sortedChildren)
