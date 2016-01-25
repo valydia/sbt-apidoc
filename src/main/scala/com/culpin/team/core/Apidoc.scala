@@ -84,9 +84,7 @@ object Apidoc {
 
     val serializer: PartialFunction[(String, Any), Option[(String, Any)]] = nameSerializer orElse descriptionSerializer orElse definedSampleUrlSerializer orElse emptySampleUrl orElse versionSerializer
 
-    // val deserializer: PartialFunction[JField, JField] = Map()
     val deserializer: PartialFunction[JField, JField] = PartialFunction.empty[JField, JField]
-    //    FieldSerializer[SbtApidocConfiguration].apply(serializer, deserializer, false)
     FieldSerializer[SbtApidocConfiguration](serializer = serializer)
   }
 

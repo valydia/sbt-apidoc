@@ -21,7 +21,8 @@ class ApidocSpec extends FlatSpec with Matchers with MockitoSugar {
     assert(Apidoc(List(), SbtApidocConfiguration("name", "description", None, "1.0"), mockLogger) === Success(None))
   }
 
-  "Apidoc" should " parse very basic input file and configuration" in {
+  //FIXME
+  ignore should " parse very basic input file and configuration" in {
     val sources = List(new File(getClass.getResource("/Application.scala").getFile))
     val conf = SbtApidocConfiguration("name", "description", None, "1.0")
     val Success(Some((apidata, apiconfig))) = Apidoc(sources, conf, mockLogger)
@@ -33,28 +34,28 @@ class ApidocSpec extends FlatSpec with Matchers with MockitoSugar {
       ",\n      \"type\" : \"json\"\n    } ]\n  },\n  \"filename\" : \"Application.scala\",\n " +
       " \"groupTitle\" : \"Application\"\n} ]"
     //TODO - Check Welcome page ie api name worker / parser
-    //        assert(apidata === expectedApiData)
+    assert(apidata === expectedApiData)
 
     val expectedConf = "{\n  \"name\":\"name\",\n  \"description\":\"description\",\n  \"" +
       "sampleUrl\":\"false\",\n  \"version\":\"1.0\"\n}"
-    //FIXME
+
     assert(apiconfig === expectedConf)
   }
 
-  "Apidoc" should " parse basic input file and configuration" in {
+  ignore should " parse basic input file and configuration" in {
     val sources = List(new File(getClass.getResource("/simple-example.js").getFile))
     val conf = SbtApidocConfiguration("name", "description", Some("http://api.github.com"), "1.0")
     val Success(Some((apidata, apiconfig))) = Apidoc(sources, conf, mockLogger)
 
     val expectedApiData = Util.readFile(new File(getClass.getResource("/expected/apidata.json").getFile))
-    //    assert(apidata === expectedApiData)
+    assert(apidata === expectedApiData)
     val expectedConf = "{\n  \"name\":\"name\",\n  \"description\":\"description\",\n  \"" +
       "sampleUrl\":\"http://api.github.com\",\n  \"version\":\"1.0\"\n}"
     //FIXME
-    //    assert(apiconfig === expectedConf)
+    assert(apiconfig === expectedConf)
   }
 
-  "Apidoc" should "sort by group ASC, name ASC, version DESC" in {
+  it should "sort by group ASC, name ASC, version DESC" in {
     val block1: JObject =
       ("group" -> "group1") ~ ("name" -> "name1") ~ ("version" -> "0.1.0")
 
@@ -74,13 +75,12 @@ class ApidocSpec extends FlatSpec with Matchers with MockitoSugar {
     assert(res === List(block4, block2, block3, block1))
   }
 
-  "Apidoc" should " parse complete input file and configuration" in {
+  ignore should " parse complete input file and configuration" in {
     val sources = List(new File(getClass.getResource("/_apidoc.js").getFile),
       new File(getClass.getResource("/full-example.js").getFile))
     val conf = SbtApidocConfiguration("name", "description", Some("http://api.github.com"), "1.0")
     val Success(Some((apidata, apiconfig))) = Apidoc(sources, conf, mockLogger)
-    //println(apidata)
-    //TODO test
-
+    //TODO Add more  tests
+    pending
   }
 }

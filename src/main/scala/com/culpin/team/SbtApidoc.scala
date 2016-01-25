@@ -46,7 +46,12 @@ object SbtApidoc extends AutoPlugin {
     //getting the source files
     val sourcesFiles = (sources in Compile).value.toList
 
-    val config = SbtApidocConfiguration(apidocName.value, apidocDescription.value, apidocSampleURL.value.map(_.toString), apidocVersion.value.getOrElse("1.0.0"))
+    val config = SbtApidocConfiguration(
+      apidocName.value,
+      apidocDescription.value,
+      apidocSampleURL.value.map(_.toString),
+      apidocVersion.value.getOrElse("1.0.0")
+    )
 
     val parseResult = Apidoc(sourcesFiles, config, log)
     val maybeFolder = parseResult match {
@@ -85,6 +90,7 @@ object SbtApidoc extends AutoPlugin {
     log.info(s"write js file: ${apidocOutput.getName}/api_project.js")
     IO.write(apidocOutput / "api_project.js", "define({ \"api\":  " + apiProject + "  })")
 
+    log.info("Generated output into folder " + apidocOutput)
     apidocOutput
   }
 

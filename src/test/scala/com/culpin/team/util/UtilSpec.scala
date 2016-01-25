@@ -73,11 +73,5 @@ class UtilSpec extends FlatSpec with Matchers {
     assert(ex.getMessage === "ex")
 
   }
-  //TODO
-  //  "Util" should "sequence list of try - edge case" in {
-  //
-  //    assert(Util.sequence(List()) === Success())
-  //
-  //  }
 
 }

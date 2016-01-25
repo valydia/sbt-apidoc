@@ -427,8 +427,6 @@ class WorkerSpec extends FlatSpec with Matchers with MockitoSugar {
 
     val JArray(List(block1, block2, block3)) = file2
 
-    //    println(pretty(render(block1)))
-
     val permission1 = block1 \ "local" \ "permission"
 
     assert(permission1(0) \ "name" === JString("admin"))
