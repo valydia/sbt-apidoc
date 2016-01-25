@@ -6,7 +6,10 @@ $ exists target/apidoc/api_project.js
 $ exists target/apidoc/api_data.json
 $ exists target/apidoc/api_project.json
 
-
-# FIXME issue with scripted sbt not copying resource file
-#$ exists target/apidoc/css/style.css
+$ exists target/apidoc/css/style.css
+$ exists target/apidoc/img
+$ exists target/apidoc/locales
+$ exists target/apidoc/vendor
+$ exists target/apidoc/main.js
+$ exists target/apidoc/index.html
 

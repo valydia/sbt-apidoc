@@ -59,30 +59,33 @@ object SbtApidoc extends AutoPlugin {
     maybeFolder
   }
 
-  def generateApidoc(apiData: String, apiProject: String, target: File, log: Logger): File = {
+  def generateApidoc(apiData: String, apiProject: String, apidocOutput: File, log: Logger): File = {
 
-    val folderName = target.getName
-    log.info(s"create dir: $folderName")
-    IO.createDirectory(target)
-    //FIXME scripted test doesn't seem to get resourceDirectory
+    val folderName = apidocOutput.getName
 
     log.info(s"copy template to $folderName")
-    val maybeTemplateFolder = Option(new File(getClass.getResource("/template").getFile))
-    maybeTemplateFolder.map(IO.copyDirectory(_, target))
 
-    log.info(s"write json file: ${target.getName}/api_data.json")
-    IO.write(target / "api_data.json", apiData)
+    val path = getClass.getClassLoader.getResourceAsStream("template.zip")
 
-    log.info(s"write js file: ${target.getName}/api_data.js")
-    IO.write(target / "api_data.js", "define({ \"api\":  " + apiData + "  })")
+    val tmp = IO.createTemporaryDirectory
+    IO.unzipStream(path, tmp)
+    val template = (tmp / "template")
+    val files = template.listFiles() zip template.list().map(apidocOutput / _)
+    IO.move(files)
 
-    log.info(s"write json file: ${target.getName}/api_project.json")
-    IO.write(target / "api_project.json", apiProject)
+    log.info(s"write json file: ${apidocOutput.getName}/api_data.json")
+    IO.write(apidocOutput / "api_data.json", apiData)
 
-    log.info(s"write js file: ${target.getName}/api_project.js")
-    IO.write(target / "api_project.js", "define({ \"api\":  " + apiProject + "  })")
+    log.info(s"write js file: ${apidocOutput.getName}/api_data.js")
+    IO.write(apidocOutput / "api_data.js", "define({ \"api\":  " + apiData + "  })")
 
-    target
+    log.info(s"write json file: ${apidocOutput.getName}/api_project.json")
+    IO.write(apidocOutput / "api_project.json", apiProject)
+
+    log.info(s"write js file: ${apidocOutput.getName}/api_project.js")
+    IO.write(apidocOutput / "api_project.js", "define({ \"api\":  " + apiProject + "  })")
+
+    apidocOutput
   }
 
 }
