@@ -66,31 +66,32 @@ object SbtApidoc extends AutoPlugin {
 
   def generateApidoc(apiData: String, apiProject: String, apidocOutput: File, log: Logger): File = {
 
-    val folderName = apidocOutput.getName
+    val relativePath = apidocOutput.getParentFile.getName + "/" + apidocOutput.getName
 
-    log.info(s"copy template to $folderName")
+    log.info(s"copy template to $relativePath")
 
-    val path = getClass.getClassLoader.getResourceAsStream("template.zip")
+    val templateStream = getClass.getClassLoader.getResourceAsStream("template.zip")
 
     val tmp = IO.createTemporaryDirectory
-    IO.unzipStream(path, tmp)
+    IO.unzipStream(templateStream, tmp)
     val template = (tmp / "template")
     val files = template.listFiles() zip template.list().map(apidocOutput / _)
     IO.move(files)
+    IO.delete(tmp)
 
-    log.info(s"write json file: ${apidocOutput.getName}/api_data.json")
+    log.info(s"write json file: $relativePath/api_data.json")
     IO.write(apidocOutput / "api_data.json", apiData)
 
-    log.info(s"write js file: ${apidocOutput.getName}/api_data.js")
+    log.info(s"write js file: $relativePath/api_data.js")
     IO.write(apidocOutput / "api_data.js", "define({ \"api\":  " + apiData + "  })")
 
-    log.info(s"write json file: ${apidocOutput.getName}/api_project.json")
+    log.info(s"write json file: $relativePath/api_project.json")
     IO.write(apidocOutput / "api_project.json", apiProject)
 
-    log.info(s"write js file: ${apidocOutput.getName}/api_project.js")
+    log.info(s"write js file: $relativePath/api_project.js")
     IO.write(apidocOutput / "api_project.js", "define({ \"api\":  " + apiProject + "  })")
 
-    log.info("Generated output into folder " + apidocOutput)
+    log.info("Generated output into folder " + relativePath)
     apidocOutput
   }
 
