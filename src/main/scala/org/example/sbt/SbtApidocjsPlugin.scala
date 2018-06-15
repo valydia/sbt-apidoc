@@ -1,6 +1,6 @@
 package org.example.sbt
 
-import sbt.{Logger, _}
+import sbt.{IO, Logger, _}
 import sbt.Keys._
 import sbt.plugins.JvmPlugin
 import fastparse.all._
@@ -32,21 +32,56 @@ object SbtApidocjsPlugin extends AutoPlugin {
     //getting the source files
     val log = streams.value.log
     val sourceFiles = (sources in Compile).value.toList
-    processSources(sourceFiles, log)
-    None
+    val result = processSources(sourceFiles, log) match {
+      case Some((apiData, apiProject)) => Some(generateApidoc(apiData, apiProject, apidocOutputDir.value, log))
+      case _ => None
+    }
+    log.info("Done.")
+    result
   }
 
-  private def processSources(sourceFiles: List[File], log: Logger): Unit = {
+  def generateApidoc(apiData: String, apiProject: String, apidocOutput: File, log: Logger): File = {
+
+    val relativePath = apidocOutput.getParentFile.getName + "/" + apidocOutput.getName
+
+    log.info(s"copy template to $relativePath")
+
+    val templateStream = getClass.getClassLoader.getResourceAsStream("template.zip")
+
+    val tmp = IO.createTemporaryDirectory
+    IO.unzipStream(templateStream, tmp)
+    val template = tmp / "template"
+    val files = template.listFiles() zip template.list().map(apidocOutput / _)
+    IO.move(files)
+    IO.delete(tmp)
+
+    log.info(s"write json file: $relativePath/api_data.json")
+    IO.write(apidocOutput / "api_data.json", apiData)
+
+    log.info(s"write js file: $relativePath/api_data.js")
+    IO.write(apidocOutput / "api_data.js", "define({ \"api\":  " + apiData + "  });")
+
+    log.info(s"write json file: $relativePath/api_project.json")
+    IO.write(apidocOutput / "api_project.json", apiProject)
+
+    log.info(s"write js file: $relativePath/api_project.js")
+    IO.write(apidocOutput / "api_project.js", "define( " + apiProject + " );")
+
+    log.info("Generated output into folder " + relativePath)
+    apidocOutput
+  }
+
+  private def processSources(sourceFiles: List[File], log: Logger): Option[(String, String)] = {
     log.info(s"Here are the file${ if (sourceFiles.nonEmpty) "s" else "" }")
     sourceFiles.foreach { f =>
       log.info("Name " + f.getName)
       processFileContent(IO.read(f), log)
     }
+    Some("", "")
   }
 
   private def processFileContent(file: String, log: Logger): Unit = {
-    log.info("Content: ")
-    log.info(file)
+    log.debug("Content: ")
     val comment = parseCommentBlocks(file)
     log.info(s"Comment: $comment")
   }
@@ -85,14 +120,44 @@ object SbtApidocjsPlugin extends AutoPlugin {
   }
   import ujson.Js
 
-  val apiParser: Parser[(Option[String], String, String)] = P( ("{" ~ (!"}" ~ AnyChar).rep.! ~ "}").? ~ " " ~ (!" " ~ AnyChar).rep.! ~ " " ~ AnyChar.rep.!)
-  private[sbt] def apiParser(content: String): Option[Js.Obj] = {
-    apiParser.parse(content).fold(
+  val api: Parser[(Option[String], String, Option[String])] = P( ("{" ~ (!"}" ~ AnyChar).rep.! ~ "}").? ~ " " ~ (!" " ~ AnyChar).rep.! ~ (" " ~ AnyChar.rep.!).?)
+  private[sbt] def apiParse(content: String): Option[Js.Obj] = {
+    api.parse(content).fold(
       (_, _, _) => None,
       (result, _) => {
-        val json: Js.Obj = Js.Obj("local" -> Js.Obj("type" -> result._1.getOrElse(""), "url" -> result._2, "title" -> result._3))
+        val json: Js.Obj = Js.Obj("local" -> Js.Obj("type" -> result._1.getOrElse(""), "url" -> result._2, "title" -> result._3.fold(Js.Null: Js.Value)(Js.Str.apply)))
         Option(json)
       }
     )
   }
+
+  val apiDefine: Parser[(String, Option[String], Option[String])] = P( (!" " ~ AnyChar).rep.! ~ (" " ~ (!"\n" ~ AnyChar).rep.!).? ~ ("\n" ~ AnyChar.rep.!).? )
+  private[sbt] def apiDefineParse(content: String): Option[Js.Obj] = {
+    apiDefine.parse(content).fold(
+      (_, _, _) => None,
+      (result, _) => {
+          val json = Js.Obj( "global" -> Js.Obj( "define" -> Js.Obj( "name" -> result._1, "title" -> result._2.fold(Js.Null: Js.Value)(Js.Str.apply), "description" -> result._3.fold(Js.Null: Js.Value)(Js.Str.apply))))
+          Option(json)
+      }
+    )
+  }
+
+
+  private[sbt] def apiDescription(content: String): Option[Js.Obj] = {
+    val description = trim(content)
+    println("hello -- " + description)
+    if (description.isEmpty)
+      None
+    else
+      Option(Js.Obj("local" -> Js.Obj("description" -> description)))
+  }
+
+  val trim: Parser[String] = P( CharIn("\r\n\t\f ").rep.? ~ (!(CharIn("\r\n\t\f ").rep ~ End) ~ AnyChar).rep.!)
+  def trim(str: String): String = {
+    trim.parse(str).fold(
+      (_, _, _) => str,
+      (result, _) => result
+    )
+  }
+
 }

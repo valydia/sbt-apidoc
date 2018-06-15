@@ -70,8 +70,9 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
 //    assert(result4.toList === expected4)
   }
 
+
   it should "parse api element with title" in {
-    val result = SbtApidocjsPlugin.apiParser("{get} /user/:id some title")
+    val result = SbtApidocjsPlugin.apiParse("{get} /user/:id some title")
     val localJson = result.get.apply("local")
     assert(localJson("type") === Js.Str("get"))
     assert(localJson("url") === Js.Str("/user/:id"))
@@ -79,10 +80,63 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
   }
 
   it should "parse api element" in {
-    val result = SbtApidocjsPlugin.apiParser("{get} /user/:id")
+    val result = SbtApidocjsPlugin.apiParse("{get} /user/:id")
     val localJson = result.get.apply("local")
     assert(localJson("type") === Js.Str("get"))
-//    assert(localJson("url") === Js.Str("/user/:id"))
+    assert(localJson("url") === Js.Str("/user/:id"))
     assert(localJson("title") === Js.Null)
+  }
+
+  it should "parse apidefine element" in {
+    val result = SbtApidocjsPlugin.apiDefineParse("admin This title is visible in version 0.1.0 and 0.2.0")
+    val defineJson = result.get.apply("global")("define")
+    assert(defineJson("name") === Js.Str("admin"))
+    assert(defineJson("title") === Js.Str("This title is visible in version 0.1.0 and 0.2.0"))
+    assert(defineJson("description") === Js.Null)
+  }
+
+
+  it should "parse apidefine element with description" in {
+    val result = SbtApidocjsPlugin.apiDefineParse("admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.")
+    val defineJson = result.get.apply("global")("define")
+    assert(defineJson("name") === Js.Str("admin"))
+    assert(defineJson("title") === Js.Str("Admin access rights needed."))
+    assert(defineJson("description") === Js.Str("Optionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."))
+  }
+
+  it should "parse apidescription element" in {
+    val result = SbtApidocjsPlugin.apiDescription("Some Description")
+    val localJson = result.get.apply("local")
+    assert(localJson("description") === Js.Str("Some Description"))
+  }
+
+  it should "parse apidescription element - empty" in {
+    val result = SbtApidocjsPlugin.apiDescription("")
+    assert(result === None)
+  }
+
+
+  it should "parse apidescription element - word only " in {
+    val result = SbtApidocjsPlugin.apiDescription("Text")
+    val localJson = result.get.apply("local")
+    assert(localJson("description") === Js.Str("Text"))
+  }
+
+  it should "parse apidescription element - trim single line  " in {
+    val result = SbtApidocjsPlugin.apiDescription("   Text line 1 (Begin: 3xSpaces (3 removed), End: 1xSpace). ")
+    val localJson = result.get.apply("local")
+    assert(localJson("description") === Js.Str("Text line 1 (Begin: 3xSpaces (3 removed), End: 1xSpace)."))
+  }
+
+  it should "parse apidescription element - trim multi line (spaces)  " in {
+    val result = SbtApidocjsPlugin.apiDescription("    Text line 1 (Begin: 4xSpaces (3 removed)).\n   Text line 2 (Begin: 3xSpaces (3 removed), End: 2xSpaces).  ")
+    val localJson = result.get.apply("local")
+    assert(localJson("description") === Js.Str("Text line 1 (Begin: 4xSpaces (3 removed)).\n   Text line 2 (Begin: 3xSpaces (3 removed), End: 2xSpaces)."))
+  }
+
+  it should "parse apidescription element - trim multi line (tabs)  " in {
+    val result = SbtApidocjsPlugin.apiDescription("\t\t\tText line 1 (Begin: 3xTab (2 removed)).\n\t\tText line 2 (Begin: 2x Tab (2 removed), End: 1xTab).\t")
+    val localJson = result.get.apply("local")
+    assert(localJson("description") === Js.Str("Text line 1 (Begin: 3xTab (2 removed)).\n\t\tText line 2 (Begin: 2x Tab (2 removed), End: 1xTab)."))
   }
 }
