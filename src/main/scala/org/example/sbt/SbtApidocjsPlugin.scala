@@ -145,7 +145,6 @@ object SbtApidocjsPlugin extends AutoPlugin {
 
   private[sbt] def apiDescription(content: String): Option[Js.Obj] = {
     val description = trim(content)
-    println("hello -- " + description)
     if (description.isEmpty)
       None
     else
