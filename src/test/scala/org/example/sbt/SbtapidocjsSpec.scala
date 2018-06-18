@@ -134,5 +134,38 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
     assert(result === None)
   }
 
+  it should "parse apiexample element" in {
+    val result = SbtApidocjsPlugin.apiExample("Example usage:\ncurl -i http://localhost/user/4711")
+    val exampleJson = result.get.apply("local")("examples")
+    assert(exampleJson("title") === Js.Str("Example usage:"))
+    assert(exampleJson("content") === Js.Str("curl -i http://localhost/user/4711"))
+    assert(exampleJson("type") === Js.Str("json"))
+  }
+
+  it should "parse apiexampleerror element" in {
+    val result = SbtApidocjsPlugin.apiErrorExample("{json} Error-Response:\n                 This is an example.")
+    val exampleJson = result.get.apply("local")("error")("examples")
+    assert(exampleJson("title") === Js.Str("Error-Response:"))
+    assert(exampleJson("content") === Js.Str("This is an example."))
+    assert(exampleJson("type") === Js.Str("json"))
+  }
+
+  val unindents =
+    Table(
+      ("content", "expected"),
+      ("  a\n    b\n   c", "a\n  b\n c"),
+      ("\t\ta\n\t\t\t\tb\n\t\t\tc", "a\n\t\tb\n\tc"),
+      ("   \t   a", "a"),
+      ("    a\n   b\nc   d\n   e", "    a\n   b\nc   d\n   e"),
+      ("\ta\n\t  b\n\t c", "a\n  b\n c")
+    )
+
+  it should "unindent" in {
+    forAll(unindents){ (content, expected) =>
+      val result = SbtApidocjsPlugin.unindent(content)
+      assert(result === expected)
+    }
+  }
+
 
 }

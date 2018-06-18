@@ -3,6 +3,7 @@ package org.example.sbt
 import sbt.{IO, Logger, _}
 import sbt.Keys._
 import sbt.plugins.JvmPlugin
+import ujson.Js
 import fastparse.all._
 
 object SbtApidocjsPlugin extends AutoPlugin {
@@ -86,10 +87,10 @@ object SbtApidocjsPlugin extends AutoPlugin {
     log.info(s"Comment: $comment")
   }
 
-  val commentChunk: Parser[Any] = P( CharsWhile(c => c != '/' && c != '*') | multilineComment | !"*/" ~ AnyChar )
-  lazy val multilineComment: Parser[String] = P( "/**" ~ "\n".? ~ " ".rep() ~ "* " ~/ commentChunk.rep.! ~ "*/" )
-  val commentBlock: Parser[String] = P( (!"/**" ~ AnyChar).rep ~ multilineComment ~ (!"/**" ~ AnyChar).rep )
-  val commentBlocks: Parser[Seq[String]] = commentBlock.rep
+  private val commentChunk: Parser[Any] = P( CharsWhile(c => c != '/' && c != '*') | multilineComment | !"*/" ~ AnyChar )
+  private lazy val multilineComment: Parser[String] = P( "/**" ~ "\n".? ~ " ".rep() ~ "* " ~/ commentChunk.rep.! ~ "*/" )
+  private val commentBlock: Parser[String] = P( (!"/**" ~ AnyChar).rep ~ multilineComment ~ (!"/**" ~ AnyChar).rep )
+  private val commentBlocks: Parser[Seq[String]] = commentBlock.rep
 
   private[sbt] def parseCommentBlocks(file: String): Seq[String] = {
 
@@ -104,11 +105,11 @@ object SbtApidocjsPlugin extends AutoPlugin {
     )
   }
 
-  val identifier: Parser[String]  = P( (!" " ~ AnyChar).rep.! )
-  val argument: Parser[String]  = P( (!"\n" ~ AnyChar).rep.! )
-  val prefix: Parser[Unit] = P( (!"@" ~ AnyChar).rep )
-  val elementParser: Parser[Element] = P( prefix ~ ("@" ~ identifier ~ " " ~ argument)).map{case (id, arg) => Element(s"@$id $arg", id.toLowerCase, id, arg) }
-  val elements: Parser[Seq[Element]] = elementParser.rep
+  private val identifier: Parser[String]  = P( (!" " ~ AnyChar).rep.! )
+  private val argument: Parser[String]  = P( (!"\n" ~ AnyChar).rep.! )
+  private val prefix: Parser[Unit] = P( (!"@" ~ AnyChar).rep )
+  private val elementParser: Parser[Element] = P( prefix ~ ("@" ~ identifier ~ " " ~ argument)).map{case (id, arg) => Element(s"@$id $arg", id.toLowerCase, id, arg) }
+  private val elements: Parser[Seq[Element]] = elementParser.rep
 
   case class Element(source: String, name: String, sourceName: String, content: String)
 
@@ -118,45 +119,77 @@ object SbtApidocjsPlugin extends AutoPlugin {
         (elements, _) => elements
     )
   }
-  import ujson.Js
 
-  val api: Parser[(Option[String], String, Option[String])] = P( ("{" ~ (!"}" ~ AnyChar).rep.! ~ "}").? ~ " " ~ (!" " ~ AnyChar).rep.! ~ (" " ~ AnyChar.rep.!).?)
-  private[sbt] def apiParse(content: String): Option[Js.Obj] = {
-    api.parse(content).fold(
+
+  private def toOption(parsed: Parsed[Js.Obj], path: String*): Option[Js.Obj] = {
+    parsed.fold(
       (_, _, _) => None,
-      (result, _) => {
-        val json: Js.Obj = Js.Obj("local" -> Js.Obj("type" -> result._1.getOrElse(""), "url" -> result._2, "title" -> result._3.fold(Js.Null: Js.Value)(Js.Str.apply)))
-        Option(json)
-      }
+      (jsObj, _) => Option(path.foldRight(jsObj){ case (key, acc) =>
+        Js.Obj(key -> acc)
+      })
     )
   }
+  private val api: Parser[Js.Obj] =
+    P( ("{" ~ (!"}" ~ AnyChar).rep.! ~ "}").? ~ " " ~ (!" " ~ AnyChar).rep.! ~ (" " ~ AnyChar.rep.!).?) map {
+      case (t, url, title) =>
+        Js.Obj("type" -> t.getOrElse(""), "url" -> url, "title" -> title.fold(Js.Null: Js.Value)(Js.Str.apply))
+    }
+  private[sbt] def apiParse(content: String): Option[Js.Obj] =
+    toOption(api.parse(content),"local")
 
-  val apiDefine: Parser[(String, Option[String], Option[String])] = P( (!" " ~ AnyChar).rep.! ~ (" " ~ (!"\n" ~ AnyChar).rep.!).? ~ ("\n" ~ AnyChar.rep.!).? )
-  private[sbt] def apiDefineParse(content: String): Option[Js.Obj] = {
-    apiDefine.parse(content).fold(
-      (_, _, _) => None,
-      (result, _) => {
-          val json = Js.Obj( "global" -> Js.Obj( "define" -> Js.Obj( "name" -> result._1, "title" -> result._2.fold(Js.Null: Js.Value)(Js.Str.apply), "description" -> result._3.fold(Js.Null: Js.Value)(Js.Str.apply))))
-          Option(json)
-      }
-    )
-  }
+
+  private val apiDefine: Parser[Js.Obj] =
+    P( (!" " ~ AnyChar).rep.! ~ (" " ~ (!"\n" ~ AnyChar).rep.!).? ~ ("\n" ~ AnyChar.rep.!).? ) map {
+      case (name, title, description) =>
+        Js.Obj("name" -> name, "title" -> title.fold(Js.Null: Js.Value)(Js.Str.apply), "description" -> description.fold(Js.Null: Js.Value)(s => Js.Str(unindent(s))))
+    }
+  private[sbt] def apiDefineParse(content: String): Option[Js.Obj] =
+    toOption(apiDefine.parse(content), "global", "define")
 
 
   private[sbt] def apiDescription(content: String): Option[Js.Obj] = {
     val description = trim(content)
-    if (description.isEmpty)
-      None
+    if (description.isEmpty) None
     else
       Option(Js.Obj("local" -> Js.Obj("description" -> description)))
   }
 
-  val trim: Parser[String] = P( CharIn("\r\n\t\f ").rep.? ~ (!(CharIn("\r\n\t\f ").rep ~ End) ~ AnyChar).rep.!)
+  private val trim: Parser[String] = P( CharIn("\r\n\t\f ").rep.? ~ (!(CharIn("\r\n\t\f ").rep ~ End) ~ AnyChar).rep.!)
   def trim(str: String): String = {
     trim.parse(str).fold(
       (_, _, _) => str,
       (result, _) => result
     )
+  }
+
+  private val apiExample: Parser[Js.Obj] =
+    P( ("{" ~ (!"}" ~ AnyChar).rep.! ~ "}" ~ " " ).?  ~ (!"\n" ~ AnyChar).rep.! ~ "\n" ~ AnyChar.rep.!) map {
+      case (t, title, content) =>
+        Js.Obj("type" -> t.fold(Js.Str("json"))(Js.Str.apply), "title" -> title, "content" -> unindent(content))
+    }
+  private[sbt] def apiExample(content: String): Option[Js.Obj] =
+    toOption(apiExample.parse(trim(content)), "local", "examples")
+
+
+  private[sbt] def apiErrorExample(content: String): Option[Js.Obj] =
+    toOption(apiExample.parse(trim(content)), "local", "error", "examples")
+
+
+  private val whiteSpace: Parser[String] = P( CharIn("\r\n\t\f ").rep(min = 1).!)
+  private val nonWhiteSpace: Parser[String] = P((!whiteSpace ~ AnyChar).rep.!)
+
+  private[sbt] def unindent(content: String): String = {
+
+    def matches(p: Parsed[_]): Boolean = p.fold((_, _, _) => false,(_, _) => true)
+
+    val lines = content.split("\n")
+    val nonWhiteSpaceLines = lines.filter(l => matches(nonWhiteSpace.parse(l))).sorted
+    if (nonWhiteSpaceLines.isEmpty) content
+    else {
+        val (head, last) = (nonWhiteSpaceLines.head, nonWhiteSpaceLines.last)
+        val i = (head zip last).takeWhile{ case (aa, bb) => matches(whiteSpace.parse(aa.toString)) && aa == bb }.length
+        lines.map(_.substring(i)).mkString("\n")
+    }
   }
 
 }
