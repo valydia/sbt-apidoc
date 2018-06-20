@@ -135,7 +135,7 @@ object SbtApidocjsPlugin extends AutoPlugin {
         Js.Obj("type" -> t.getOrElse(""), "url" -> url, "title" -> title.fold(Js.Null: Js.Value)(Js.Str.apply))
     }
   private[sbt] def apiParse(content: String): Option[Js.Obj] =
-    toOption(api.parse(content),"local")
+    api.parse(content).toOption("local")
 
 
   private val apiDefine: Parser[Js.Obj] =
@@ -143,8 +143,9 @@ object SbtApidocjsPlugin extends AutoPlugin {
       case (name, title, description) =>
         Js.Obj("name" -> name, "title" -> title.fold(Js.Null: Js.Value)(Js.Str.apply), "description" -> description.fold(Js.Null: Js.Value)(s => Js.Str(unindent(s))))
     }
+
   private[sbt] def apiDefineParse(content: String): Option[Js.Obj] =
-    toOption(apiDefine.parse(content), "global", "define")
+    apiDefine.parse(content).toOption("global", "define")
 
 
   private[sbt] def apiDescription(content: String): Option[Js.Obj] = {
@@ -168,14 +169,14 @@ object SbtApidocjsPlugin extends AutoPlugin {
         Js.Obj("type" -> t.fold(Js.Str("json"))(Js.Str.apply), "title" -> title, "content" -> unindent(content))
     }
   private[sbt] def apiExample(content: String): Option[Js.Obj] =
-    toOption(apiExample.parse(trim(content)), "local", "examples")
+    apiExample.parse(trim(content)).toOption("local", "examples")
 
 
   private[sbt] def apiErrorExample(content: String): Option[Js.Obj] =
-    toOption(apiExample.parse(trim(content)), "local", "error", "examples")
+    apiExample.parse(trim(content)).toOption("local", "error", "examples")
 
   private[sbt] def apiHeaderExample(content: String): Option[Js.Obj] =
-    toOption(apiExample.parse(trim(content)), "local", "header", "examples")
+    apiExample.parse(trim(content)).toOption("local", "header", "examples")
 
   private[sbt] def apiGroup(content: String): Option[Js.Obj] = {
     val group = trim(content)
@@ -202,13 +203,12 @@ object SbtApidocjsPlugin extends AutoPlugin {
   }
 
   private val group: Parser[String] =
-    P( ("(" ~ " ".rep ~ (!CharIn(") ") ~ AnyChar).rep.! ~ " ".rep ~ ")" ~ " ".rep).? ) map {
-      group =>
-        group.getOrElse("Parameter")
-    }
+    P( ("(" ~ " ".rep ~ (!CharIn(") ") ~ AnyChar).rep.! ~ " ".rep ~ ")" ~ " ".rep).? ) map { _.getOrElse("Parameter") }
 
-  private val doubleQuoteEnum: Parser[Seq[String]] = P(("\"" ~ CharsWhile(_ != '\"').! ~ "\"" ~ ",".? ~ " ".rep ).map("\"" + _ + "\"").rep(min = 1))
-  private val singleQuoteEnum: Parser[Seq[String]] = P(("\'" ~ CharsWhile(_ != '\'').! ~ "\'" ~ ",".? ~ " ".rep).map("\'" + _ + "\'").rep(min = 1))
+  private val doubleQuoteEnum: Parser[Seq[String]] =
+    P(("\"" ~ CharsWhile(_ != '\"').! ~ "\"" ~ ",".? ~ " ".rep ).map("\"" + _ + "\"").rep(min = 1))
+  private val singleQuoteEnum: Parser[Seq[String]] =
+    P(("\'" ~ CharsWhile(_ != '\'').! ~ "\'" ~ ",".? ~ " ".rep).map("\'" + _ + "\'").rep(min = 1))
   private val noQuoteEnum: Parser[Seq[String]] = P(((!"," ~ AnyChar).rep.! ~ ",".? ~ " ".rep).rep)
   private val enum: Parser[Seq[String]] = doubleQuoteEnum | singleQuoteEnum | noQuoteEnum
   private val typeSizeAllowedValues: Parser[Js.Obj] =
@@ -233,22 +233,19 @@ object SbtApidocjsPlugin extends AutoPlugin {
     }
 
   private[sbt] def apiParam(content: String): Option[Js.Obj] =
-    toOption(apiParam.parse(trim(content)), "local", "parameter", "fields")
+    apiParam.parse(trim(content)).toOption("local", "parameter", "fields")
 
 
 
-//  TODO
-//  implicit class ParsedWrapper[T](val parsed: Parsed[T]) extends AnyVal {
-//
-//    def toOption(path: String*): Option[Js.Obj] = {
-//      parsed.fold(
-//        (_, _, _) => None,
-//        (jsObj, _) => Option(path.foldRight(jsObj){ case (key, acc) =>
-//          Js.Obj(key -> acc)
-//        })
-//      )
-//    }
-//
-//  }
+  implicit class ParsedWrapper(val parsed: Parsed[Js.Obj]) extends AnyVal {
+    def toOption(path: String*): Option[Js.Obj] = {
+      parsed.fold(
+        (_, _, _) => None,
+        (jsObj, _) => Option(path.foldRight(jsObj){ case (key, acc) =>
+          Js.Obj(key -> acc)
+        })
+      )
+    }
+  }
 
 }
