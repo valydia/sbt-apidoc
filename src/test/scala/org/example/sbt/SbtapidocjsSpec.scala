@@ -142,12 +142,34 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
     assert(exampleJson("type") === Js.Str("json"))
   }
 
-  it should "parse apiexampleerror element" in {
+  it should "parse apierrorexample element" in {
     val result = SbtApidocjsPlugin.apiErrorExample("{json} Error-Response:\n                 This is an example.")
     val exampleJson = result.get.apply("local")("error")("examples")
     assert(exampleJson("title") === Js.Str("Error-Response:"))
     assert(exampleJson("content") === Js.Str("This is an example."))
     assert(exampleJson("type") === Js.Str("json"))
+  }
+
+  it should "parse apiheaderexample element" in {
+    val result = SbtApidocjsPlugin.apiHeaderExample("{json} Header-Example:\n    {\n      \"Accept-Encoding\": \"Accept-Encoding: gzip, deflate\"\n    }")
+    val exampleJson = result.get.apply("local")("header")("examples")
+    assert(exampleJson("title") === Js.Str("Header-Example:"))
+    assert(exampleJson("content") === Js.Str("{\n  \"Accept-Encoding\": \"Accept-Encoding: gzip, deflate\"\n}"))
+    assert(exampleJson("type") === Js.Str("json"))
+  }
+
+
+  it should "parse apiheaderexample element - 2" in {
+    val result = SbtApidocjsPlugin.apiHeaderExample("{json} Request-Example:\n{ \"content\": \"This is an example content\" }")
+    val exampleJson = result.get.apply("local")("header")("examples")
+    assert(exampleJson("title") === Js.Str("Request-Example:"))
+    assert(exampleJson("content") === Js.Str("{ \"content\": \"This is an example content\" }"))
+    assert(exampleJson("type") === Js.Str("json"))
+  }
+
+  it should "parse apigroup element" in {
+    val result = SbtApidocjsPlugin.apiGroup("User")
+    assert(result.get.apply("local")("group") === Js.Str("User"))
   }
 
   val unindents =
@@ -164,6 +186,31 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
     forAll(unindents){ (content, expected) =>
       val result = SbtApidocjsPlugin.unindent(content)
       assert(result === expected)
+    }
+  }
+
+  val apiParamTestCase =
+    Table(
+      ("content", "group", "type", "optional", "field", "defaultValue", "size", "allowedValue", "description"),
+      ("{String} country=\"DE\" Mandatory with default value \"DE\".", "Parameter", Js.Str("String"), Js.Bool(false), Js.Str("country"), Js.Str("DE"), Js.Null, Js.Null, Js.Str("Mandatory with default value \"DE\".")),
+      ("{String} lastname     Mandatory Lastname.", "Parameter", Js.Str("String"), Js.Bool(false), Js.Str("lastname"), Js.Null, Js.Null, Js.Null, Js.Str("Mandatory Lastname.")),
+      ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  \\MyClass\\field.user_first-name = John_Doe Some description.", "MyGroup", Js.Str("\\Object\\String.uni-code_char[]"), Js.Bool(false), Js.Str("\\MyClass\\field.user_first-name"), Js.Str("John_Doe"), Js.Str("1..10"), Js.Arr("\'abc\'", "\'def\'"), Js.Str("Some description."))
+    )
+
+
+  it should "parse apiparam element" in {
+    forAll(apiParamTestCase) { (content, group, `type`, optional, field, defaultValue, size, allowedValue, description) =>
+
+      val result = SbtApidocjsPlugin.apiParam(content)
+      val parameterJson = result.get.apply("local")("parameter")("fields")(group)
+      assert(parameterJson("group") === Js.Str(group))
+      assert(parameterJson("type") === `type`)
+      assert(parameterJson("optional") === optional)
+      assert(parameterJson("field") === field)
+      assert(parameterJson("defaultValue") === defaultValue)
+      assert(parameterJson("size") === size)
+      assert(parameterJson("allowedValue") === allowedValue)
+      assert(parameterJson("description") === description)
     }
   }
 

@@ -174,6 +174,15 @@ object SbtApidocjsPlugin extends AutoPlugin {
   private[sbt] def apiErrorExample(content: String): Option[Js.Obj] =
     toOption(apiExample.parse(trim(content)), "local", "error", "examples")
 
+  private[sbt] def apiHeaderExample(content: String): Option[Js.Obj] =
+    toOption(apiExample.parse(trim(content)), "local", "header", "examples")
+
+  private[sbt] def apiGroup(content: String): Option[Js.Obj] = {
+    val group = trim(content)
+    if (group.isEmpty) None
+    else
+      Option(Js.Obj("local" -> Js.Obj("group" -> group.replaceAll("\\s+", "_"))))
+  }
 
   private val whiteSpace: Parser[String] = P( CharIn("\r\n\t\f ").rep(min = 1).!)
   private val nonWhiteSpace: Parser[String] = P((!whiteSpace ~ AnyChar).rep.!)
@@ -191,5 +200,55 @@ object SbtApidocjsPlugin extends AutoPlugin {
         lines.map(_.substring(i)).mkString("\n")
     }
   }
+
+  private val group: Parser[String] =
+    P( ("(" ~ " ".rep ~ (!CharIn(") ") ~ AnyChar).rep.! ~ " ".rep ~ ")" ~ " ".rep).? ) map {
+      group =>
+        group.getOrElse("Parameter")
+    }
+
+  private val doubleQuoteEnum: Parser[Seq[String]] = P(("\"" ~ CharsWhile(_ != '\"').! ~ "\"" ~ ",".? ~ " ".rep ).map("\"" + _ + "\"").rep(min = 1))
+  private val singleQuoteEnum: Parser[Seq[String]] = P(("\'" ~ CharsWhile(_ != '\'').! ~ "\'" ~ ",".? ~ " ".rep).map("\'" + _ + "\'").rep(min = 1))
+  private val noQuoteEnum: Parser[Seq[String]] = P(((!"," ~ AnyChar).rep.! ~ ",".? ~ " ".rep).rep)
+  private val enum: Parser[Seq[String]] = doubleQuoteEnum | singleQuoteEnum | noQuoteEnum
+  private val typeSizeAllowedValues: Parser[Js.Obj] =
+    P("{" ~ " ".rep ~ (!CharIn("{} ") ~ AnyChar).rep.! ~ " ".rep ~ ("{" ~ " ".rep ~ (!CharIn("} ") ~ AnyChar).rep.! ~ " ".rep ~ "}" ~ " ".rep).? ~  " ".rep ~ ("=" ~ " ".rep ~ enum).? ~ " ".rep ~ "}"  ~ " ".rep) map {
+      case (_type, size, allowedValues) =>
+        Js.Obj("type" -> _type, "size" -> size.fold(Js.Null: Js.Value)(Js.Str.apply), "allowedValue" -> allowedValues.fold(Js.Null: Js.Value)( av => av.map(Js.Str.apply)))
+    }
+  private val fieldCharacter: Seq[Char] = Seq('.', '-', '/') ++ ('A' to 'z').filterNot(c => c == '`' || c == '^')
+  private val doubleQuotedDefaultValue = P( "\"" ~ (!CharIn("] \"") ~ AnyChar).rep.! ~ "\"")
+  private val singleQuotedDefaultValue = P( "\'" ~ (!CharIn("] \'") ~ AnyChar).rep.! ~ "\'")
+  private val noQuotedDefaultValue = P( (!CharIn("] ") ~ AnyChar).rep.!)
+  private val defaultValue: Parser[String] = P( " ".rep ~ "=" ~ " ".rep ~ (doubleQuotedDefaultValue | singleQuotedDefaultValue | noQuotedDefaultValue))
+  private val field: Parser[Js.Obj] = P( CharIn(fieldCharacter).rep.! ~ defaultValue.? ~ " ".rep) map {
+    case (f, dv) =>
+      Js.Obj("field" -> f, "optional" -> f.startsWith("["), "defaultValue" -> dv.fold(Js.Null: Js.Value)(Js.Str.apply))
+  }
+  private val description: Parser[Js.Obj] = P( AnyChar.rep.!.? ).map(d => Js.Obj("description" -> d.fold(Js.Null: Js.Value)(Js.Str.apply)))
+  private val apiParam: Parser[Js.Obj] =
+    P( group ~ typeSizeAllowedValues ~ field ~ description) map {
+      case (g, tsav, f, d) =>
+        Js.Obj(g -> Js.Obj.from( Js.Obj("group" -> g).value ++ tsav.value ++ f.value ++ d.value))
+    }
+
+  private[sbt] def apiParam(content: String): Option[Js.Obj] =
+    toOption(apiParam.parse(trim(content)), "local", "parameter", "fields")
+
+
+
+//  TODO
+//  implicit class ParsedWrapper[T](val parsed: Parsed[T]) extends AnyVal {
+//
+//    def toOption(path: String*): Option[Js.Obj] = {
+//      parsed.fold(
+//        (_, _, _) => None,
+//        (jsObj, _) => Option(path.foldRight(jsObj){ case (key, acc) =>
+//          Js.Obj(key -> acc)
+//        })
+//      )
+//    }
+//
+//  }
 
 }
