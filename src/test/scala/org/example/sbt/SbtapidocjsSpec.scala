@@ -73,7 +73,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
 
 
   it should "parse api element with title" in {
-    val result = SbtApidocjsPlugin.apiParse("{get} /user/:id some title")
+    val result = SbtApidocjsPlugin.api("{get} /user/:id some title")
     val localJson = result.get.apply("local")
     assert(localJson("type") === Js.Str("get"))
     assert(localJson("url") === Js.Str("/user/:id"))
@@ -81,7 +81,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
   }
 
   it should "parse api element" in {
-    val result = SbtApidocjsPlugin.apiParse("{get} /user/:id")
+    val result = SbtApidocjsPlugin.api("{get} /user/:id")
     val localJson = result.get.apply("local")
     assert(localJson("type") === Js.Str("get"))
     assert(localJson("url") === Js.Str("/user/:id"))
@@ -99,7 +99,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
 
   it should "parse apidefine element" in {
     forAll(apidefineTestCases){ (content, name, title, description) =>
-      val result = SbtApidocjsPlugin.apiDefineParse(content)
+      val result = SbtApidocjsPlugin.apiDefine(content)
       val defineJson = result.get.apply("global")("define")
       assert(defineJson("name") === name)
       assert(defineJson("title") === title)
@@ -167,6 +167,22 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
     assert(exampleJson("type") === Js.Str("json"))
   }
 
+  it should "parse apiparamexample element" in {
+    val result = SbtApidocjsPlugin.apiParamExample("{json} Request-Example:\n                 { \"content\": \"This is an example content\" }")
+    val exampleJson = result.get.apply("local")("parameter")("examples")
+    assert(exampleJson("title") === Js.Str("Request-Example:"))
+    assert(exampleJson("content") === Js.Str("{ \"content\": \"This is an example content\" }"))
+    assert(exampleJson("type") === Js.Str("json"))
+  }
+
+  it should "parse apisuccessexample element" in {
+    val result = SbtApidocjsPlugin.apiSuccessExample("Success-Response:\n    HTTP/1.1 200 OK\n    HTML for welcome page\n    {\n      \"emailAvailable\": \"true\"\n    }\n")
+    val exampleJson = result.get.apply("local")("success")("examples")
+    assert(exampleJson("title") === Js.Str("Success-Response:"))
+    assert(exampleJson("content") === Js.Str("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"))
+    assert(exampleJson("type") === Js.Str("json"))
+  }
+
   it should "parse apigroup element" in {
     val result = SbtApidocjsPlugin.apiGroup("User")
     assert(result.get.apply("local")("group") === Js.Str("User"))
@@ -217,5 +233,38 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
     }
   }
 
+  it should "parse apisuccess element" in {
+
+      val result = SbtApidocjsPlugin.apiSuccess("{String} firstname Firstname of the User.")
+      val parameterJson = result.get.apply("local")("success")("fields")("Success 200")
+      assert(parameterJson("group") === Js.Str("Success 200"))
+      assert(parameterJson("type") === Js.Str("String"))
+      assert(parameterJson("optional") === Js.Bool(false))
+      assert(parameterJson("field") === Js.Str("firstname"))
+      assert(parameterJson("defaultValue") === Js.Null)
+      assert(parameterJson("size") === Js.Null)
+      assert(parameterJson("allowedValue") === Js.Null)
+      assert(parameterJson("description") === Js.Str("Firstname of the User."))
+  }
+
+  it should "parse apiuse element" in {
+    val result = SbtApidocjsPlugin.apiUse("MySuccess")
+    assert(result.get.apply("local")("use")("name") === Js.Str("MySuccess"))
+  }
+
+  it should "parse apipermission element" in {
+    val result = SbtApidocjsPlugin.apiPermission("admin")
+    assert(result.get.apply("local")("permission")("name") === Js.Str("admin"))
+  }
+
+  it should "parse apisamplerequest element" in {
+    val result = SbtApidocjsPlugin.apiSampleRequest("http://test.github.com")
+    assert(result.get.apply("local")("sampleRequest")("url") === Js.Str("http://test.github.com"))
+  }
+
+  it should "parse apiversion element" in {
+    val result = SbtApidocjsPlugin.apiVersion("1.6.2")
+    assert(result.get.apply("local")("version")=== Js.Str("1.6.2"))
+  }
 
 }

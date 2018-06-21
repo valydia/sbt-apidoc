@@ -11,9 +11,7 @@ object SbtApidocjsPlugin extends AutoPlugin {
   override def trigger = allRequirements
   override def requires = JvmPlugin
 
-  object autoImport extends SbtApidocjsKeys {
-
-  }
+  object autoImport extends SbtApidocjsKeys
 
   import autoImport._
 
@@ -33,12 +31,21 @@ object SbtApidocjsPlugin extends AutoPlugin {
     //getting the source files
     val log = streams.value.log
     val sourceFiles = (sources in Compile).value.toList
-    val result = processSources(sourceFiles, log) match {
+    val result = run(sourceFiles, log) match {
       case Some((apiData, apiProject)) => Some(generateApidoc(apiData, apiProject, apidocOutputDir.value, log))
       case _ => None
     }
     log.info("Done.")
     result
+  }
+
+  def run(sourceFiles: List[File], log: Logger): Option[(String, String)] = {
+     val (blocks, filename) = processSources(sourceFiles, log)
+
+//    blocks map { b =>
+//
+//    }
+    ???
   }
 
   def generateApidoc(apiData: String, apiProject: String, apidocOutput: File, log: Logger): File = {
@@ -72,19 +79,116 @@ object SbtApidocjsPlugin extends AutoPlugin {
     apidocOutput
   }
 
-  private def processSources(sourceFiles: List[File], log: Logger): Option[(String, String)] = {
-    log.info(s"Here are the file${ if (sourceFiles.nonEmpty) "s" else "" }")
-    sourceFiles.foreach { f =>
-      log.info("Name " + f.getName)
-      processFileContent(IO.read(f), log)
-    }
-    Some("", "")
+  private def processSources(sourceFiles: List[File], log: Logger): (Js.Arr, List[String]) = {
+    (sourceFiles.map { f =>
+      log.info("parse file: " + f.getName)
+      processFileContent(f, log)
+    }, sourceFiles map (_.getName))
   }
 
-  private def processFileContent(file: String, log: Logger): Unit = {
-    log.debug("Content: ")
-    val comment = parseCommentBlocks(file)
-    log.info(s"Comment: $comment")
+  private def processFileContent(file: File, log: Logger): Js.Arr = {
+    log.debug(s"inspect file ${file.getName}")
+    log.debug(s"size: ${file.length} bytes")
+    val commentBlocks = parseCommentBlocks(IO.read(file))
+    if (commentBlocks.nonEmpty)
+      log.debug(s"count blocks: ${commentBlocks.size}")
+
+    val elements =
+      commentBlocks.zipWithIndex map { case(block, index) =>
+        val result = parseElement(block)
+        log.debug(s"count elements in block $index : ${result.size}")
+        result
+      }
+    processElements(elements, log)
+  }
+
+  private val parserMap: Map[String, String => Option[Js.Obj]] =
+    Map(
+      "api" -> api,
+      "apidefine" -> apiDefine,
+      "apidescription" -> apiDescription,
+      "apierror" -> apiError,
+      "apierrorexample" -> apiErrorExample,
+      "apigroup" -> apiGroup,
+      "apiheader" -> apiHeader,
+      "apiheaderexample" -> apiHeaderExample,
+      "apiname" -> apiName,
+      "apiparam" -> apiParam,
+      "apiparamexample" -> apiParamExample,
+      "apipermission" -> apiPermission,
+      "apisamplerequest" -> apiSampleRequest,
+      "apisuccessexample" -> apiSuccessExample,
+      "apisuccess" -> apiSuccess,
+      "apiuse" -> apiUse,
+      "apiversion" -> apiVersion,
+    )
+
+  def processElements(detectedElements: Seq[Seq[Element]], log: Logger): Js.Arr = {
+
+    def isApiBlock(elements: Seq[Element]): Boolean = {
+      val apiIgnore = elements.exists { elem =>
+        elem.name.toLowerCase.startsWith("apiignore")
+      }
+      val apiElem = elements.exists { elem =>
+        elem.name.toLowerCase.startsWith("api")
+      }
+      !apiIgnore && apiElem
+    }
+
+    detectedElements.zipWithIndex collect { case (elems, index) if isApiBlock(elems) =>
+        val initialResult: Js.Value = Js.Obj("global" -> Js.Obj(), "local" -> Js.Obj())
+      elems.foldLeft(initialResult){ case (acc, element) =>
+        parserMap.get(element.name.toLowerCase) map {
+          ep =>
+            log.debug(s"found @${element.sourceName} in block: $index")
+            ep(element.content) map { values =>
+
+              val version = if (element.name.toLowerCase == "apiversion") values("local")("version") else Js.Null
+              val jsIndex= Js.Obj("index" -> (index + 1), "version" -> version)
+              //TODO merging ...
+              merge(acc, merge(values, jsIndex))
+            } getOrElse {
+              //TODO what to log?????
+              acc
+            }
+        } getOrElse {
+          log.warn(s"parser plugin '${element.name}' not found in block: $index")
+          acc
+        }
+      }
+    }
+  }
+
+  private def merge(val1: Js.Value, val2: Js.Value): Js.Value = (val1, val2) match {
+    case (Js.Obj(xs), Js.Obj(ys)) =>  Js.Obj.from(mergeFields(xs.toList, ys.toList))
+    case (Js.Arr(xs), Js.Arr(ys)) =>  Js.Arr(mergeVals(xs.toList, ys.toList))
+    case (Js.Null, x) => x
+    case (x, Js.Null) => x
+    case (_, y) => y
+  }
+
+  private[json4s] def mergeFields(vs1: List[(String, Js.Value)], vs2: List[(String, Js.Value)]): List[(String, Js.Value)] = {
+    def mergeRec(xleft: List[(String, Js.Value)], yleft: List[(String, Js.Value)]): List[(String, Js.Value)] = xleft match {
+      case Nil => yleft
+      case (xn, xv) :: xs => yleft find (_._1 == xn) match {
+        case Some(y @ (_, yv)) =>
+          (xn, merge(xv, yv)) :: mergeRec(xs, yleft filterNot (_ == y))
+        case None => (xn, xv) :: mergeRec(xs, yleft)
+      }
+    }
+
+    mergeRec(vs1, vs2)
+  }
+  private def mergeVals(vs1: List[Js.Value], vs2: List[Js.Value]): List[Js.Value] = {
+    def mergeRec(xleft: List[Js.Value], yleft: List[Js.Value]): List[Js.Value] = xleft match {
+      case Nil => yleft
+      case x :: xs => yleft find (_ == x) match {
+        case Some(y) => merge(x, y) :: mergeRec(xs, yleft filterNot (_ == y))
+        case None => x :: mergeRec(xs, yleft)
+      }
+    }
+
+    mergeRec(vs1, vs2)
   }
 
   private val commentChunk: Parser[Any] = P( CharsWhile(c => c != '/' && c != '*') | multilineComment | !"*/" ~ AnyChar )
@@ -99,10 +203,7 @@ object SbtApidocjsPlugin extends AutoPlugin {
       comments.map(_.dropRight(3).replace("\n  * ","\n"))
     }
 
-    commentBlocks.parse(file).fold(
-      (_, _, _) => Seq(),
-      onSuccess
-    )
+    commentBlocks.parse(file).fold((_, _, _) => Seq(), onSuccess)
   }
 
   private val identifier: Parser[String]  = P( (!" " ~ AnyChar).rep.! )
@@ -120,39 +221,30 @@ object SbtApidocjsPlugin extends AutoPlugin {
     )
   }
 
-
-  private def toOption(parsed: Parsed[Js.Obj], path: String*): Option[Js.Obj] = {
-    parsed.fold(
-      (_, _, _) => None,
-      (jsObj, _) => Option(path.foldRight(jsObj){ case (key, acc) =>
-        Js.Obj(key -> acc)
-      })
-    )
-  }
-  private val api: Parser[Js.Obj] =
+  private val apiParser: Parser[Js.Obj] =
     P( ("{" ~ (!"}" ~ AnyChar).rep.! ~ "}").? ~ " " ~ (!" " ~ AnyChar).rep.! ~ (" " ~ AnyChar.rep.!).?) map {
       case (t, url, title) =>
         Js.Obj("type" -> t.getOrElse(""), "url" -> url, "title" -> title.fold(Js.Null: Js.Value)(Js.Str.apply))
     }
-  private[sbt] def apiParse(content: String): Option[Js.Obj] =
-    api.parse(content).toOption("local")
+  private[sbt] def api(content: String): Option[Js.Obj] =
+    apiParser.parse(content).toOption("local")
 
 
-  private val apiDefine: Parser[Js.Obj] =
+  private val apiDefineParser: Parser[Js.Obj] =
     P( (!" " ~ AnyChar).rep.! ~ (" " ~ (!"\n" ~ AnyChar).rep.!).? ~ ("\n" ~ AnyChar.rep.!).? ) map {
       case (name, title, description) =>
         Js.Obj("name" -> name, "title" -> title.fold(Js.Null: Js.Value)(Js.Str.apply), "description" -> description.fold(Js.Null: Js.Value)(s => Js.Str(unindent(s))))
     }
 
-  private[sbt] def apiDefineParse(content: String): Option[Js.Obj] =
-    apiDefine.parse(content).toOption("global", "define")
+  private[sbt] def apiDefine(content: String): Option[Js.Obj] =
+    apiDefineParser.parse(content).toOption("global", "define")
 
 
   private[sbt] def apiDescription(content: String): Option[Js.Obj] = {
     val description = trim(content)
     if (description.isEmpty) None
     else
-      Option(Js.Obj("local" -> Js.Obj("description" -> description)))
+      Option(Js.Obj("local" -> Js.Obj("description" -> unindent(description))))
   }
 
   private val trim: Parser[String] = P( CharIn("\r\n\t\f ").rep.? ~ (!(CharIn("\r\n\t\f ").rep ~ End) ~ AnyChar).rep.!)
@@ -171,18 +263,32 @@ object SbtApidocjsPlugin extends AutoPlugin {
   private[sbt] def apiExample(content: String): Option[Js.Obj] =
     apiExample.parse(trim(content)).toOption("local", "examples")
 
-
   private[sbt] def apiErrorExample(content: String): Option[Js.Obj] =
     apiExample.parse(trim(content)).toOption("local", "error", "examples")
 
   private[sbt] def apiHeaderExample(content: String): Option[Js.Obj] =
     apiExample.parse(trim(content)).toOption("local", "header", "examples")
 
+  private[sbt] def apiParamExample(content: String): Option[Js.Obj] = {
+    apiExample.parse(trim(content)).toOption("local", "parameter", "examples")
+  }
+
+  private[sbt] def apiSuccessExample(content: String): Option[Js.Obj] = {
+    apiExample.parse(trim(content)).toOption("local", "success", "examples")
+  }
+
   private[sbt] def apiGroup(content: String): Option[Js.Obj] = {
     val group = trim(content)
     if (group.isEmpty) None
     else
       Option(Js.Obj("local" -> Js.Obj("group" -> group.replaceAll("\\s+", "_"))))
+  }
+
+  private[sbt] def apiName(content: String): Option[Js.Obj] = {
+    val name = trim(content)
+    if (name.isEmpty) None
+    else
+      Option(Js.Obj("local" -> Js.Obj("name" -> name.replaceAll("\\s+", "_"))))
   }
 
   private val whiteSpace: Parser[String] = P( CharIn("\r\n\t\f ").rep(min = 1).!)
@@ -202,8 +308,8 @@ object SbtApidocjsPlugin extends AutoPlugin {
     }
   }
 
-  private val group: Parser[String] =
-    P( ("(" ~ " ".rep ~ (!CharIn(") ") ~ AnyChar).rep.! ~ " ".rep ~ ")" ~ " ".rep).? ) map { _.getOrElse("Parameter") }
+  private[sbt] def group(defaultGroup: String): Parser[String] =
+    P( ("(" ~ " ".rep ~ (!CharIn(") ") ~ AnyChar).rep.! ~ " ".rep ~ ")" ~ " ".rep).? ) map { _.getOrElse(defaultGroup) }
 
   private val doubleQuoteEnum: Parser[Seq[String]] =
     P(("\"" ~ CharsWhile(_ != '\"').! ~ "\"" ~ ",".? ~ " ".rep ).map("\"" + _ + "\"").rep(min = 1))
@@ -212,38 +318,79 @@ object SbtApidocjsPlugin extends AutoPlugin {
   private val noQuoteEnum: Parser[Seq[String]] = P(((!"," ~ AnyChar).rep.! ~ ",".? ~ " ".rep).rep)
   private val enum: Parser[Seq[String]] = doubleQuoteEnum | singleQuoteEnum | noQuoteEnum
   private val typeSizeAllowedValues: Parser[Js.Obj] =
-    P("{" ~ " ".rep ~ (!CharIn("{} ") ~ AnyChar).rep.! ~ " ".rep ~ ("{" ~ " ".rep ~ (!CharIn("} ") ~ AnyChar).rep.! ~ " ".rep ~ "}" ~ " ".rep).? ~  " ".rep ~ ("=" ~ " ".rep ~ enum).? ~ " ".rep ~ "}"  ~ " ".rep) map {
-      case (_type, size, allowedValues) =>
+    P( ("{" ~ " ".rep ~ (!CharIn("{} ") ~ AnyChar).rep.! ~ " ".rep ~ ("{" ~ " ".rep ~ (!CharIn("} ") ~ AnyChar).rep.! ~ " ".rep ~ "}" ~ " ".rep).? ~  " ".rep ~ ("=" ~ " ".rep ~ enum).? ~ " ".rep ~ "}"  ~ " ".rep).? ) map {
+      case Some((_type, size, allowedValues)) =>
         Js.Obj("type" -> _type, "size" -> size.fold(Js.Null: Js.Value)(Js.Str.apply), "allowedValue" -> allowedValues.fold(Js.Null: Js.Value)( av => av.map(Js.Str.apply)))
+      case _ => Js.Obj("type" -> Js.Null, "size" -> Js.Null, "allowedValue" -> Js.Null)
     }
-  private val fieldCharacter: Seq[Char] = Seq('.', '-', '/') ++ ('A' to 'z').filterNot(c => c == '`' || c == '^')
-  private val doubleQuotedDefaultValue = P( "\"" ~ (!CharIn("] \"") ~ AnyChar).rep.! ~ "\"")
-  private val singleQuotedDefaultValue = P( "\'" ~ (!CharIn("] \'") ~ AnyChar).rep.! ~ "\'")
-  private val noQuotedDefaultValue = P( (!CharIn("] ") ~ AnyChar).rep.!)
+  private val fieldCharacter: Seq[Char] =
+    Seq('.', '-', '/') ++ ('A' to 'z').filterNot(c => c == '`' || c == '^' || c == '[' || c == ']')
+  private val doubleQuotedDefaultValue =
+    P( "\"" ~ (!CharIn("]\"") ~ AnyChar).rep.! ~ "\"")
+  private val singleQuotedDefaultValue =
+    P( "\'" ~ (!CharIn("]\'") ~ AnyChar).rep.! ~ "\'")
+  private val noQuotedDefaultValue =
+    P( (!CharIn("] ") ~ AnyChar).rep.!)
   private val defaultValue: Parser[String] = P( " ".rep ~ "=" ~ " ".rep ~ (doubleQuotedDefaultValue | singleQuotedDefaultValue | noQuotedDefaultValue))
-  private val field: Parser[Js.Obj] = P( CharIn(fieldCharacter).rep.! ~ defaultValue.? ~ " ".rep) map {
-    case (f, dv) =>
-      Js.Obj("field" -> f, "optional" -> f.startsWith("["), "defaultValue" -> dv.fold(Js.Null: Js.Value)(Js.Str.apply))
+  private val field: Parser[Js.Obj] = P( "[".!.? ~ " ".rep ~ CharIn(fieldCharacter).rep.! ~ defaultValue.? ~ " ".rep ~ "]".? ~ " ".rep) map {
+    case (o, f, dv) =>
+      Js.Obj("field" -> f, "optional" -> o.isDefined, "defaultValue" -> dv.fold(Js.Null: Js.Value)(Js.Str.apply))
   }
-  private val description: Parser[Js.Obj] = P( AnyChar.rep.!.? ).map(d => Js.Obj("description" -> d.fold(Js.Null: Js.Value)(Js.Str.apply)))
-  private val apiParam: Parser[Js.Obj] =
-    P( group ~ typeSizeAllowedValues ~ field ~ description) map {
+  private val description: Parser[Js.Obj] = P( AnyChar.rep.!.? ).map(description => Js.Obj("description" -> description.fold(Js.Null: Js.Value)(d => if (d.isEmpty) Js.Null else Js.Str(d))))
+  private def apiParamParser(defaultGroup: String): Parser[Js.Obj] =
+    P( group(defaultGroup) ~ typeSizeAllowedValues ~ field ~ description) map {
       case (g, tsav, f, d) =>
         Js.Obj(g -> Js.Obj.from( Js.Obj("group" -> g).value ++ tsav.value ++ f.value ++ d.value))
     }
 
   private[sbt] def apiParam(content: String): Option[Js.Obj] =
-    apiParam.parse(trim(content)).toOption("local", "parameter", "fields")
+    apiParamParser("Parameter").parse(trim(content)).toOption("local", "parameter", "fields")
 
+  private[sbt] def apiSuccess(content: String): Option[Js.Obj] =
+    apiParamParser("Success 200").parse(trim(content)).toOption("local", "success", "fields")
 
+  private[sbt] def apiError(content: String): Option[Js.Obj] =
+    apiParamParser("Error 4xx").parse(trim(content)).toOption("local", "error", "fields")
+
+  private[sbt] def apiHeader(content: String): Option[Js.Obj] =
+    apiParamParser("Header").parse(trim(content)).toOption("local", "header", "fields")
+
+  private[sbt] def apiUse(content: String): Option[Js.Obj] = {
+    val name = trim(content)
+    if (name.isEmpty) None
+    else
+      Option(Js.Obj("local" -> Js.Obj("use" -> Js.Obj("name" -> name))))
+  }
+
+  private[sbt] def apiPermission(content: String): Option[Js.Obj] = {
+    val name = trim(content)
+    if (name.isEmpty) None
+    else
+      Option(Js.Obj("local" -> Js.Obj("permission" -> Js.Obj("name" -> name))))
+  }
+
+  private[sbt] def apiSampleRequest(content: String): Option[Js.Obj] = {
+    val url = trim(content)
+    if (url.isEmpty) None
+    else
+      Option(Js.Obj("local" -> Js.Obj("sampleRequest" -> Js.Obj("url" -> url))))
+  }
+
+  private[sbt] def apiVersion(content: String): Option[Js.Obj] = {
+    val version = trim(content)
+    if (version.isEmpty) None
+    else
+      Option(Js.Obj("local" -> Js.Obj("version" -> version)))
+  }
+
+  private def pathToObject(jsObj: Js.Obj, path: String*): Js.Obj =
+    path.foldRight(jsObj){ case (key, acc) => Js.Obj(key -> acc) }
 
   implicit class ParsedWrapper(val parsed: Parsed[Js.Obj]) extends AnyVal {
     def toOption(path: String*): Option[Js.Obj] = {
       parsed.fold(
         (_, _, _) => None,
-        (jsObj, _) => Option(path.foldRight(jsObj){ case (key, acc) =>
-          Js.Obj(key -> acc)
-        })
+        (jsObj, _) => Option(pathToObject(jsObj, path:_*))
       )
     }
   }
