@@ -1,17 +1,17 @@
-package org.example.sbt
+package com.culpin.team.sbt
 
-import sbt.{IO, Logger, _}
-import sbt.Keys._
-import sbt.plugins.JvmPlugin
-import ujson.Js
 import fastparse.all._
+import sbt.Keys.{name, version, _}
+import sbt.plugins.JvmPlugin
+import sbt.{IO, Logger, _}
+import ujson.Js
 
-object SbtApidocjsPlugin extends AutoPlugin {
+object SbtApidoc extends AutoPlugin {
 
   override def trigger = allRequirements
   override def requires = JvmPlugin
 
-  object autoImport extends SbtApidocjsKeys
+  object autoImport extends SbtApidocKeys
 
   import autoImport._
 
@@ -40,12 +40,12 @@ object SbtApidocjsPlugin extends AutoPlugin {
   }
 
   def run(sourceFiles: List[File], log: Logger): Option[(String, String)] = {
-     val (blocks, filename) = processSources(sourceFiles, log)
+     val (blocks, filename) = parseSources(sourceFiles, log)
 
 //    blocks map { b =>
 //
 //    }
-    ???
+    Some(("",""))
   }
 
   def generateApidoc(apiData: String, apiProject: String, apidocOutput: File, log: Logger): File = {
@@ -79,7 +79,7 @@ object SbtApidocjsPlugin extends AutoPlugin {
     apidocOutput
   }
 
-  private def processSources(sourceFiles: List[File], log: Logger): (Js.Arr, List[String]) = {
+  private def parseSources(sourceFiles: List[File], log: Logger): (Js.Arr, List[String]) = {
     (sourceFiles.map { f =>
       log.info("parse file: " + f.getName)
       processFileContent(f, log)
@@ -145,7 +145,6 @@ object SbtApidocjsPlugin extends AutoPlugin {
 
               val version = if (element.name.toLowerCase == "apiversion") values("local")("version") else Js.Null
               val jsIndex= Js.Obj("index" -> (index + 1), "version" -> version)
-              //TODO merging ...
               merge(acc, merge(values, jsIndex))
             } getOrElse {
               //TODO what to log?????
@@ -167,7 +166,7 @@ object SbtApidocjsPlugin extends AutoPlugin {
     case (_, y) => y
   }
 
-  private[json4s] def mergeFields(vs1: List[(String, Js.Value)], vs2: List[(String, Js.Value)]): List[(String, Js.Value)] = {
+  private def mergeFields(vs1: List[(String, Js.Value)], vs2: List[(String, Js.Value)]): List[(String, Js.Value)] = {
     def mergeRec(xleft: List[(String, Js.Value)], yleft: List[(String, Js.Value)]): List[(String, Js.Value)] = xleft match {
       case Nil => yleft
       case (xn, xv) :: xs => yleft find (_._1 == xn) match {
@@ -303,7 +302,7 @@ object SbtApidocjsPlugin extends AutoPlugin {
     if (nonWhiteSpaceLines.isEmpty) content
     else {
         val (head, last) = (nonWhiteSpaceLines.head, nonWhiteSpaceLines.last)
-        val i = (head zip last).takeWhile{ case (aa, bb) => matches(whiteSpace.parse(aa.toString)) && aa == bb }.length
+        val i = (head zip last).takeWhile{ case (headChar, lastChar) => matches(whiteSpace.parse(headChar.toString)) && headChar == lastChar }.length
         lines.map(_.substring(i)).mkString("\n")
     }
   }

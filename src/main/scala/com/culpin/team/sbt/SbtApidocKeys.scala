@@ -1,8 +1,8 @@
-package org.example.sbt
+package com.culpin.team.sbt
 
 import sbt._
 
-trait SbtApidocjsKeys {
+trait SbtApidocKeys {
   lazy val apidoc = taskKey[Option[File]]("Generates APIDOC plugin documentation")
   lazy val apidocOutputDir = settingKey[File]("The output directory of the apidoc")
   lazy val apidocName = settingKey[String]("The Name of the API")

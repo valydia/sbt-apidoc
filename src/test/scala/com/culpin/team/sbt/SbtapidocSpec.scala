@@ -1,11 +1,11 @@
-package org.example.sbt
+package com.culpin.team.sbt
 
-import org.example.sbt.SbtApidocjsPlugin.Element
+import com.culpin.team.sbt.SbtApidoc.Element
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.{FlatSpec, Matchers}
 import ujson.Js
 
-class SbtapidocjsSpec extends FlatSpec with Matchers  {
+class SbtapidocSpec extends FlatSpec with Matchers  {
 
   "Parser" should "parse comment block" in {
     val file = """package simple
@@ -33,17 +33,17 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
                  |}""".stripMargin
 
 
-    val result = SbtApidocjsPlugin.parseCommentBlocks(file)
+    val result = SbtApidoc.parseCommentBlocks(file)
     result shouldEqual Seq("A simple class and objects to write tests against.","Block 1\n@param arg")
   }
 
   it should "find element in block" in {
 
-    val result = SbtApidocjsPlugin.parseElement("Block 1\n@param arg")
+    val result = SbtApidoc.parseElement("Block 1\n@param arg")
     val expected = List(Element("@param arg", "param", "param", "arg"))
     assert(result.toList === expected)
 
-    val result2 = SbtApidocjsPlugin.parseElement("More complex block\n@param arg The array of string\n" +
+    val result2 = SbtApidoc.parseElement("More complex block\n@param arg The array of string\n" +
       "@param theString the string\n@param theInt the int\n@return the result string")
 
     val expected2 = List(
@@ -54,7 +54,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
     )
     assert(result2.toList === expected2)
 
-    val result3 = SbtApidocjsPlugin.parseElement("Ignored block\n@apiIgnore Not finished Method\n" +
+    val result3 = SbtApidoc.parseElement("Ignored block\n@apiIgnore Not finished Method\n" +
       "@param theString the string\n@param theInt the int\n@return the result string")
 
     val expected3 = List(
@@ -73,7 +73,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
 
 
   it should "parse api element with title" in {
-    val result = SbtApidocjsPlugin.api("{get} /user/:id some title")
+    val result = SbtApidoc.api("{get} /user/:id some title")
     val localJson = result.get.apply("local")
     assert(localJson("type") === Js.Str("get"))
     assert(localJson("url") === Js.Str("/user/:id"))
@@ -81,7 +81,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
   }
 
   it should "parse api element" in {
-    val result = SbtApidocjsPlugin.api("{get} /user/:id")
+    val result = SbtApidoc.api("{get} /user/:id")
     val localJson = result.get.apply("local")
     assert(localJson("type") === Js.Str("get"))
     assert(localJson("url") === Js.Str("/user/:id"))
@@ -99,7 +99,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
 
   it should "parse apidefine element" in {
     forAll(apidefineTestCases){ (content, name, title, description) =>
-      val result = SbtApidocjsPlugin.apiDefine(content)
+      val result = SbtApidoc.apiDefine(content)
       val defineJson = result.get.apply("global")("define")
       assert(defineJson("name") === name)
       assert(defineJson("title") === title)
@@ -123,19 +123,19 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
 
   it should "parse apidescription element" in {
     forAll(descriptions){ (content, expected) =>
-      val result = SbtApidocjsPlugin.apiDescription(content)
+      val result = SbtApidoc.apiDescription(content)
       val localJson = result.get.apply("local")
       assert(localJson("description") === expected)
     }
   }
 
   it should "parse apidescription element - empty" in {
-    val result = SbtApidocjsPlugin.apiDescription("")
+    val result = SbtApidoc.apiDescription("")
     assert(result === None)
   }
 
   it should "parse apiexample element" in {
-    val result = SbtApidocjsPlugin.apiExample("Example usage:\ncurl -i http://localhost/user/4711")
+    val result = SbtApidoc.apiExample("Example usage:\ncurl -i http://localhost/user/4711")
     val exampleJson = result.get.apply("local")("examples")
     assert(exampleJson("title") === Js.Str("Example usage:"))
     assert(exampleJson("content") === Js.Str("curl -i http://localhost/user/4711"))
@@ -143,7 +143,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
   }
 
   it should "parse apierrorexample element" in {
-    val result = SbtApidocjsPlugin.apiErrorExample("{json} Error-Response:\n                 This is an example.")
+    val result = SbtApidoc.apiErrorExample("{json} Error-Response:\n                 This is an example.")
     val exampleJson = result.get.apply("local")("error")("examples")
     assert(exampleJson("title") === Js.Str("Error-Response:"))
     assert(exampleJson("content") === Js.Str("This is an example."))
@@ -151,7 +151,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
   }
 
   it should "parse apiheaderexample element" in {
-    val result = SbtApidocjsPlugin.apiHeaderExample("{json} Header-Example:\n    {\n      \"Accept-Encoding\": \"Accept-Encoding: gzip, deflate\"\n    }")
+    val result = SbtApidoc.apiHeaderExample("{json} Header-Example:\n    {\n      \"Accept-Encoding\": \"Accept-Encoding: gzip, deflate\"\n    }")
     val exampleJson = result.get.apply("local")("header")("examples")
     assert(exampleJson("title") === Js.Str("Header-Example:"))
     assert(exampleJson("content") === Js.Str("{\n  \"Accept-Encoding\": \"Accept-Encoding: gzip, deflate\"\n}"))
@@ -160,7 +160,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
 
 
   it should "parse apiheaderexample element - 2" in {
-    val result = SbtApidocjsPlugin.apiHeaderExample("{json} Request-Example:\n{ \"content\": \"This is an example content\" }")
+    val result = SbtApidoc.apiHeaderExample("{json} Request-Example:\n{ \"content\": \"This is an example content\" }")
     val exampleJson = result.get.apply("local")("header")("examples")
     assert(exampleJson("title") === Js.Str("Request-Example:"))
     assert(exampleJson("content") === Js.Str("{ \"content\": \"This is an example content\" }"))
@@ -168,7 +168,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
   }
 
   it should "parse apiparamexample element" in {
-    val result = SbtApidocjsPlugin.apiParamExample("{json} Request-Example:\n                 { \"content\": \"This is an example content\" }")
+    val result = SbtApidoc.apiParamExample("{json} Request-Example:\n                 { \"content\": \"This is an example content\" }")
     val exampleJson = result.get.apply("local")("parameter")("examples")
     assert(exampleJson("title") === Js.Str("Request-Example:"))
     assert(exampleJson("content") === Js.Str("{ \"content\": \"This is an example content\" }"))
@@ -176,7 +176,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
   }
 
   it should "parse apisuccessexample element" in {
-    val result = SbtApidocjsPlugin.apiSuccessExample("Success-Response:\n    HTTP/1.1 200 OK\n    HTML for welcome page\n    {\n      \"emailAvailable\": \"true\"\n    }\n")
+    val result = SbtApidoc.apiSuccessExample("Success-Response:\n    HTTP/1.1 200 OK\n    HTML for welcome page\n    {\n      \"emailAvailable\": \"true\"\n    }\n")
     val exampleJson = result.get.apply("local")("success")("examples")
     assert(exampleJson("title") === Js.Str("Success-Response:"))
     assert(exampleJson("content") === Js.Str("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"))
@@ -184,7 +184,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
   }
 
   it should "parse apigroup element" in {
-    val result = SbtApidocjsPlugin.apiGroup("User")
+    val result = SbtApidoc.apiGroup("User")
     assert(result.get.apply("local")("group") === Js.Str("User"))
   }
 
@@ -200,7 +200,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
 
   it should "unindent" in {
     forAll(unindents){ (content, expected) =>
-      val result = SbtApidocjsPlugin.unindent(content)
+      val result = SbtApidoc.unindent(content)
       assert(result === expected)
     }
   }
@@ -220,7 +220,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
   it should "parse apiparam element" in {
     forAll(apiParamTestCase) { (content, group, `type`, optional, field, defaultValue, size, allowedValue, description) =>
 
-      val result = SbtApidocjsPlugin.apiParam(content)
+      val result = SbtApidoc.apiParam(content)
       val parameterJson = result.get.apply("local")("parameter")("fields")(group)
       assert(parameterJson("group") === Js.Str(group))
       assert(parameterJson("type") === `type`)
@@ -235,7 +235,7 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
 
   it should "parse apisuccess element" in {
 
-      val result = SbtApidocjsPlugin.apiSuccess("{String} firstname Firstname of the User.")
+      val result = SbtApidoc.apiSuccess("{String} firstname Firstname of the User.")
       val parameterJson = result.get.apply("local")("success")("fields")("Success 200")
       assert(parameterJson("group") === Js.Str("Success 200"))
       assert(parameterJson("type") === Js.Str("String"))
@@ -248,22 +248,22 @@ class SbtapidocjsSpec extends FlatSpec with Matchers  {
   }
 
   it should "parse apiuse element" in {
-    val result = SbtApidocjsPlugin.apiUse("MySuccess")
+    val result = SbtApidoc.apiUse("MySuccess")
     assert(result.get.apply("local")("use")("name") === Js.Str("MySuccess"))
   }
 
   it should "parse apipermission element" in {
-    val result = SbtApidocjsPlugin.apiPermission("admin")
+    val result = SbtApidoc.apiPermission("admin")
     assert(result.get.apply("local")("permission")("name") === Js.Str("admin"))
   }
 
   it should "parse apisamplerequest element" in {
-    val result = SbtApidocjsPlugin.apiSampleRequest("http://test.github.com")
+    val result = SbtApidoc.apiSampleRequest("http://test.github.com")
     assert(result.get.apply("local")("sampleRequest")("url") === Js.Str("http://test.github.com"))
   }
 
   it should "parse apiversion element" in {
-    val result = SbtApidocjsPlugin.apiVersion("1.6.2")
+    val result = SbtApidoc.apiVersion("1.6.2")
     assert(result.get.apply("local")("version")=== Js.Str("1.6.2"))
   }
 
