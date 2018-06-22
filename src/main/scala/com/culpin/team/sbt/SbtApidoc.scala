@@ -6,6 +6,14 @@ import sbt.Keys.{name, version, _}
 import sbt.plugins.JvmPlugin
 import sbt.{IO, Logger, _}
 
+case class Config(
+   name: String,
+   title: String,
+   description: String,
+   version: String,
+   url: Option[String],
+   sampleUrl: Option[String]
+)
 
 object SbtApidoc extends AutoPlugin {
 
@@ -31,8 +39,18 @@ object SbtApidoc extends AutoPlugin {
   def apidocSetting: Setting[_] = apidoc := {
     //getting the source files
     val log = streams.value.log
+
+    val config = Config(
+      apidocName.value,
+      apidocTitle.value,
+      apidocDescription.value,
+      apidocVersion.value.getOrElse("1.0.0"),
+      apidocURL.value.map(_.toString),
+      apidocSampleURL.value.map(_.toString)
+    )
+
     val sourceFiles = (sources in Compile).value.toList
-    val result = run(sourceFiles, log) match {
+    val result = run(sourceFiles, config, log) match {
       case Some((apiData, apiProject)) => Some(generateApidoc(apiData, apiProject, apidocOutputDir.value, log))
       case _ => None
     }
@@ -40,7 +58,7 @@ object SbtApidoc extends AutoPlugin {
     result
   }
 
-  def run(sourceFiles: List[File], log: Logger): Option[(String, String)] = {
+  def run(sourceFiles: List[File], config: Config, log: Logger): Option[(String, String)] = {
      val (blocks, filename) = Parser(sourceFiles, log)
 
 //    blocks map { b =>

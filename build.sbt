@@ -1,8 +1,12 @@
 name := """sbt-apidoc"""
 organization := "com.culpin.team"
-version := "0.1-SNAPSHOT"
+version := "0.5.3-SNAPSHOT"
 
 sbtPlugin := true
+
+scalacOptions ++= Seq("-deprecation", "-feature")
+licenses := Seq("MIT License" -> url("http://opensource.org/licenses/mit-license.php/"))
+
 
 libraryDependencies ++= Seq(
   "com.lihaoyi"         %%     "upickle"        %    "0.6.6",
