@@ -48,12 +48,12 @@ class WorkerSpec extends FlatSpec with Matchers  {
     val parsedFilesFiles = new File(getClass.getResource("/parsedFiles-filename.json").getFile)
     val parsedFileString = readFile(parsedFilesFiles)
 
-    val filenames = ujson.read(parsedFileString).asInstanceOf[Js.Arr]
+    val parsedFiles = ujson.read(parsedFileString).asInstanceOf[Js.Arr]
     val worker = new ApiParamTitleWorker
 
-    val result = worker.postProcess(filenames, preProcessJson)
+    val result = worker.postProcess(parsedFiles, preProcessJson)
 
-    assert(result === filenames)
+    assert(result === parsedFiles)
   }
 
   "ApiUseWorker" should " preProcess parsed Files" in {
@@ -94,6 +94,42 @@ class WorkerSpec extends FlatSpec with Matchers  {
     assert(error2("description") === Js.Str("Minimum of 5 characters required."))
 
     val examples = createUser("error")("examples")(0)
+    assert(examples("title") === Js.Str("Response (example):"))
+    assert(examples("content") === Js.Str("HTTP/1.1 400 Bad Request\n{\n  \"error\": \"UserNameTooShort\"\n}"))
+    assert(examples("type") === Js.Str("json"))
+
+  }
+
+  "ApiUser Worker" should " postprocess" in {
+
+    val preProcessFiles = new File(getClass.getResource("/apiusePreprocess.json").getFile)
+    val preProcessString = readFile(preProcessFiles)
+    val preProcessJson = ujson.read(preProcessString)
+
+    val blocksFiles = new File(getClass.getResource("/apiuseBlocks.json").getFile)
+    val blocksString = readFile(blocksFiles)
+
+
+    val parsedFiles = ujson.read(blocksString).asInstanceOf[Js.Arr]
+    val worker = new ApiUseWorker
+
+    val result = worker.postProcess(parsedFiles, preProcessJson)
+    val error = result(0)(0)("local")( "error")
+
+    val error4XX = error("fields")("Error 4xx")
+    val error4XX_0 = error4XX(0)
+    assert(error4XX_0("group") === Js.Str("Error 4xx"))
+    assert(error4XX_0("optional") === Js.Bool(false))
+    assert(error4XX_0("field") === Js.Str("NoAccessRight"))
+    assert(error4XX_0("description") === Js.Str("Only authenticated Admins can access the data."))
+
+    val error4XX_1 = error4XX(1)
+    assert(error4XX_1("group") === Js.Str("Error 4xx"))
+    assert(error4XX_1("optional") === Js.Bool(false))
+    assert(error4XX_1("field") === Js.Str("UserNameTooShort"))
+    assert(error4XX_1("description") === Js.Str("Minimum of 5 characters required."))
+
+    val examples = error("examples")(0)
     assert(examples("title") === Js.Str("Response (example):"))
     assert(examples("content") === Js.Str("HTTP/1.1 400 Bad Request\n{\n  \"error\": \"UserNameTooShort\"\n}"))
     assert(examples("type") === Js.Str("json"))

@@ -1,0 +1,42 @@
+{
+   "define":{
+      "CreateUserError":{
+         "0.2.0":{
+            "version":"0.2.0",
+            "error":{
+               "fields":{
+                  "Error 4xx":[
+                     {
+                        "group":"Error 4xx",
+                        "optional":false,
+                        "field":"NoAccessRight",
+                        "description":"Only authenticated Admins can access the data."
+                     },
+                     {
+                        "group":"Error 4xx",
+                        "optional":false,
+                        "field":"UserNameTooShort",
+                        "description":"Minimum of 5 characters required."
+                     }
+                  ]
+               },
+               "examples":[
+                  {
+                     "title":"Response (example):",
+                     "content":"HTTP/1.1 400 Bad Request\n{\n  \"error\": \"UserNameTooShort\"\n}",
+                     "type":"json"
+                  }
+               ]
+            }
+         }
+      },
+      "admin":{
+         "0.3.0":{
+            "version":"0.3.0"
+         },
+         "0.1.0":{
+            "version":"0.1.0"
+         }
+      }
+   }
+}

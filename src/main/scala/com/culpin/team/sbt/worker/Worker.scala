@@ -2,7 +2,7 @@ package com.culpin.team.sbt.worker
 
 import com.culpin.team.sbt.Util
 import sbt.librarymanagement.VersionNumber
-import ujson.Js
+import ujson.{Js, Visitor}
 import com.gilt.gfc.semver.SemVer
 
 case class ErrorMessage(element: String, usage: String, example: String)
@@ -158,65 +158,55 @@ class ApiUseWorker extends Worker {
   }
 
   def postProcess(parsedFiles: Js.Arr,
-                  preProcess: Js.Value, source: String = "defineParamTitle" ,
-                  target: String = "parameter", errorMessage: ErrorMessage = ErrorMessage("apiParam","@apiParam (group) varname","")): Js.Arr = {
+                  preProcess: Js.Value, source: String = "define" ,
+                  target: String = "use", errorMessage: ErrorMessage = ErrorMessage("apiParam","@apiParam (group) varname","")): Js.Arr = {
 
     parsedFiles.arr.map { parsedFile =>
       parsedFile.arr.map { block =>
-        val localTarget: Js.Value = block("local").obj.getOrElse(target, Js.Null) //block \ "local" \ target
+
+        val localTarget: Js.Value = block("local").obj.getOrElse(target, Js.Null)
         if (localTarget == Js.Null) block
         else {
-          val fields = localTarget.obj.getOrElse("field", Js.Obj())
-          fields.obj.keySet.foldLeft(Js.Obj(): Js.Value){
-            case (newFields, fieldGroup) =>
-              fields(fieldGroup).arr.foldLeft(newFields){
-                case (newField, definition) =>
-                  val Js.Str(name) = definition("group")
-                  val version =
-                    definition("version") match {
-                      case Js.Str(v) => v
-                      case _ => "0.0.0"
+          val Js.Str(name) = localTarget(0)("name")
+          val version =
+            block("version") match {
+              case Js.Str(v) => v
+              case _ => "0.0.0"
+            }
+          if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null) {
+            val Js.Num(index) = block("index")
+            val Js.Str(filename) = block("local")("filename")
+            ???
+          } else {
+            val matchedData =
+              preProcess(source)(name).obj.getOrElse(version, {
+
+                val versionKeys = preProcess(source)(name).obj.keySet.toList
+
+                // find nearest matching version
+                var foundIndex = -1
+                var lastVersion = "0.0.0"
+                versionKeys.zipWithIndex.foreach {
+                  case (currentVersion, versionIndex) =>
+                    VersionNumber(version)
+                    if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
+                      ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
+                      foundIndex = versionIndex
+                      lastVersion = currentVersion
                     }
+                }
+                //TODO handle not found case
 
-                  val matchedData =
-                    if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null)
-                      Js.Obj("name" -> name, "title" -> name)
-                    else preProcess(source)(name).obj.getOrElse(version, {
-
-                      val versionKeys = preProcess(source)(name).obj.keySet.toList
-
-                      // find nearest matching version
-                      var foundIndex = -1
-                      var lastVersion = "0.0.0"
-                      versionKeys.zipWithIndex.foreach {
-                        case (currentVersion, versionIndex) =>
-                          VersionNumber(version)
-                          if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
-                            ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
-                            foundIndex = versionIndex
-                            lastVersion = currentVersion
-                          }
-                      }
-                      //TODO handle not found case
-
-                      val versionName = versionKeys(foundIndex)
-                      preProcess(source)(name)(versionName)
-                    })
-
-                  val Js.Str(title) = matchedData("title")
-
-                  val newValue = Js.Obj(title -> Js.Arr(definition))
-                  Util.merge(newField, newValue)
-
-              }
-
+                val versionName = versionKeys(foundIndex)
+                preProcess(source)(name)(versionName)
+              })
+            block("local")(target) = Js.Null
+            Util.merge(block, Js.Obj("local" -> matchedData))
           }
-          block
         }
-
       }
-    }
 
+    }
   }
 }
 
