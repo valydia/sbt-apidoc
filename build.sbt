@@ -9,7 +9,8 @@ licenses := Seq("MIT License" -> url("http://opensource.org/licenses/mit-license
 
 
 libraryDependencies ++= Seq(
-  "com.lihaoyi"         %%     "upickle"        %    "0.6.6",
+  "com.lihaoyi"         %%     "ujson"        %    "0.6.6",
+  "com.gilt"            %%     "gfc-semver"     %    "0.0.5",
   "org.scalatest"       %%     "scalatest"      %    "3.0.5"   % "test"
 )
 
