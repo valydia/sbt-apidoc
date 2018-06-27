@@ -2,8 +2,9 @@ package com.culpin.team.sbt.worker
 
 import com.culpin.team.sbt.Util
 import sbt.librarymanagement.VersionNumber
-import ujson.{Js, Visitor}
+import ujson.Js
 import com.gilt.gfc.semver.SemVer
+import ujson.Js.Value
 
 case class ErrorMessage(element: String, usage: String, example: String)
 
@@ -20,10 +21,147 @@ trait Worker {
 
   def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String)(source: String): Js.Value
 
-  def postProcess(parsedFiles: Js.Arr,
+  def postProcess(parsedFiles: Js.Arr, fileNames: List[String],
                   preProcess: Js.Value, source: String,
                  target: String, errorMessage: ErrorMessage): Js.Arr
 
+}
+
+class ApiErrorStructureWorker extends ApiUseWorker {
+
+  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "defineErrorStructure")(source: String = target): Value =
+    super.preProcess(parsedFiles, defaultVersion, target)(source)
+
+  override def postProcess(parsedFiles: Js.Arr, fileNames: List[String], preProcess: Value, source: String = "defineErrorStructure", target: String = "errorStructure", errorMessage: ErrorMessage): Js.Arr =
+    super.postProcess(parsedFiles, fileNames, preProcess, source, target, errorMessage)
+
+}
+
+class ApiErrorTitleWorker extends ApiParamTitleWorker {
+
+  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "defineErrorTitle")(source: String = target): Value =
+    super.preProcess(parsedFiles, defaultVersion, target)(source)
+
+  override def postProcess(parsedFiles: Js.Arr, fileNames: List[String], preProcess: Value, source: String = "defineErrorTitle", target: String = "error", errorMessage: ErrorMessage): Js.Arr =
+    super.postProcess(parsedFiles, fileNames, preProcess, source, target, errorMessage)
+
+}
+
+class ApiGroupWorker extends ApiParamTitleWorker {
+
+  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "defineGroup")(source: String = target): Value =
+    super.preProcess(parsedFiles, defaultVersion, target)(source)
+
+  override def postProcess(parsedFiles: Js.Arr, fileNames: List[String],
+                  preProcess: Js.Value, source: String = "defineGroup" ,
+                  target: String = "group", errorMessage: ErrorMessage = ErrorMessage("apiParam","@apiParam (group) varname","")): Js.Arr = {
+
+
+    parsedFiles.arr.zip(fileNames).map { case(parsedFile, filename) =>
+      parsedFile.arr.map { block =>
+        val namedBlock =
+          if (block("global").obj.nonEmpty) block
+          else {
+            val group =
+              block("local")(target) match {
+                case Js.Str(g) => g
+                case _ => filename
+              }
+            Util.merge(block, Js.Obj("local" -> Js.Obj("target" -> group.replaceAll("""[^\w]""", "_"))))
+          }
+
+        val localTarget: Js.Value = namedBlock("local").obj.getOrElse(target, Js.Null)
+        if (localTarget == Js.Null) namedBlock
+        else {
+              val Js.Str(name) = localTarget
+              val version =
+                namedBlock("version") match {
+                  case Js.Str(v) => v
+                  case _ => "0.0.0"
+                }
+
+              val matchedData =
+                if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null)
+                  Js.Obj("title" -> localTarget)
+                else preProcess(source)(name).obj.getOrElse(version, {
+
+                  val versionKeys = preProcess(source)(name).obj.keySet.toList
+
+                  // find nearest matching version
+                  var foundIndex = -1
+                  var lastVersion = "0.0.0"
+                  versionKeys.zipWithIndex.foreach {
+                    case (currentVersion, versionIndex) =>
+                      VersionNumber(version)
+                      if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
+                        ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
+                        foundIndex = versionIndex
+                        lastVersion = currentVersion
+                      }
+                  }
+                  //TODO handle not found case
+
+                  val versionName = versionKeys(foundIndex)
+                  preProcess(source)(name)(versionName)
+                })
+
+              val newValue = Js.Obj("local" -> Js.Obj("groupTitle" -> matchedData("title"), "groupDescription" -> matchedData.obj.getOrElse("description","")))
+              Util.merge(namedBlock, newValue)
+
+          }
+
+      }
+    }
+
+
+  }
+}
+
+class ApiHeaderStructureWorker extends ApiUseWorker {
+
+  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "defineHeaderStructure")(source: String = target): Value =
+    super.preProcess(parsedFiles, defaultVersion, target)(source)
+
+  override def postProcess(parsedFiles: Js.Arr, fileNames: List[String], preProcess: Value, source: String = "defineHeaderStructure", target: String = "headerStructure", errorMessage: ErrorMessage): Js.Arr =
+    super.postProcess(parsedFiles, fileNames, preProcess, source, target, errorMessage)
+
+}
+
+class ApiHeaderTitleWorker extends ApiParamTitleWorker {
+
+  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "defineHeaderTitle")(source: String = target): Value =
+    super.preProcess(parsedFiles, defaultVersion, target)(source)
+
+  override def postProcess(parsedFiles: Js.Arr, fileNames: List[String], preProcess: Value, source: String = "defineHeaderTitle", target: String = "header", errorMessage: ErrorMessage): Js.Arr =
+    super.postProcess(parsedFiles, fileNames, preProcess, source, target, errorMessage)
+
+}
+
+class ApiNameWorker extends Worker {
+  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "")(source: String = target): Value = Js.Null
+
+  override def postProcess(parsedFiles: Js.Arr, fileNames: List[String], preProcess: Value, source: String = "", target: String = "name", errorMessage: ErrorMessage = ErrorMessage("apiParam","@apiParam (group) varname","")): Js.Arr = {
+    parsedFiles.arr.map { parsedFile =>
+      parsedFile.arr.map { block =>
+
+        if (block("global").obj.nonEmpty) block
+        else {
+
+          val name =
+          block("local")(target) match {
+            case Js.Str(n) => n
+            case _ =>
+              val Js.Str(_type) = block("local")("type")
+              val Js.Str(url) = block("local")("url")
+              val initName = _type.toLowerCase.capitalize
+              initName + "_" + url.toLowerCase.split("\\s+").map(_.capitalize).mkString("_")
+          }
+          Util.merge(block, Js.Obj("local" -> Js.Obj("name" -> name.replaceAll("""[^\w]""", "_"))))
+        }
+      }
+
+    }
+  }
 }
 
 class ApiParamTitleWorker extends Worker {
@@ -61,68 +199,70 @@ class ApiParamTitleWorker extends Worker {
     }
   }
 
-  def postProcess(parsedFiles: Js.Arr,
+  def postProcess(parsedFiles: Js.Arr, filenames: List[String],
                   preProcess: Js.Value, source: String = "defineParamTitle" ,
                   target: String = "parameter", errorMessage: ErrorMessage = ErrorMessage("apiParam","@apiParam (group) varname","")): Js.Arr = {
 
     parsedFiles.arr.map { parsedFile =>
-        parsedFile.arr.map { block =>
-          val localTarget: Js.Value = block("local").obj.getOrElse(target, Js.Null) //block \ "local" \ target
-          if (localTarget == Js.Null) block
-          else {
-            val fields = localTarget.obj.getOrElse("field", Js.Obj())
-             fields.obj.keySet.foldLeft(Js.Obj(): Js.Value){
-               case (newFields, fieldGroup) =>
-                 fields(fieldGroup).arr.foldLeft(newFields){
-                   case (newField, definition) =>
-                     val Js.Str(name) = definition("group")
-                     val version =
-                       definition("version") match {
-                         case Js.Str(v) => v
-                         case _ => "0.0.0"
+      parsedFile.arr.map { block =>
+        val localTarget: Js.Value = block("local").obj.getOrElse(target, Js.Null)
+        if (localTarget == Js.Null) block
+        else {
+          val fields = localTarget.obj.getOrElse("field", Js.Obj())
+           fields.obj.keySet.foldLeft(Js.Obj(): Js.Value){
+             case (newFields, fieldGroup) =>
+               fields(fieldGroup).arr.foldLeft(newFields){
+                 case (newField, definition) =>
+                   val Js.Str(name) = definition("group")
+                   val version =
+                     definition("version") match {
+                       case Js.Str(v) => v
+                       case _ => "0.0.0"
+                     }
+
+                   val matchedData =
+                     if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null)
+                       Js.Obj("name" -> name, "title" -> name)
+                     else preProcess(source)(name).obj.getOrElse(version, {
+
+                       val versionKeys = preProcess(source)(name).obj.keySet.toList
+
+                       // find nearest matching version
+                       var foundIndex = -1
+                       var lastVersion = "0.0.0"
+                       versionKeys.zipWithIndex.foreach {
+                         case (currentVersion, versionIndex) =>
+                           VersionNumber(version)
+                           if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
+                             ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
+                             foundIndex = versionIndex
+                             lastVersion = currentVersion
+                           }
                        }
+                       //TODO handle not found case
 
-                     val matchedData =
-                       if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null)
-                         Js.Obj("name" -> name, "title" -> name)
-                       else preProcess(source)(name).obj.getOrElse(version, {
+                       val versionName = versionKeys(foundIndex)
+                       preProcess(source)(name)(versionName)
+                     })
 
-                         val versionKeys = preProcess(source)(name).obj.keySet.toList
+                   val Js.Str(title) = matchedData("title")
 
-                         // find nearest matching version
-                         var foundIndex = -1
-                         var lastVersion = "0.0.0"
-                         versionKeys.zipWithIndex.foreach {
-                           case (currentVersion, versionIndex) =>
-                             VersionNumber(version)
-                             if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
-                               ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
-                               foundIndex = versionIndex
-                               lastVersion = currentVersion
-                             }
-                         }
-                         //TODO handle not found case
+                   val newValue = Js.Obj(title -> Js.Arr(definition))
+                   Util.merge(newField, newValue)
 
-                         val versionName = versionKeys(foundIndex)
-                         preProcess(source)(name)(versionName)
-                       })
-
-                     val Js.Str(title) = matchedData("title")
-
-                     val newValue = Js.Obj(title -> Js.Arr(definition))
-                     Util.merge(newField, newValue)
-
-                 }
-
-             }
-            block
-          }
-
+               }
+           }
+          block
         }
-    }
 
+      }
+    }
   }
 }
+
+//class ApiPermissionWorker extends ApiParamTitleWorker {
+//
+//}
 
 class ApiUseWorker extends Worker {
 
@@ -157,7 +297,7 @@ class ApiUseWorker extends Worker {
     }
   }
 
-  def postProcess(parsedFiles: Js.Arr,
+  def postProcess(parsedFiles: Js.Arr, fileNames: List[String],
                   preProcess: Js.Value, source: String = "define" ,
                   target: String = "use", errorMessage: ErrorMessage = ErrorMessage("apiParam","@apiParam (group) varname","")): Js.Arr = {
 

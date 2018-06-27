@@ -51,7 +51,7 @@ class WorkerSpec extends FlatSpec with Matchers  {
     val parsedFiles = ujson.read(parsedFileString).asInstanceOf[Js.Arr]
     val worker = new ApiParamTitleWorker
 
-    val result = worker.postProcess(parsedFiles, preProcessJson)
+    val result = worker.postProcess(parsedFiles, List(), preProcessJson)
 
     assert(result === parsedFiles)
   }
@@ -113,7 +113,7 @@ class WorkerSpec extends FlatSpec with Matchers  {
     val parsedFiles = ujson.read(blocksString).asInstanceOf[Js.Arr]
     val worker = new ApiUseWorker
 
-    val result = worker.postProcess(parsedFiles, preProcessJson)
+    val result = worker.postProcess(parsedFiles,List(), preProcessJson)
     val error = result(0)(0)("local")( "error")
 
     val error4XX = error("fields")("Error 4xx")
@@ -133,6 +133,60 @@ class WorkerSpec extends FlatSpec with Matchers  {
     assert(examples("title") === Js.Str("Response (example):"))
     assert(examples("content") === Js.Str("HTTP/1.1 400 Bad Request\n{\n  \"error\": \"UserNameTooShort\"\n}"))
     assert(examples("type") === Js.Str("json"))
+
+  }
+
+  "ApiGroupWorker" should " postprocess" in {
+
+    val preProcessFiles = new File(getClass.getResource("/preprocess.json").getFile)
+    val preProcessString = readFile(preProcessFiles)
+    val preProcessJson = ujson.read(preProcessString)
+
+    val parsedFilesFiles = new File(getClass.getResource("/parsedFiles-filename.json").getFile)
+    val parsedFileString = readFile(parsedFilesFiles)
+
+    val parsedFiles = ujson.read(parsedFileString).asInstanceOf[Js.Arr]
+    val worker = new ApiGroupWorker
+
+    val result = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), preProcessJson)
+
+    val (file1, file2)= (result(0), result(1))
+
+    val (block4, block5, block6) = (file1(3), file1(4), file1(5))
+    val (block2_1, block2_2, block2_3) = (file2(0), file2(1), file2(2))
+    assert(block4("local")("groupTitle") === Js.Str("User"))
+    assert(block5("local")("groupTitle") === Js.Str("User"))
+    assert(block6("local")("groupTitle") === Js.Str("User"))
+    assert(block2_1("local")("groupTitle") === Js.Str("User"))
+    assert(block2_2("local")("groupTitle") === Js.Str("User"))
+    assert(block2_3("local")("groupTitle") === Js.Str("User"))
+//      assert((result \\ "groupTitle").children.size === 6)
+
+  }
+
+  "ApiNameWorker" should " postprocess" in {
+
+    val preProcessFiles = new File(getClass.getResource("/preprocess.json").getFile)
+    val preProcessString = readFile(preProcessFiles)
+    val preProcessJson = ujson.read(preProcessString)
+
+    val parsedFilesFiles = new File(getClass.getResource("/parsedFiles-filename.json").getFile)
+    val parsedFileString = readFile(parsedFilesFiles)
+    val parsedFiles = ujson.read(parsedFileString).asInstanceOf[Js.Arr]
+    val worker = new ApiNameWorker
+
+    val result = worker.postProcess(parsedFiles, List(), preProcessJson)
+
+    val (file1, file2)= (result(0), result(1))
+
+    val (block4, block5, block6) = (file1(3), file1(4), file1(5))
+    val (block2_1, block2_2, block2_3) = (file2(0), file2(1), file2(2))
+    assert(block4("local")("name") === Js.Str("GetUser"))
+    assert(block5("local")("name") === Js.Str("GetUser"))
+    assert(block6("local")("name") === Js.Str("PostUser"))
+    assert(block2_1("local")("name") === Js.Str("GetUser"))
+    assert(block2_2("local")("name") === Js.Str("PostUser"))
+    assert(block2_3("local")("name") === Js.Str("PutUser"))
 
   }
 
