@@ -4,6 +4,7 @@ import ujson.Js
 
 object Util {
 
+  //TODO test - Special case empty arrays
   private[sbt] def merge(val1: Js.Value, val2: Js.Value): Js.Value = (val1, val2) match {
     case (Js.Obj(xs), Js.Obj(ys)) =>  Js.Obj.from(mergeFields(xs.toList, ys.toList))
     case (Js.Arr(xs), Js.Arr(ys)) =>  Js.Arr(mergeVals(xs.toList, ys.toList))

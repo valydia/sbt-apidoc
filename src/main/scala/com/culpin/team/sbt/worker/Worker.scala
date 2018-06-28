@@ -260,9 +260,67 @@ class ApiParamTitleWorker extends Worker {
   }
 }
 
-//class ApiPermissionWorker extends ApiParamTitleWorker {
-//
-//}
+class ApiPermissionWorker extends ApiParamTitleWorker {
+
+  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "definePermission")(source: String = target): Value =
+    super.preProcess(parsedFiles, defaultVersion, target)(source)
+
+  override def postProcess(parsedFiles: Js.Arr, filenames: List[String], preProcess: Value, source: String = "definePermission", target: String = "permission", errorMessage: ErrorMessage): Js.Arr = {
+    parsedFiles.arr.map { parsedFile =>
+      parsedFile.arr.map { block =>
+        val localTarget: Js.Value = block("local").obj.getOrElse(target, Js.Null)
+        if (localTarget == Js.Null) block
+        else {
+          val newPermission = localTarget.arr.foldLeft(Js.Arr()){
+            case (permission, definition) =>
+              val Js.Str(name) = definition("name")
+              val version =
+                block("version") match {
+                  case Js.Str(v) => v
+                  case _ => "0.0.0"
+                }
+
+              val metadata =
+                if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null){
+                  Js.Obj("name" -> name, "title" -> definition.obj.getOrElse("title",""), "description" -> definition.obj.getOrElse("description",""))
+                }
+                else preProcess(source)(name).obj.getOrElse(version, {
+
+                  val versionKeys = preProcess(source)(name).obj.keySet.toList
+
+                  // find nearest matching version
+                  var foundIndex = -1
+                  var lastVersion = "0.0.0"
+                  versionKeys.zipWithIndex.foreach {
+                    case (currentVersion, versionIndex) =>
+                      VersionNumber(version)
+                      if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
+                        ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
+                        foundIndex = versionIndex
+                        lastVersion = currentVersion
+                      }
+                  }
+                  //TODO handle not found case
+
+                  val versionName = versionKeys(foundIndex)
+                  preProcess(source)(name)(versionName)
+                })
+
+              //TODO check merge function
+            val Js.Arr(xxx) = if (permission.arr.isEmpty) Js.Arr(metadata) else Util.merge(permission, Js.Arr(metadata))
+              println(s"xxxx -------- ${Js.Arr(xxx)}")
+              Js.Arr(xxx)
+          }
+          block("local")(target) = Js.Null
+          Util.merge(block, Js.Obj("local" -> Js.Obj(target -> newPermission)))
+        }
+      }
+    }
+
+  }
+
+
+}
 
 class ApiUseWorker extends Worker {
 

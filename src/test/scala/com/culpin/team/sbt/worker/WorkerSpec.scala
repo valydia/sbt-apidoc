@@ -177,6 +177,7 @@ class WorkerSpec extends FlatSpec with Matchers  {
 
     val result = worker.postProcess(parsedFiles, List(), preProcessJson)
 
+
     val (file1, file2)= (result(0), result(1))
 
     val (block4, block5, block6) = (file1(3), file1(4), file1(5))
@@ -190,5 +191,68 @@ class WorkerSpec extends FlatSpec with Matchers  {
 
   }
 
+    "ApiPermissionWorker" should " postprocess" in {
+
+      val preProcessFiles = new File(getClass.getResource("/preprocess.json").getFile)
+      val preProcessString = readFile(preProcessFiles)
+      val preProcessJson = ujson.read(preProcessString)
+
+      val parsedFilesFiles = new File(getClass.getResource("/parsedFiles-filename.json").getFile)
+      val parsedFileString = readFile(parsedFilesFiles)
+      val parsedFiles = ujson.read(parsedFileString).asInstanceOf[Js.Arr]
+      val worker = new ApiPermissionWorker
+
+      val result = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), preProcessJson)
+//      println(s"result  -------- $result")
+
+      val (file1, file2)= (result(0), result(1))
+//      println(s"file1  -------- $file1")
+
+      val (block4, block5, block6) = (file1(3), file1(4), file1(5))
+
+
+      println("block4 -----------------" + block4("local")("permission"))
+      val permission4 = block4("local")("permission")(0)
+      assert(permission4("name") === Js.Str("admin"))
+      assert(permission4("title") === Js.Str("This title is visible in version 0.1.0 and 0.2.0"))
+      assert(permission4("description") === Js.Str(""))
+
+      val permission5 = block5("local")("permission")(0)
+
+      assert(permission5("name") === Js.Str("admin"))
+      assert(permission5("title") === Js.Str("This title is visible in version 0.1.0 and 0.2.0"))
+      assert(permission5("description") === Js.Str(""))
+
+      val permission6 = block6("local")("permission")(0)
+
+      assert(permission6("name") === Js.Str("none"))
+      assert(permission6("title") === Js.Str(""))
+      assert(permission6("description") === Js.Str(""))
+
+
+      val (block1, block2, block3) = (file2(0), file2(1), file2(2))
+
+      val permission1 = block1("local")("permission")(0)
+
+      assert(permission1("name") === Js.Str("admin"))
+      assert(permission1("title") === Js.Str("Admin access rights needed."))
+      assert(permission1("description") === Js.Str("Optionallyyou can write here further Informations about the permission.An \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."))
+
+      val permission2 = block2("local")("permission")(0)
+
+      assert(permission2("name") === Js.Str("none"))
+      assert(permission2("title") === Js.Str(""))
+      assert(permission2("description") === Js.Str(""))
+
+      val permission3 = block3("local")("permission")(0)
+
+      assert(permission3("name") === Js.Str("none"))
+      assert(permission3("title") === Js.Str(""))
+      assert(permission3("description") === Js.Str(""))
+
+//      assert(JArray(l).diff(result).deleted === Js.Null)
+//      assert(JArray(l).diff(result).changed === Js.Null)
+
+    }
 
 }
