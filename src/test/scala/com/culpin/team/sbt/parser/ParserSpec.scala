@@ -1,11 +1,11 @@
 package com.culpin.team.sbt.parser
 
 import org.scalatest.prop.TableDrivenPropertyChecks._
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.FlatSpec
 import ujson.Js
 import Parser._
 
-class ParserSpec extends FlatSpec with Matchers  {
+class ParserSpec extends FlatSpec  {
 
   "Parser" should "parse comment block" in {
     val file = """package simple

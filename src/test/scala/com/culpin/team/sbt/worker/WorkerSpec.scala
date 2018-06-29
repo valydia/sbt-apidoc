@@ -2,10 +2,10 @@ package com.culpin.team.sbt.worker
 
 import java.io.File
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.FlatSpec
 import ujson.Js
 
-class WorkerSpec extends FlatSpec with Matchers  {
+class WorkerSpec extends FlatSpec  {
 
   def readFile(file: File): String = {
     val source = scala.io.Source.fromFile(file)
@@ -203,15 +203,12 @@ class WorkerSpec extends FlatSpec with Matchers  {
       val worker = new ApiPermissionWorker
 
       val result = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), preProcessJson)
-//      println(s"result  -------- $result")
 
       val (file1, file2)= (result(0), result(1))
-//      println(s"file1  -------- $file1")
 
       val (block4, block5, block6) = (file1(3), file1(4), file1(5))
 
 
-      println("block4 -----------------" + block4("local")("permission"))
       val permission4 = block4("local")("permission")(0)
       assert(permission4("name") === Js.Str("admin"))
       assert(permission4("title") === Js.Str("This title is visible in version 0.1.0 and 0.2.0"))

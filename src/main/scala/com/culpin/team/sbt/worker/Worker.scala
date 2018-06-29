@@ -1,6 +1,6 @@
 package com.culpin.team.sbt.worker
 
-import com.culpin.team.sbt.Util
+import com.culpin.team.sbt.Util.merge
 import sbt.librarymanagement.VersionNumber
 import ujson.Js
 import com.gilt.gfc.semver.SemVer
@@ -67,7 +67,7 @@ class ApiGroupWorker extends ApiParamTitleWorker {
                 case Js.Str(g) => g
                 case _ => filename
               }
-            Util.merge(block, Js.Obj("local" -> Js.Obj("target" -> group.replaceAll("""[^\w]""", "_"))))
+            merge(block, Js.Obj("local" -> Js.Obj("target" -> group.replaceAll("""[^\w]""", "_"))))
           }
 
         val localTarget: Js.Value = namedBlock("local").obj.getOrElse(target, Js.Null)
@@ -106,7 +106,7 @@ class ApiGroupWorker extends ApiParamTitleWorker {
                 })
 
               val newValue = Js.Obj("local" -> Js.Obj("groupTitle" -> matchedData("title"), "groupDescription" -> matchedData.obj.getOrElse("description","")))
-              Util.merge(namedBlock, newValue)
+              merge(namedBlock, newValue)
 
           }
 
@@ -156,7 +156,7 @@ class ApiNameWorker extends Worker {
               val initName = _type.toLowerCase.capitalize
               initName + "_" + url.toLowerCase.split("\\s+").map(_.capitalize).mkString("_")
           }
-          Util.merge(block, Js.Obj("local" -> Js.Obj("name" -> name.replaceAll("""[^\w]""", "_"))))
+          merge(block, Js.Obj("local" -> Js.Obj("name" -> name.replaceAll("""[^\w]""", "_"))))
         }
       }
 
@@ -189,10 +189,11 @@ class ApiParamTitleWorker extends Worker {
                     case Js.Str(v) => v
                     case _ => defaultVersion //TODO or the '0.0.0' if so remove defautlVersion
                   }
-                val x = Util.merge(r, Js.Obj(target -> Js.Obj(name -> Js.Obj(version -> sourceNode))))
-                if (x(target) == Js.Null)
-                  x.obj.remove(target)
-                x
+
+                val result = merge(r, Js.Obj(target -> Js.Obj(name -> Js.Obj(version -> sourceNode))))
+                if (result(target) == Js.Null)
+                  result.obj.remove(target)
+                result
               case _ => r
             }
           }
@@ -248,7 +249,7 @@ class ApiParamTitleWorker extends Worker {
                    val Js.Str(title) = matchedData("title")
 
                    val newValue = Js.Obj(title -> Js.Arr(definition))
-                   Util.merge(newField, newValue)
+                   merge(newField, newValue)
 
                }
            }
@@ -306,13 +307,10 @@ class ApiPermissionWorker extends ApiParamTitleWorker {
                   preProcess(source)(name)(versionName)
                 })
 
-              //TODO check merge function
-            val Js.Arr(xxx) = if (permission.arr.isEmpty) Js.Arr(metadata) else Util.merge(permission, Js.Arr(metadata))
-              println(s"xxxx -------- ${Js.Arr(xxx)}")
-              Js.Arr(xxx)
+            merge(permission, Js.Arr(metadata))
           }
           block("local")(target) = Js.Null
-          Util.merge(block, Js.Obj("local" -> Js.Obj(target -> newPermission)))
+          merge(block, Js.Obj("local" -> Js.Obj(target -> newPermission)))
         }
       }
     }
@@ -347,7 +345,7 @@ class ApiUseWorker extends Worker {
                     case Js.Str(v) => v
                     case _ => defaultVersion //TODO or the '0.0.0' if so remove defautlVersion
                   }
-               Util.merge(r, Js.Obj(target -> Js.Obj(name -> Js.Obj(version -> block("local")))))
+               merge(r, Js.Obj(target -> Js.Obj(name -> Js.Obj(version -> block("local")))))
 
               case _ => r
             }
@@ -399,7 +397,7 @@ class ApiUseWorker extends Worker {
                 preProcess(source)(name)(versionName)
               })
             block("local")(target) = Js.Null
-            Util.merge(block, Js.Obj("local" -> matchedData))
+            merge(block, Js.Obj("local" -> matchedData))
           }
         }
       }
@@ -409,5 +407,46 @@ class ApiUseWorker extends Worker {
 }
 
 object Worker {
+
+  def apply(parsedFiles: Js.Arr, filenames: List[String]): Js.Arr = {
+
+    parsedFiles.arr.zip(filenames) map {
+      case(parsedFile, filename) =>
+        parsedFile.arr map { block =>
+          if (block("global").obj.isEmpty && block("local").obj.nonEmpty) {
+            val newType = block("local")("type") match {
+              case Js.Str(theType) => theType
+              case _ => ""
+            }
+
+            val newUrl = block("local")("url") match {
+              case Js.Str(url) => url
+              case _ => ""
+            }
+
+            val newVersion = block("local")("version") match {
+              case Js.Str(version) => version
+              case _ => "0.0.0"
+            }
+
+            val newFilename = block("local" )("filename") match {
+              case Js.Str(fileName) => fileName
+              case _ => filename
+            }
+            val newLocal = Js.Obj("local" ->
+              Js.Obj("type" -> newType,
+                "url" -> newUrl,
+                "version" -> newVersion,
+                "filename" -> newFilename
+              )
+            )
+            merge(block,newLocal)
+          }
+          else block
+        }
+    }
+
+
+  }
 
 }
