@@ -269,7 +269,9 @@ object Parser {
     val url = trim(content)
     if (url.isEmpty) None
     else
-      Option(Js.Obj("local" -> Js.Obj("sampleRequest" -> Js.Obj("url" -> url))))
+      //TODO investigate if not this.....
+      //Option(Js.Obj("local" -> Js.Obj("sampleRequest" -> Js.Obj("url" -> url))))
+      Option(Js.Obj("local" -> Js.Obj("sampleRequest" -> Js.Arr(Js.Obj("url" -> url)))))
   }
 
   private[parser] def apiVersion(content: String): Option[Js.Obj] = {

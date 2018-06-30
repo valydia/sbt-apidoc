@@ -2,12 +2,25 @@ package com.culpin.team.sbt.worker
 
 import java.io.File
 
+import com.culpin.team.sbt.parser.Parser
 import org.scalatest.FlatSpec
+import sbt.util.{Level, Logger}
 import ujson.Js
 
 class WorkerSpec extends FlatSpec  {
 
-  def readFile(file: File): String = {
+  private def loadFixture(parsedFilesUrl: String = "/parsedFiles-filename.json", preprocessUrl: String = "/preprocess.json"): (Js.Arr, Js.Value) = {
+    val preProcessFiles = new File(getClass.getResource(preprocessUrl).getFile)
+    val preProcessString = readFile(preProcessFiles)
+
+
+    val parsedFilesFiles = new File(getClass.getResource(parsedFilesUrl).getFile)
+    val parsedFileString = readFile(parsedFilesFiles)
+    (ujson.read(parsedFileString).asInstanceOf[Js.Arr],  ujson.read(preProcessString))
+
+  }
+
+  private def readFile(file: File): String = {
     val source = scala.io.Source.fromFile(file)
     val src = try source.mkString finally source.close()
     src
@@ -41,17 +54,10 @@ class WorkerSpec extends FlatSpec  {
 
   it should "postprocess" in {
 
-    val preProcessFiles = new File(getClass.getResource("/preprocess.json").getFile)
-    val preProcessString = readFile(preProcessFiles)
-    val preProcessJson = ujson.read(preProcessString)
-
-    val parsedFilesFiles = new File(getClass.getResource("/parsedFiles-filename.json").getFile)
-    val parsedFileString = readFile(parsedFilesFiles)
-
-    val parsedFiles = ujson.read(parsedFileString).asInstanceOf[Js.Arr]
+    val (parsedFiles, preProcessJson) = loadFixture()
     val worker = new ApiParamTitleWorker
 
-    val result = worker.postProcess(parsedFiles, List(), preProcessJson)
+    val result = worker.postProcess(parsedFiles, List(), None, preProcessJson)
 
     assert(result === parsedFiles)
   }
@@ -102,18 +108,10 @@ class WorkerSpec extends FlatSpec  {
 
   "ApiUser Worker" should " postprocess" in {
 
-    val preProcessFiles = new File(getClass.getResource("/apiusePreprocess.json").getFile)
-    val preProcessString = readFile(preProcessFiles)
-    val preProcessJson = ujson.read(preProcessString)
-
-    val blocksFiles = new File(getClass.getResource("/apiuseBlocks.json").getFile)
-    val blocksString = readFile(blocksFiles)
-
-
-    val parsedFiles = ujson.read(blocksString).asInstanceOf[Js.Arr]
+    val (parsedFiles, preProcessJson) = loadFixture("/apiuseBlocks.json","/apiusePreprocess.json")
     val worker = new ApiUseWorker
 
-    val result = worker.postProcess(parsedFiles,List(), preProcessJson)
+    val result = worker.postProcess(parsedFiles, List(), None, preProcessJson)
     val error = result(0)(0)("local")( "error")
 
     val error4XX = error("fields")("Error 4xx")
@@ -138,17 +136,10 @@ class WorkerSpec extends FlatSpec  {
 
   "ApiGroupWorker" should " postprocess" in {
 
-    val preProcessFiles = new File(getClass.getResource("/preprocess.json").getFile)
-    val preProcessString = readFile(preProcessFiles)
-    val preProcessJson = ujson.read(preProcessString)
-
-    val parsedFilesFiles = new File(getClass.getResource("/parsedFiles-filename.json").getFile)
-    val parsedFileString = readFile(parsedFilesFiles)
-
-    val parsedFiles = ujson.read(parsedFileString).asInstanceOf[Js.Arr]
+    val (parsedFiles, preProcessJson) = loadFixture()
     val worker = new ApiGroupWorker
 
-    val result = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), preProcessJson)
+    val result = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), None, preProcessJson)
 
     val (file1, file2)= (result(0), result(1))
 
@@ -166,16 +157,10 @@ class WorkerSpec extends FlatSpec  {
 
   "ApiNameWorker" should " postprocess" in {
 
-    val preProcessFiles = new File(getClass.getResource("/preprocess.json").getFile)
-    val preProcessString = readFile(preProcessFiles)
-    val preProcessJson = ujson.read(preProcessString)
-
-    val parsedFilesFiles = new File(getClass.getResource("/parsedFiles-filename.json").getFile)
-    val parsedFileString = readFile(parsedFilesFiles)
-    val parsedFiles = ujson.read(parsedFileString).asInstanceOf[Js.Arr]
+    val (parsedFiles, preProcessJson) = loadFixture()
     val worker = new ApiNameWorker
 
-    val result = worker.postProcess(parsedFiles, List(), preProcessJson)
+    val result = worker.postProcess(parsedFiles, List(), None, preProcessJson)
 
 
     val (file1, file2)= (result(0), result(1))
@@ -191,65 +176,111 @@ class WorkerSpec extends FlatSpec  {
 
   }
 
-    "ApiPermissionWorker" should " postprocess" in {
 
-      val preProcessFiles = new File(getClass.getResource("/preprocess.json").getFile)
-      val preProcessString = readFile(preProcessFiles)
-      val preProcessJson = ujson.read(preProcessString)
+  "ApiPermissionWorker" should " postprocess" in {
 
-      val parsedFilesFiles = new File(getClass.getResource("/parsedFiles-filename.json").getFile)
-      val parsedFileString = readFile(parsedFilesFiles)
-      val parsedFiles = ujson.read(parsedFileString).asInstanceOf[Js.Arr]
-      val worker = new ApiPermissionWorker
+    val (parsedFiles, preProcessJson) = loadFixture()
+    val worker = new ApiPermissionWorker
 
-      val result = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), preProcessJson)
+    val result = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), None, preProcessJson)
 
-      val (file1, file2)= (result(0), result(1))
+    val (file1, file2)= (result(0), result(1))
 
-      val (block4, block5, block6) = (file1(3), file1(4), file1(5))
+    val (block4, block5, block6) = (file1(3), file1(4), file1(5))
 
 
-      val permission4 = block4("local")("permission")(0)
-      assert(permission4("name") === Js.Str("admin"))
-      assert(permission4("title") === Js.Str("This title is visible in version 0.1.0 and 0.2.0"))
-      assert(permission4("description") === Js.Str(""))
+    val permission4 = block4("local")("permission")(0)
+    assert(permission4("name") === Js.Str("admin"))
+    assert(permission4("title") === Js.Str("This title is visible in version 0.1.0 and 0.2.0"))
+    assert(permission4("description") === Js.Str(""))
 
-      val permission5 = block5("local")("permission")(0)
+    val permission5 = block5("local")("permission")(0)
 
-      assert(permission5("name") === Js.Str("admin"))
-      assert(permission5("title") === Js.Str("This title is visible in version 0.1.0 and 0.2.0"))
-      assert(permission5("description") === Js.Str(""))
+    assert(permission5("name") === Js.Str("admin"))
+    assert(permission5("title") === Js.Str("This title is visible in version 0.1.0 and 0.2.0"))
+    assert(permission5("description") === Js.Str(""))
 
-      val permission6 = block6("local")("permission")(0)
+    val permission6 = block6("local")("permission")(0)
 
-      assert(permission6("name") === Js.Str("none"))
-      assert(permission6("title") === Js.Str(""))
-      assert(permission6("description") === Js.Str(""))
+    assert(permission6("name") === Js.Str("none"))
+    assert(permission6("title") === Js.Str(""))
+    assert(permission6("description") === Js.Str(""))
 
 
-      val (block1, block2, block3) = (file2(0), file2(1), file2(2))
+    val (block1, block2, block3) = (file2(0), file2(1), file2(2))
 
-      val permission1 = block1("local")("permission")(0)
+    val permission1 = block1("local")("permission")(0)
 
-      assert(permission1("name") === Js.Str("admin"))
-      assert(permission1("title") === Js.Str("Admin access rights needed."))
-      assert(permission1("description") === Js.Str("Optionallyyou can write here further Informations about the permission.An \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."))
+    assert(permission1("name") === Js.Str("admin"))
+    assert(permission1("title") === Js.Str("Admin access rights needed."))
+    assert(permission1("description") === Js.Str("Optionallyyou can write here further Informations about the permission.An \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."))
 
-      val permission2 = block2("local")("permission")(0)
+    val permission2 = block2("local")("permission")(0)
 
-      assert(permission2("name") === Js.Str("none"))
-      assert(permission2("title") === Js.Str(""))
-      assert(permission2("description") === Js.Str(""))
+    assert(permission2("name") === Js.Str("none"))
+    assert(permission2("title") === Js.Str(""))
+    assert(permission2("description") === Js.Str(""))
 
-      val permission3 = block3("local")("permission")(0)
+    val permission3 = block3("local")("permission")(0)
 
-      assert(permission3("name") === Js.Str("none"))
-      assert(permission3("title") === Js.Str(""))
-      assert(permission3("description") === Js.Str(""))
+    assert(permission3("name") === Js.Str("none"))
+    assert(permission3("title") === Js.Str(""))
+    assert(permission3("description") === Js.Str(""))
 
 //      assert(JArray(l).diff(result).deleted === Js.Null)
 //      assert(JArray(l).diff(result).changed === Js.Null)
 
+  }
+
+  "ApiSampleRequestWorker" should " postprocess - local url with sampleURL" in {
+
+    val (parsedFiles, preProcessJson) = loadFixture()
+    val worker = new ApiSampleRequestWorker
+
+    val result = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), Option("https://api.github.com/v1"), preProcessJson)
+    assert(result === parsedFiles)
+
+  }
+
+  it should " postprocess with sampleURL" in {
+
+    val stubLogger = new Logger {
+      override def log(level: Level.Value, message: => String): Unit = ()
+
+      override def trace(t: => Throwable): Unit = ()
+
+      override def success(message: => String): Unit = ()
     }
+    val (parsedFiles, filenames) = Parser(List(new File(getClass.getResource("/sampleRequest.js").getFile)), stubLogger)
+
+
+    val worker = new ApiSampleRequestWorker
+//
+    val result = worker.postProcess(parsedFiles, filenames, Option("https://api.github.com/v1"), Js.Null)
+//
+    val file1 = result(0)
+    val (block1, block2, block3) = (file1(0), file1(1), file1(2))
+    println(s"--------- ${block1("local")("sampleRequest")}")
+    assert(block1("local")("sampleRequest")(0)("url") === Js.Str("http://www.example.com/user/4711"))
+    assert(block2("local")("sampleRequest")(0)("url")  === Js.Str("https://api.github.com/v1/car/4711"))
+    assert(block3("local")("sampleRequest") === Js.Null)
+  }
+//
+//  "ApiSampleRequestWorker" should " postprocess without sampleURL" in {
+//
+//    val (Success(parsedFiles), filenames) = Parser.apply(List(new File(getClass.getResource("/sampleRequest.js").getFile)), mockLogger)
+//
+//    val worker = new ApiSampleRequestWorker
+//
+//    val conf2 = SbtApidocConfiguration("name", "title", "description", "1.2", None, None)
+//
+//    val result = worker.postProcess(parsedFiles, filenames.toList, JObject(), conf2)
+//
+//    val file1 = result(0)
+//    val JArray(List(block1, block2, block3)) = file1
+//    assert((block1 \ "local" \ "sampleRequest")(0) \ "url" === JString("http://www.example.com/user/4711"))
+//    assert((block2 \ "local" \ "sampleRequest")(0) \ "url" === JString("/car/4711"))
+//    assert(block3 \ "local" \ "sampleRequest" === JNothing)
+//  }
 
 }

@@ -259,7 +259,7 @@ class ParserSpec extends FlatSpec  {
 
   it should "parse apisamplerequest element" in {
     val result = apiSampleRequest("http://test.github.com")
-    assert(result.get.apply("local")("sampleRequest")("url") === Js.Str("http://test.github.com"))
+    assert(result.get.apply("local")("sampleRequest")(0)("url") === Js.Str("http://test.github.com"))
   }
 
   it should "parse apiversion element" in {
