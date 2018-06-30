@@ -262,7 +262,7 @@ object Parser {
     val name = trim(content)
     if (name.isEmpty) None
     else
-      Option(Js.Obj("local" -> Js.Obj("permission" -> Js.Obj("name" -> name))))
+      Option(Js.Obj("local" -> Js.Obj("permission" -> Js.Arr(Js.Obj("name" -> name)))))
   }
 
   private[parser] def apiSampleRequest(content: String): Option[Js.Obj] = {

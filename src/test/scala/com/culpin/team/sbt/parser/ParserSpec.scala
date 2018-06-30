@@ -254,7 +254,7 @@ class ParserSpec extends FlatSpec  {
 
   it should "parse apipermission element" in {
     val result = apiPermission("admin")
-    assert(result.get.apply("local")("permission")("name") === Js.Str("admin"))
+    assert(result.get.apply("local")("permission")(0)("name") === Js.Str("admin"))
   }
 
   it should "parse apisamplerequest element" in {

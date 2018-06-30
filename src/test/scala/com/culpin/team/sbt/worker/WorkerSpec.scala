@@ -33,7 +33,7 @@ class WorkerSpec extends FlatSpec  {
     val parsedFiles: Js.Arr = ujson.read(jsonString).asInstanceOf[Js.Arr]
 
     val worker = new ApiParamTitleWorker
-    val result = worker.preProcess(parsedFiles, "0.0.0", "defineErrorTitle")("define")
+    val result = worker.preProcess(parsedFiles, "defineErrorTitle")("define")
 
     val defineErrorTitle = result("defineErrorTitle")
     val createUser = defineErrorTitle("CreateUserError")("0.2.0")
@@ -69,7 +69,7 @@ class WorkerSpec extends FlatSpec  {
     val jarray = ujson.read(jsonString).asInstanceOf[Js.Arr]
 
     val worker = new ApiUseWorker
-    val result = worker.preProcess(jarray,"0.0.0", "defineErrorStructure")()
+    val result = worker.preProcess(jarray, "defineErrorStructure")()
     val structure = result("defineErrorStructure")
     assert(structure == Js.Obj())
   }
@@ -81,7 +81,7 @@ class WorkerSpec extends FlatSpec  {
     val jarray = ujson.read(jsonString).asInstanceOf[Js.Arr]
 
     val worker = new ApiUseWorker
-    val result = worker.preProcess(jarray, "0.0.0")()
+    val result = worker.preProcess(jarray)()
 
     val createUser = result("define")("CreateUserError" )("0.2.0")
     assert(createUser("version") === Js.Str("0.2.0"))
@@ -255,32 +255,38 @@ class WorkerSpec extends FlatSpec  {
 
 
     val worker = new ApiSampleRequestWorker
-//
+
     val result = worker.postProcess(parsedFiles, filenames, Option("https://api.github.com/v1"), Js.Null)
-//
+
     val file1 = result(0)
     val (block1, block2, block3) = (file1(0), file1(1), file1(2))
-    println(s"--------- ${block1("local")("sampleRequest")}")
     assert(block1("local")("sampleRequest")(0)("url") === Js.Str("http://www.example.com/user/4711"))
     assert(block2("local")("sampleRequest")(0)("url")  === Js.Str("https://api.github.com/v1/car/4711"))
     assert(block3("local")("sampleRequest") === Js.Null)
   }
-//
-//  "ApiSampleRequestWorker" should " postprocess without sampleURL" in {
-//
-//    val (Success(parsedFiles), filenames) = Parser.apply(List(new File(getClass.getResource("/sampleRequest.js").getFile)), mockLogger)
-//
-//    val worker = new ApiSampleRequestWorker
-//
-//    val conf2 = SbtApidocConfiguration("name", "title", "description", "1.2", None, None)
-//
-//    val result = worker.postProcess(parsedFiles, filenames.toList, JObject(), conf2)
-//
-//    val file1 = result(0)
-//    val JArray(List(block1, block2, block3)) = file1
-//    assert((block1 \ "local" \ "sampleRequest")(0) \ "url" === JString("http://www.example.com/user/4711"))
-//    assert((block2 \ "local" \ "sampleRequest")(0) \ "url" === JString("/car/4711"))
-//    assert(block3 \ "local" \ "sampleRequest" === JNothing)
-//  }
+
+  "ApiSampleRequestWorker" should " postprocess without sampleURL" in {
+
+    val stubLogger = new Logger {
+      override def log(level: Level.Value, message: => String): Unit = ()
+
+      override def trace(t: => Throwable): Unit = ()
+
+      override def success(message: => String): Unit = ()
+    }
+    val (parsedFiles, filenames) = Parser(List(new File(getClass.getResource("/sampleRequest.js").getFile)), stubLogger)
+
+
+    val worker = new ApiSampleRequestWorker
+
+    val result = worker.postProcess(parsedFiles, filenames, None, Js.Null)
+
+    val file1 = result(0)
+    val (block1, block2, block3) = (file1(0), file1(1), file1(2))
+    assert(block1("local")("sampleRequest")(0)("url") === Js.Str("http://www.example.com/user/4711"))
+    assert(block2("local")("sampleRequest")(0)("url")  === Js.Str("/car/4711"))
+    assert(block3("local")("sampleRequest") === Js.Null)
+
+  }
 
 }

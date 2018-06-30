@@ -19,18 +19,18 @@ case class ErrorMessage(element: String, usage: String, example: String)
   */
 trait Worker {
 
-  def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String)(source: String): Js.Value
+  def preProcess(parsedFiles: Js.Arr, target: String = "define")(source: String = target): Js.Value
 
   def postProcess(parsedFiles: Js.Arr, fileNames: List[String],
-                  maybeSampleUrl: Option[String], preProcess: Js.Value, source: String,
-                 target: String, errorMessage: ErrorMessage): Js.Arr
+                  maybeSampleUrl: Option[String], preProcess: Js.Value, source: String = "defineParamTitle" ,
+                 target: String = "parameter", errorMessage: ErrorMessage = ErrorMessage("apiUse", "@apiUse group", "@apiDefine MyValidGroup Some title\n@apiUse MyValidGroup")): Js.Arr
 
 }
 
 class ApiErrorStructureWorker extends ApiUseWorker {
 
-  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "defineErrorStructure")(source: String = target): Value =
-    super.preProcess(parsedFiles, defaultVersion, target)(source)
+  override def preProcess(parsedFiles: Js.Arr, target: String = "defineErrorStructure")(source: String = target): Value =
+    super.preProcess(parsedFiles, target)(source)
 
   override def postProcess(parsedFiles: Js.Arr, fileNames: List[String], maybeSampleUrl: Option[String],  preProcess: Value, source: String = "defineErrorStructure", target: String = "errorStructure", errorMessage: ErrorMessage): Js.Arr =
     super.postProcess(parsedFiles, fileNames, maybeSampleUrl, preProcess, source, target, errorMessage)
@@ -39,8 +39,8 @@ class ApiErrorStructureWorker extends ApiUseWorker {
 
 class ApiErrorTitleWorker extends ApiParamTitleWorker {
 
-  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "defineErrorTitle")(source: String = target): Value =
-    super.preProcess(parsedFiles, defaultVersion, target)(source)
+  override def preProcess(parsedFiles: Js.Arr, target: String = "defineErrorTitle")(source: String = target): Value =
+    super.preProcess(parsedFiles, target)(source)
 
   override def postProcess(
      parsedFiles: Js.Arr, fileNames: List[String], maybeSampleUrl: Option[String],
@@ -52,8 +52,8 @@ class ApiErrorTitleWorker extends ApiParamTitleWorker {
 
 class ApiGroupWorker extends ApiParamTitleWorker {
 
-  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "defineGroup")(source: String = target): Value =
-    super.preProcess(parsedFiles, defaultVersion, target)(source)
+  override def preProcess(parsedFiles: Js.Arr, target: String = "defineGroup")(source: String = target): Value =
+    super.preProcess(parsedFiles, target)(source)
 
   override def postProcess(parsedFiles: Js.Arr, fileNames: List[String], maybeSampleUrl: Option[String],
                   preProcess: Js.Value, source: String = "defineGroup" ,
@@ -122,8 +122,8 @@ class ApiGroupWorker extends ApiParamTitleWorker {
 
 class ApiHeaderStructureWorker extends ApiUseWorker {
 
-  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "defineHeaderStructure")(source: String = target): Value =
-    super.preProcess(parsedFiles, defaultVersion, target)(source)
+  override def preProcess(parsedFiles: Js.Arr, target: String = "defineHeaderStructure")(source: String = target): Value =
+    super.preProcess(parsedFiles, target)(source)
 
   override def postProcess(
         parsedFiles: Js.Arr, fileNames: List[String], maybeSampleUrl: Option[String],
@@ -134,8 +134,8 @@ class ApiHeaderStructureWorker extends ApiUseWorker {
 
 class ApiHeaderTitleWorker extends ApiParamTitleWorker {
 
-  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "defineHeaderTitle")(source: String = target): Value =
-    super.preProcess(parsedFiles, defaultVersion, target)(source)
+  override def preProcess(parsedFiles: Js.Arr, target: String = "defineHeaderTitle")(source: String = target): Value =
+    super.preProcess(parsedFiles, target)(source)
 
   override def postProcess(parsedFiles: Js.Arr, fileNames: List[String], maybeSampleUrl: Option[String],
           preProcess: Value, source: String = "defineHeaderTitle", target: String = "header", errorMessage: ErrorMessage): Js.Arr =
@@ -144,7 +144,7 @@ class ApiHeaderTitleWorker extends ApiParamTitleWorker {
 }
 
 class ApiNameWorker extends Worker {
-  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "")(source: String = target): Value = Js.Null
+  override def preProcess(parsedFiles: Js.Arr, target: String = "")(source: String = target): Value = Js.Null
 
   override def postProcess(parsedFiles: Js.Arr, fileNames: List[String], maybeSampleUrl: Option[String], preProcess: Value,  source: String = "", target: String = "name", errorMessage: ErrorMessage = ErrorMessage("apiParam","@apiParam (group) varname","")): Js.Arr = {
     parsedFiles.arr.map { parsedFile =>
@@ -176,11 +176,10 @@ class ApiParamTitleWorker extends Worker {
     * PreProcess
     *
     * @param parsedFiles
-    * @param defaultVersion
     * @param target       Target path in preProcess-Object (returned result), where the data should be set.
     * @return
     */
-  def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "defineParamTitle")(source: String): Js.Value = {
+  def preProcess(parsedFiles: Js.Arr, target: String = "defineParamTitle")(source: String): Js.Value = {
 
     parsedFiles.arr.foldLeft(Js.Obj(target -> Js.Obj()): Js.Value) {
       case (result, parsedFile) =>
@@ -193,7 +192,7 @@ class ApiParamTitleWorker extends Worker {
                 val version =
                   block("version") match {
                     case Js.Str(v) => v
-                    case _ => defaultVersion //TODO or the '0.0.0' if so remove defautlVersion
+                    case _ => "0.0.0"
                   }
 
                 val result = merge(r, Js.Obj(target -> Js.Obj(name -> Js.Obj(version -> sourceNode))))
@@ -269,8 +268,8 @@ class ApiParamTitleWorker extends Worker {
 
 class ApiPermissionWorker extends ApiParamTitleWorker {
 
-  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "definePermission")(source: String = target): Value =
-    super.preProcess(parsedFiles, defaultVersion, target)(source)
+  override def preProcess(parsedFiles: Js.Arr, target: String = "definePermission")(source: String = target): Value =
+    super.preProcess(parsedFiles, target)(source)
 
   override def postProcess(
      parsedFiles: Js.Arr, filenames: List[String], maybeSampleUrl: Option[String], preProcess: Value,
@@ -331,7 +330,7 @@ class ApiPermissionWorker extends ApiParamTitleWorker {
 
 class ApiSampleRequestWorker extends Worker {
 
-  override def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String)(source: String): Value = Js.Null
+  override def preProcess(parsedFiles: Js.Arr, target: String)(source: String): Value = Js.Null
 
   override def postProcess(
     parsedFiles: Js.Arr, fileNames: List[String], maybeSampleUrl: Option[String],
@@ -378,17 +377,46 @@ class ApiSampleRequestWorker extends Worker {
   }
 }
 
+class ApiStructureWorker extends ApiUseWorker {
+
+  override def preProcess(parsedFiles: Js.Arr, target: String = "defineStructure")(source: String): Value =
+    super.preProcess(parsedFiles, target)(source)
+
+  override def postProcess(parsedFiles: Js.Arr, fileNames: List[String], maybeSampleUrl: Option[String], preProcess: Value, source: String = "defineStructure", target: String = "structure", errorMessage: ErrorMessage): Js.Arr =
+    super.postProcess(parsedFiles, fileNames, maybeSampleUrl, preProcess, source, target, errorMessage)
+
+
+}
+
+class ApiSuccessStructureWorker extends ApiUseWorker {
+
+  override def preProcess(parsedFiles: Js.Arr, target: String = "defineSuccessStructure")(source: String): Value =
+    super.preProcess(parsedFiles, target)(source)
+
+  override def postProcess(parsedFiles: Js.Arr, fileNames: List[String], maybeSampleUrl: Option[String], preProcess: Value, source: String = "defineSuccessStructure", target: String = "successStructure", errorMessage: ErrorMessage): Js.Arr =
+    super.postProcess(parsedFiles, fileNames, maybeSampleUrl, preProcess, source, target, errorMessage)
+}
+
+class ApiSuccessTitleWorker extends ApiParamTitleWorker {
+  override def preProcess(parsedFiles: Js.Arr, target: String = "defineSuccessTitle")(source: String): Value =
+    super.preProcess(parsedFiles, target)(source)
+
+//  override def postProcess(parsedFiles: Js.Arr, fileNames: List[String], maybeSampleUrl: Option[String], preProcess: Value, source: String = "defineSuccessStructure", target: String = "successStructure", errorMessage: ErrorMessage): Js.Arr =
+//    super.postProcess(parsedFiles, fileNames, maybeSampleUrl, preProcess, source, target, errorMessage)
+
+
+}
+
 class ApiUseWorker extends Worker {
 
   /**
     * PreProcess
     *
     * @param parsedFiles
-    * @param defaultVersion
     * @param target       Target path in preProcess-Object (returned result), where the data should be set.
     * @return
     */
-  def preProcess(parsedFiles: Js.Arr, defaultVersion: String, target: String = "define")(source: String = target): Js.Value = {
+  def preProcess(parsedFiles: Js.Arr, target: String = "define")(source: String = target): Js.Value = {
 
     parsedFiles.arr.foldLeft(Js.Obj(target -> Js.Obj()): Js.Value) {
       case (result, parsedFile) =>
@@ -401,7 +429,7 @@ class ApiUseWorker extends Worker {
                 val version =
                   block("version") match {
                     case Js.Str(v) => v
-                    case _ => defaultVersion //TODO or the '0.0.0' if so remove defautlVersion
+                    case _ => "0.0.0"
                   }
                merge(r, Js.Obj(target -> Js.Obj(name -> Js.Obj(version -> block("local")))))
 
@@ -475,16 +503,29 @@ object Worker {
     new ApiNameWorker,
     new ApiParamTitleWorker,
     new ApiPermissionWorker,
-//    new ApiSampleRequestWorker,
-//    new ApiStructureWorker,
-//    new ApiSuccessStructureWorker,
-//    new ApiSuccessTitleWorker,
+    new ApiSampleRequestWorker,
+    new ApiStructureWorker,
+    new ApiSuccessStructureWorker,
+    new ApiSuccessTitleWorker,
     new ApiUseWorker
   )
 
-//  def preprocess()
+  def preProcess(parsedFiles: Js.Arr): Js.Value = {
+    workers.foldLeft(Js.Obj(): Js.Value) {
+      case (preProcessResult, worker) =>
+        merge(preProcessResult,worker.preProcess(parsedFiles)())
+    }
+  }
 
-  def apply(parsedFiles: Js.Arr, filenames: List[String]): Js.Arr = {
+  def postProcess(parsedFiles: Js.Arr, filenames: List[String], sampleUrl: Option[String],
+                  preProcess: Js.Value): Js.Arr = {
+    workers.foldLeft(parsedFiles) {
+      case (pf, worker) =>
+        worker.postProcess(pf, filenames, sampleUrl, preProcess)
+    }
+  }
+
+  def apply(parsedFiles: Js.Arr, filenames: List[String], sampleUrl: Option[String]): Js.Arr = {
 
     parsedFiles.arr.zip(filenames) map {
       case(parsedFile, filename) =>
@@ -522,6 +563,7 @@ object Worker {
         }
     }
 
+    postProcess(parsedFiles, filenames, sampleUrl, preProcess(parsedFiles))
 
   }
 
