@@ -1,13 +1,27 @@
 package com.culpin.team.sbt.parser
 
+import java.io.File
+
 import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.FlatSpec
 import ujson.Js
 import Parser._
+import sbt.util.{Level, Logger}
 
 class ParserSpec extends FlatSpec  {
 
-  "Parser" should "parse comment block" in {
+  val stubLogger = new Logger {
+    override def log(level: Level.Value, message: => String): Unit = ()
+
+    override def trace(t: => Throwable): Unit = ()
+
+    override def success(message: => String): Unit = ()
+  }
+  "Parser" should "parse empty files" in {
+    assert(Parser(List(new File(getClass.getResource("/NoApidocApplication.scala").getFile)), stubLogger) === (Js.Arr(Js.Arr()), List("NoApidocApplication.scala")))
+  }
+
+  it should "parse comment block" in {
     val file = """package simple
                  |
                  |/**

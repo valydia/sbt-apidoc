@@ -1,0 +1,12 @@
+# call the apidoc task
+> apidoc
+-$ exists target/apidoc
+-$ exists target/apidoc/api_data.js
+-$ exists target/apidoc/api_project.js
+-$ exists target/apidoc/api_data.json
+-$ exists target/apidoc/api_project.json
+
+
+# FIXME issue with scripted sbt not copying resource file
+#$ exists target/apidoc/css/style.css
+

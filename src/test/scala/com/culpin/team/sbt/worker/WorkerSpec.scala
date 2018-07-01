@@ -9,6 +9,14 @@ import ujson.Js
 
 class WorkerSpec extends FlatSpec  {
 
+  val stubLogger = new Logger {
+    override def log(level: Level.Value, message: => String): Unit = ()
+
+    override def trace(t: => Throwable): Unit = ()
+
+    override def success(message: => String): Unit = ()
+  }
+
   private def loadFixture(parsedFilesUrl: String = "/parsedFiles-filename.json", preprocessUrl: String = "/preprocess.json"): (Js.Arr, Js.Value) = {
     val preProcessFiles = new File(getClass.getResource(preprocessUrl).getFile)
     val preProcessString = readFile(preProcessFiles)
@@ -244,13 +252,6 @@ class WorkerSpec extends FlatSpec  {
 
   it should " postprocess with sampleURL" in {
 
-    val stubLogger = new Logger {
-      override def log(level: Level.Value, message: => String): Unit = ()
-
-      override def trace(t: => Throwable): Unit = ()
-
-      override def success(message: => String): Unit = ()
-    }
     val (parsedFiles, filenames) = Parser(List(new File(getClass.getResource("/sampleRequest.js").getFile)), stubLogger)
 
 
@@ -267,13 +268,6 @@ class WorkerSpec extends FlatSpec  {
 
   "ApiSampleRequestWorker" should " postprocess without sampleURL" in {
 
-    val stubLogger = new Logger {
-      override def log(level: Level.Value, message: => String): Unit = ()
-
-      override def trace(t: => Throwable): Unit = ()
-
-      override def success(message: => String): Unit = ()
-    }
     val (parsedFiles, filenames) = Parser(List(new File(getClass.getResource("/sampleRequest.js").getFile)), stubLogger)
 
 

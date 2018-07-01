@@ -1,5 +1,6 @@
 package com.culpin.team.sbt
 
+import com.gilt.gfc.semver.SemVer
 import ujson.Js
 
 object Util {
@@ -41,5 +42,30 @@ object Util {
 
     mergeRec(vs1, vs2)
   }
+
+  // sort by group ASC, name ASC, version DESC
+  private[sbt] def sortBlocks(blocks: Js.Arr): Js.Arr = {
+    val sortedChildren = blocks.arr.sortWith {
+      case (a, b) =>
+        val Js.Str(groupA) = a("group")
+        val Js.Str(nameA) = a("name")
+
+        val Js.Str(groupB) = b("group")
+        val Js.Str(nameB) = b("name")
+
+        val labelA = groupA + nameA
+        val labelB = groupB + nameB
+
+        if (labelA.equals(labelB)) {
+          val Js.Str(versionA) = a("version")
+          val Js.Str(versionB) = b("version")
+          SemVer(versionA) >= SemVer(versionB)
+        } else {
+          labelA <= labelB
+        }
+    }
+    Js.Arr(sortedChildren)
+  }
+
 
 }
