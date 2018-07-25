@@ -106,23 +106,25 @@ object Parser {
   private val identifier: Parser[String]  = P( (!" " ~ AnyChar).rep.! )
   private val prefix: Parser[Unit] = P( (!"@" ~ AnyChar).rep )
   private val argument: Parser[String]  = prefix.!.map(_.trim)
-  private val elementParser: Parser[Element] = P( prefix ~ ("@" ~ identifier ~ " " ~ argument)).map{case (id, arg) => Element(s"@$id $arg", id.toLowerCase, id, arg) }
+  private val elementParser: Parser[Element] =
+    P( prefix ~ ("@" ~ identifier ~ " " ~ argument)).map{case (id, arg) => Element(s"@$id $arg", id.toLowerCase, id, arg) }
   private val elements: Parser[Seq[Element]] = elementParser.rep
 
   case class Element(source: String, name: String, sourceName: String, content: String)
 
-  private[parser] def parseElement(block: String): Seq[Element] = {
+  private[parser] def parseElement(block: String): Seq[Element] =
     elements.parse(block).fold(
       (_, _, _) => Seq(),
       (elements, _) => elements
     )
-  }
+
 
   private val apiParser: Parser[Js.Obj] =
     P( ("{" ~ (!"}" ~ AnyChar).rep.! ~ "}").? ~ " " ~ (!" " ~ AnyChar).rep.! ~ (" " ~ AnyChar.rep.!).?) map {
       case (t, url, title) =>
         Js.Obj("type" -> t.getOrElse(""), "url" -> url, "title" -> title.fold(Js.Null: Js.Value)(Js.Str.apply))
     }
+
   private[parser] def api(content: String): Option[Js.Obj] =
     apiParser.parse(content).toOption("local")
 
@@ -130,7 +132,11 @@ object Parser {
   private val apiDefineParser: Parser[Js.Obj] =
     P( (!" " ~ AnyChar).rep.! ~ (" " ~ (!"\n" ~ AnyChar).rep.!).? ~ ("\n" ~ AnyChar.rep.!).? ) map {
       case (name, title, _description) =>
-        Js.Obj("name" -> name, "title" -> title.fold(Js.Null: Js.Value)(Js.Str.apply), "description" -> _description.fold(Js.Null: Js.Value)(s => Js.Str(unindent(s))))
+        Js.Obj(
+          "name" -> name,
+          "title" -> title.fold(Js.Null: Js.Value)(Js.Str.apply),
+          "description" -> _description.fold(Js.Null: Js.Value)(s => Js.Str(unindent(s)))
+        )
     }
 
   private[parser] def apiDefine(content: String): Option[Js.Obj] =
@@ -217,7 +223,11 @@ object Parser {
   private val typeSizeAllowedValues: Parser[Js.Obj] =
     P( ("{" ~ " ".rep ~ (!CharIn("{} ") ~ AnyChar).rep.! ~ " ".rep ~ ("{" ~ " ".rep ~ (!CharIn("} ") ~ AnyChar).rep.! ~ " ".rep ~ "}" ~ " ".rep).? ~  " ".rep ~ ("=" ~ " ".rep ~ enum).? ~ " ".rep ~ "}"  ~ " ".rep).? ) map {
       case Some((_type, size, allowedValues)) =>
-        Js.Obj("type" -> _type, "size" -> size.fold(Js.Null: Js.Value)(Js.Str.apply), "allowedValue" -> allowedValues.fold(Js.Null: Js.Value)( av => av.map(Js.Str.apply)))
+        Js.Obj(
+          "type" -> _type,
+          "size" -> size.fold(Js.Null: Js.Value)(Js.Str.apply),
+          "allowedValue" -> allowedValues.fold(Js.Null: Js.Value)( av => av.map(Js.Str.apply))
+        )
       case _ => Js.Obj("type" -> Js.Null, "size" -> Js.Null, "allowedValue" -> Js.Null)
     }
   private val fieldCharacter: Seq[Char] =
@@ -233,7 +243,9 @@ object Parser {
     case (o, f, dv) =>
       Js.Obj("field" -> f, "optional" -> o.isDefined, "defaultValue" -> dv.fold(Js.Null: Js.Value)(Js.Str.apply))
   }
-  private val description: Parser[Js.Obj] = P( AnyChar.rep.!.? ).map(description => Js.Obj("description" -> description.fold(Js.Null: Js.Value)(d => if (d.isEmpty) Js.Null else Js.Str(d))))
+  private val description: Parser[Js.Obj] =
+    P( AnyChar.rep.!.? ).map(description => Js.Obj("description" -> description.fold(Js.Null: Js.Value)(d => if (d.isEmpty) Js.Null else Js.Str(d))))
+
   private def apiParamParser(defaultGroup: String): Parser[Js.Obj] =
     P( group(defaultGroup) ~ typeSizeAllowedValues ~ field ~ description) map {
       case (g, tsav, f, d) =>
@@ -280,11 +292,11 @@ object Parser {
       Option(Js.Obj("local" -> Js.Obj("version" -> version)))
   }
 
-  private def pathToObject(jsObj: Js.Value, path: String, paths: String*): Js.Obj =
-    Js.Obj(path -> paths.foldRight(jsObj){ case (key, acc) => Js.Obj(key -> acc) })
 
   implicit class ParsedWrapper(val parsed: Parsed[Js.Value]) extends AnyVal {
     def toOption(path: String, paths: String*): Option[Js.Obj] = {
+      def pathToObject(jsObj: Js.Value, path: String, paths: String*): Js.Obj =
+        Js.Obj(path -> paths.foldRight(jsObj){ case (key, acc) => Js.Obj(key -> acc) })
       parsed.fold(
         (_, _, _) => None,
         (jsVal, _) => Option(pathToObject(jsVal, path, paths:_*))

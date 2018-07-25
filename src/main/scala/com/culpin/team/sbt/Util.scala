@@ -18,7 +18,8 @@ object Util {
 
   private def mergeFields(vs1: List[(String, Js.Value)], vs2: List[(String, Js.Value)]): List[(String, Js.Value)] = {
       @scala.annotation.tailrec
-      def mergeRec(acc: List[(String, Js.Value)], xleft: List[(String, Js.Value)], yleft: List[(String, Js.Value)]): List[(String, Js.Value)] =            xleft match {
+      def mergeRec(acc: List[(String, Js.Value)], xleft: List[(String, Js.Value)], yleft: List[(String, Js.Value)]): List[(String, Js.Value)] =
+        xleft match {
           case Nil => acc ++ yleft
           case (xn, xv) :: xs => yleft find (_._1 == xn) match {
             case Some(y @ (_, yv)) =>

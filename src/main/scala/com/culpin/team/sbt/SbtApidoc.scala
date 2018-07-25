@@ -38,7 +38,7 @@ object SbtApidoc extends AutoPlugin {
   override lazy val projectSettings: Seq[Setting[_]] = defaultSettings ++ Seq(apidocSetting)
 
   def apidocSetting: Setting[_] = apidoc := {
-    //getting the source files
+
     val log = streams.value.log
 
     val config = Config(
@@ -71,7 +71,7 @@ object SbtApidoc extends AutoPlugin {
         "title" -> apidocConfig.title,
         "description" -> apidocConfig.description,
         "version" -> apidocConfig.version,
-        "url" -> apidocConfig.url.fold("")(identity),
+        "url" -> apidocConfig.url.getOrElse(""),
         "sampleUrl" -> apidocConfig.sampleUrl.fold("")(identity),
         "template" -> Js.Obj(
           "withCompare" -> true,

@@ -22,8 +22,9 @@ trait Worker {
   def preProcess(parsedFiles: Js.Arr, target: String = "define")(source: String = target): Js.Value
 
   def postProcess(parsedFiles: Js.Arr, fileNames: List[String],
-                  maybeSampleUrl: Option[String], preProcess: Js.Value, source: String = "defineParamTitle" ,
-                 target: String = "parameter", errorMessage: ErrorMessage = ErrorMessage("apiUse", "@apiUse group", "@apiDefine MyValidGroup Some title\n@apiUse MyValidGroup")): Js.Arr
+      maybeSampleUrl: Option[String], preProcess: Js.Value, source: String = "defineParamTitle" ,
+      target: String = "parameter",
+      errorMessage: ErrorMessage = ErrorMessage("apiUse", "@apiUse group", "@apiDefine MyValidGroup Some title\n@apiUse MyValidGroup")): Js.Arr
 
 }
 
@@ -251,7 +252,11 @@ class ApiPermissionWorker extends ApiParamTitleWorker {
 
               val metadata =
                 if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null){
-                  Js.Obj("name" -> name, "title" -> definition.obj.getOrElse("title",Js.Null), "description" -> definition.obj.getOrElse("description",""))
+                  Js.Obj(
+                    "name" -> name,
+                    "title" -> definition.obj.getOrElse("title",Js.Null),
+                    "description" -> definition.obj.getOrElse("description","")
+                  )
                 }
                 else Worker.matchData(preProcess, source, name, version)
             merge(permission, Js.Arr(metadata))
