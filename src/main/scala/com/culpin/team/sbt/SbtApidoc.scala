@@ -76,7 +76,7 @@ object SbtApidoc extends AutoPlugin {
           |   ${apidocConfig.sampleUrl.fold("")(s => s"sampleUrl: $s")}
           |}
         """.stripMargin
-      Some((ujson.write(sortedFiles), config))
+      Some((ujson.write(sortedFiles, 2), config))
     }
   }
 

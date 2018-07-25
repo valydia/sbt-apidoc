@@ -60,7 +60,7 @@ class ApiGroupWorker extends ApiParamTitleWorker {
                   target: String = "group", errorMessage: ErrorMessage = ErrorMessage("apiParam","@apiParam (group) varname","")): Js.Arr = {
 
 
-    parsedFiles.arr.zip(fileNames).map { case(parsedFile, filename) =>
+    parsedFiles.arr.zip(fileNames).map { case (parsedFile, filename) =>
       parsedFile.arr.map { block =>
         val namedBlock =
           if (block("global").obj.nonEmpty) block
@@ -86,29 +86,9 @@ class ApiGroupWorker extends ApiParamTitleWorker {
               val matchedData =
                 if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null)
                   Js.Obj("title" -> localTarget)
-                else preProcess(source)(name).obj.getOrElse(version, {
+                else Worker.matchData(preProcess, source, name, version)
 
-                  val versionKeys = preProcess(source)(name).obj.keySet.toList
-
-                  // find nearest matching version
-                  var foundIndex = -1
-                  var lastVersion = "0.0.0"
-                  versionKeys.zipWithIndex.foreach {
-                    case (currentVersion, versionIndex) =>
-                      VersionNumber(version)
-                      if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
-                        ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
-                        foundIndex = versionIndex
-                        lastVersion = currentVersion
-                      }
-                  }
-                  //TODO handle not found case
-
-                  val versionName = versionKeys(foundIndex)
-                  preProcess(source)(name)(versionName)
-                })
-
-              val newValue = Js.Obj("local" -> Js.Obj("groupTitle" -> matchedData("title"), "groupDescription" -> matchedData.obj.getOrElse("description","")))
+              val newValue = Js.Obj("local" -> Js.Obj("groupTitle" -> matchedData("title"), "groupDescription" -> matchedData.obj.getOrElse("description",Js.Null)))
               merge(namedBlock, newValue)
 
           }
@@ -179,7 +159,7 @@ class ApiParamTitleWorker extends Worker {
     * @param target       Target path in preProcess-Object (returned result), where the data should be set.
     * @return
     */
-  def preProcess(parsedFiles: Js.Arr, target: String = "defineParamTitle")(source: String): Js.Value = {
+  def preProcess(parsedFiles: Js.Arr, target: String = "defineParamTitle")(source: String = "define"): Js.Value = {
 
     parsedFiles.arr.foldLeft(Js.Obj(target -> Js.Obj()): Js.Value) {
       case (result, parsedFile) =>
@@ -229,27 +209,7 @@ class ApiParamTitleWorker extends Worker {
                    val matchedData =
                      if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null)
                        Js.Obj("name" -> name, "title" -> name)
-                     else preProcess(source)(name).obj.getOrElse(version, {
-
-                       val versionKeys = preProcess(source)(name).obj.keySet.toList
-
-                       // find nearest matching version
-                       var foundIndex = -1
-                       var lastVersion = "0.0.0"
-                       versionKeys.zipWithIndex.foreach {
-                         case (currentVersion, versionIndex) =>
-                           VersionNumber(version)
-                           if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
-                             ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
-                             foundIndex = versionIndex
-                             lastVersion = currentVersion
-                           }
-                       }
-                       //TODO handle not found case
-
-                       val versionName = versionKeys(foundIndex)
-                       preProcess(source)(name)(versionName)
-                     })
+                     else Worker.matchData(preProcess, source, name, version)
 
                    val Js.Str(title) = matchedData("title")
 
@@ -268,7 +228,7 @@ class ApiParamTitleWorker extends Worker {
 
 class ApiPermissionWorker extends ApiParamTitleWorker {
 
-  override def preProcess(parsedFiles: Js.Arr, target: String = "definePermission")(source: String = target): Value =
+  override def preProcess(parsedFiles: Js.Arr, target: String = "definePermission")(source: String = "define"): Value =
     super.preProcess(parsedFiles, target)(source)
 
   override def postProcess(
@@ -291,30 +251,9 @@ class ApiPermissionWorker extends ApiParamTitleWorker {
 
               val metadata =
                 if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null){
-                  Js.Obj("name" -> name, "title" -> definition.obj.getOrElse("title",""), "description" -> definition.obj.getOrElse("description",""))
+                  Js.Obj("name" -> name, "title" -> definition.obj.getOrElse("title",Js.Null), "description" -> definition.obj.getOrElse("description",""))
                 }
-                else preProcess(source)(name).obj.getOrElse(version, {
-
-                  val versionKeys = preProcess(source)(name).obj.keySet.toList
-
-                  // find nearest matching version
-                  var foundIndex = -1
-                  var lastVersion = "0.0.0"
-                  versionKeys.zipWithIndex.foreach {
-                    case (currentVersion, versionIndex) =>
-                      VersionNumber(version)
-                      if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
-                        ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
-                        foundIndex = versionIndex
-                        lastVersion = currentVersion
-                      }
-                  }
-                  //TODO handle not found case
-
-                  val versionName = versionKeys(foundIndex)
-                  preProcess(source)(name)(versionName)
-                })
-
+                else Worker.matchData(preProcess, source, name, version)
             merge(permission, Js.Arr(metadata))
           }
           block("local")(target) = Js.Null
@@ -460,30 +399,10 @@ class ApiUseWorker extends Worker {
             val Js.Str(filename) = block("local")("filename")
             ???
           } else {
-            val matchedData =
-              preProcess(source)(name).obj.getOrElse(version, {
+            val metadata = Worker.matchData(preProcess, source, name, version)
 
-                val versionKeys = preProcess(source)(name).obj.keySet.toList
-
-                // find nearest matching version
-                var foundIndex = -1
-                var lastVersion = "0.0.0"
-                versionKeys.zipWithIndex.foreach {
-                  case (currentVersion, versionIndex) =>
-                    VersionNumber(version)
-                    if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
-                      ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
-                      foundIndex = versionIndex
-                      lastVersion = currentVersion
-                    }
-                }
-                //TODO handle not found case
-
-                val versionName = versionKeys(foundIndex)
-                preProcess(source)(name)(versionName)
-              })
             block("local")(target) = Js.Null
-            merge(block, Js.Obj("local" -> matchedData))
+            merge(block, Js.Obj("local" -> metadata))
           }
         }
       }
@@ -510,6 +429,31 @@ object Worker {
     new ApiUseWorker
   )
 
+
+  def matchData(preProcess: Js.Value, source: String, name: String, version: String): Js.Value = {
+    preProcess(source)(name).obj.getOrElse(version, {
+
+      val versionKeys = preProcess(source)(name).obj.keySet.toList
+
+      // find nearest matching version
+      var foundIndex = -1
+      var lastVersion = "0.0.0"
+      versionKeys.zipWithIndex.foreach {
+        case (currentVersion, versionIndex) =>
+          VersionNumber(version)
+          if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
+            ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
+            foundIndex = versionIndex
+            lastVersion = currentVersion
+          }
+      }
+      //TODO handle not found case
+
+      val versionName = versionKeys(foundIndex)
+      preProcess(source)(name)(versionName)
+    })
+  }
+
   def preProcess(parsedFiles: Js.Arr): Js.Value = {
     workers.foldLeft(Js.Obj(): Js.Value) {
       case (preProcessResult, worker) =>
@@ -527,7 +471,7 @@ object Worker {
 
   def apply(parsedFiles: Js.Arr, filenames: List[String], sampleUrl: Option[String]): Js.Arr = {
 
-    parsedFiles.arr.zip(filenames) map {
+    val pf = parsedFiles.arr.zip(filenames) map {
       case(parsedFile, filename) =>
         parsedFile.arr map { block =>
           if (block("global").obj.isEmpty && block("local").obj.nonEmpty) {
@@ -546,8 +490,8 @@ object Worker {
               case _ => "0.0.0"
             }
 
-            val newFilename = block("local" )("filename") match {
-              case Js.Str(fileName) => fileName
+            val newFilename = block("local" ).obj.getOrElse("filename", Js.Null) match {
+              case Js.Str(name) => name
               case _ => filename
             }
             val newLocal = Js.Obj("local" ->
@@ -563,7 +507,7 @@ object Worker {
         }
     }
 
-    postProcess(parsedFiles, filenames, sampleUrl, preProcess(parsedFiles))
+    postProcess(pf, filenames, sampleUrl, preProcess(pf))
 
   }
 

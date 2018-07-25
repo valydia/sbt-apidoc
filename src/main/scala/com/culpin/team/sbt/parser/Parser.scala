@@ -37,6 +37,7 @@ object Parser {
       "apidescription" -> apiDescription,
       "apierror" -> apiError,
       "apierrorexample" -> apiErrorExample,
+      "apiexample" -> apiExample,
       "apigroup" -> apiGroup,
       "apiheader" -> apiHeader,
       "apiheaderexample" -> apiHeaderExample,
@@ -96,15 +97,15 @@ object Parser {
 
     def onSuccess(comments: Seq[String], index: Int): Seq[String] = {
       //TODO use another parser?
-      comments.map(_.dropRight(3).replace("\n  * ","\n"))
+      comments.map(_.dropRight(3).replace("\n  * ","\n").replace("\n  *","\n"))
     }
 
     commentBlocks.parse(file).fold((_, _, _) => Seq(), onSuccess)
   }
 
   private val identifier: Parser[String]  = P( (!" " ~ AnyChar).rep.! )
-  private val argument: Parser[String]  = P( (!"\n" ~ AnyChar).rep.! )
   private val prefix: Parser[Unit] = P( (!"@" ~ AnyChar).rep )
+  private val argument: Parser[String]  = prefix.!.map(_.trim)
   private val elementParser: Parser[Element] = P( prefix ~ ("@" ~ identifier ~ " " ~ argument)).map{case (id, arg) => Element(s"@$id $arg", id.toLowerCase, id, arg) }
   private val elements: Parser[Seq[Element]] = elementParser.rep
 
@@ -128,8 +129,8 @@ object Parser {
 
   private val apiDefineParser: Parser[Js.Obj] =
     P( (!" " ~ AnyChar).rep.! ~ (" " ~ (!"\n" ~ AnyChar).rep.!).? ~ ("\n" ~ AnyChar.rep.!).? ) map {
-      case (name, title, description) =>
-        Js.Obj("name" -> name, "title" -> title.fold(Js.Null: Js.Value)(Js.Str.apply), "description" -> description.fold(Js.Null: Js.Value)(s => Js.Str(unindent(s))))
+      case (name, title, _description) =>
+        Js.Obj("name" -> name, "title" -> title.fold(Js.Null: Js.Value)(Js.Str.apply), "description" -> _description.fold(Js.Null: Js.Value)(s => Js.Str(unindent(s))))
     }
 
   private[parser] def apiDefine(content: String): Option[Js.Obj] =
@@ -151,26 +152,26 @@ object Parser {
     )
   }
 
-  private val apiExample: Parser[Js.Obj] =
+  private val apiExampleParser: Parser[Js.Value] =
     P( ("{" ~ (!"}" ~ AnyChar).rep.! ~ "}" ~ " " ).?  ~ (!"\n" ~ AnyChar).rep.! ~ "\n" ~ AnyChar.rep.!) map {
       case (t, title, content) =>
-        Js.Obj("type" -> t.fold(Js.Str("json"))(Js.Str.apply), "title" -> title, "content" -> unindent(content))
+        Js.Arr(Js.Obj("type" -> t.fold(Js.Str("json"))(Js.Str.apply), "title" -> title, "content" -> unindent(content)))
     }
   private[parser] def apiExample(content: String): Option[Js.Obj] =
-    apiExample.parse(trim(content)).toOption("local", "examples")
+    apiExampleParser.parse(trim(content)).toOption("local", "examples")
 
   private[parser] def apiErrorExample(content: String): Option[Js.Obj] =
-    apiExample.parse(trim(content)).toOption("local", "error", "examples")
+    apiExampleParser.parse(trim(content)).toOption("local", "error", "examples")
 
   private[parser] def apiHeaderExample(content: String): Option[Js.Obj] =
-    apiExample.parse(trim(content)).toOption("local", "header", "examples")
+    apiExampleParser.parse(trim(content)).toOption("local", "header", "examples")
 
   private[parser] def apiParamExample(content: String): Option[Js.Obj] = {
-    apiExample.parse(trim(content)).toOption("local", "parameter", "examples")
+    apiExampleParser.parse(trim(content)).toOption("local", "parameter", "examples")
   }
 
   private[parser] def apiSuccessExample(content: String): Option[Js.Obj] = {
-    apiExample.parse(trim(content)).toOption("local", "success", "examples")
+    apiExampleParser.parse(trim(content)).toOption("local", "success", "examples")
   }
 
   private[parser] def apiGroup(content: String): Option[Js.Obj] = {
@@ -236,7 +237,7 @@ object Parser {
   private def apiParamParser(defaultGroup: String): Parser[Js.Obj] =
     P( group(defaultGroup) ~ typeSizeAllowedValues ~ field ~ description) map {
       case (g, tsav, f, d) =>
-        Js.Obj(g -> Js.Obj.from( Js.Obj("group" -> g).value ++ tsav.value ++ f.value ++ d.value))
+        Js.Obj(g -> Js.Arr(Js.Obj.from(Js.Obj("group" -> g).value ++ tsav.value ++ f.value ++ d.value)))
     }
 
   private[parser] def apiParam(content: String): Option[Js.Obj] =
@@ -255,7 +256,7 @@ object Parser {
     val name = trim(content)
     if (name.isEmpty) None
     else
-      Option(Js.Obj("local" -> Js.Obj("use" -> Js.Obj("name" -> name))))
+      Option(Js.Obj("local" -> Js.Obj("use" -> Js.Arr(Js.Obj("name" -> name)))))
   }
 
   private[parser] def apiPermission(content: String): Option[Js.Obj] = {
@@ -281,14 +282,14 @@ object Parser {
       Option(Js.Obj("local" -> Js.Obj("version" -> version)))
   }
 
-  private def pathToObject(jsObj: Js.Obj, path: String*): Js.Obj =
-    path.foldRight(jsObj){ case (key, acc) => Js.Obj(key -> acc) }
+  private def pathToObject(jsObj: Js.Value, path: String, paths: String*): Js.Obj =
+    Js.Obj(path -> paths.foldRight(jsObj){ case (key, acc) => Js.Obj(key -> acc) })
 
-  implicit class ParsedWrapper(val parsed: Parsed[Js.Obj]) extends AnyVal {
-    def toOption(path: String*): Option[Js.Obj] = {
+  implicit class ParsedWrapper(val parsed: Parsed[Js.Value]) extends AnyVal {
+    def toOption(path: String, paths: String*): Option[Js.Obj] = {
       parsed.fold(
         (_, _, _) => None,
-        (jsObj, _) => Option(pathToObject(jsObj, path:_*))
+        (jsVal, _) => Option(pathToObject(jsVal, path, paths:_*))
       )
     }
   }

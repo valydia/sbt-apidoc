@@ -44,13 +44,25 @@ class ParserSpec extends FlatSpec  {
                  |  def main(args: Array[String]): Unit = {
                  |    println(new Main().default)
                  |  }
+                 |
+                 |
+                 | /**
+                 |  * @apiDefine admin Admin access rights needed.
+                 |  * Optionally you can write here further Informations about the permission.
+                 |  *
+                 |  * An "apiDefinePermission"-block can have an "apiVersion", so you can attach the block to a specific version.
+                 |  *
+                 |  * @apiVersion 0.3.0
+                 |  */
+                 |  def foo(): Unit = {}
                  |}""".stripMargin
 
 
     val result = parseCommentBlocks(file)
-    assert(result === Seq("A simple class and objects to write tests against.","Block 1\n@param arg"))
+    assert(result === Seq("A simple class and objects to write tests against.","Block 1\n@param arg","@apiDefine admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.\n\n@apiVersion 0.3.0"))
   }
 
+  //TODO rewrite using TableProperties
   it should "find element in block" in {
 
     val result = parseElement("Block 1\n@param arg")
@@ -78,6 +90,14 @@ class ParserSpec extends FlatSpec  {
       Element("@return the result string", "return", "return", "the result string")
     )
     assert(result3.toList === expected3)
+
+    val result4 = parseElement("@apiDefine admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.\n\n@apiVersion 0.3.0")
+    val expected4 = List(
+      Element("@apiDefine admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.","apidefine", "apiDefine", "admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."),
+      Element("@apiVersion 0.3.0","apiversion","apiVersion","0.3.0")
+    )
+
+    assert(result4.toList === expected4)
 
 //TODO Check what the expected behaviour with the original library
 //    val result4 = SbtApidocjsPlugin.parseElement("Api block\n@apiParam")
@@ -150,7 +170,7 @@ class ParserSpec extends FlatSpec  {
 
   it should "parse apiexample element" in {
     val result = apiExample("Example usage:\ncurl -i http://localhost/user/4711")
-    val exampleJson = result.get.apply("local")("examples")
+    val exampleJson = result.get.apply("local")("examples")(0)
     assert(exampleJson("title") === Js.Str("Example usage:"))
     assert(exampleJson("content") === Js.Str("curl -i http://localhost/user/4711"))
     assert(exampleJson("type") === Js.Str("json"))
@@ -158,7 +178,7 @@ class ParserSpec extends FlatSpec  {
 
   it should "parse apierrorexample element" in {
     val result = apiErrorExample("{json} Error-Response:\n                 This is an example.")
-    val exampleJson = result.get.apply("local")("error")("examples")
+    val exampleJson = result.get.apply("local")("error")("examples")(0)
     assert(exampleJson("title") === Js.Str("Error-Response:"))
     assert(exampleJson("content") === Js.Str("This is an example."))
     assert(exampleJson("type") === Js.Str("json"))
@@ -166,7 +186,7 @@ class ParserSpec extends FlatSpec  {
 
   it should "parse apiheaderexample element" in {
     val result = apiHeaderExample("{json} Header-Example:\n    {\n      \"Accept-Encoding\": \"Accept-Encoding: gzip, deflate\"\n    }")
-    val exampleJson = result.get.apply("local")("header")("examples")
+    val exampleJson = result.get.apply("local")("header")("examples")(0)
     assert(exampleJson("title") === Js.Str("Header-Example:"))
     assert(exampleJson("content") === Js.Str("{\n  \"Accept-Encoding\": \"Accept-Encoding: gzip, deflate\"\n}"))
     assert(exampleJson("type") === Js.Str("json"))
@@ -175,7 +195,7 @@ class ParserSpec extends FlatSpec  {
 
   it should "parse apiheaderexample element - 2" in {
     val result = apiHeaderExample("{json} Request-Example:\n{ \"content\": \"This is an example content\" }")
-    val exampleJson = result.get.apply("local")("header")("examples")
+    val exampleJson = result.get.apply("local")("header")("examples")(0)
     assert(exampleJson("title") === Js.Str("Request-Example:"))
     assert(exampleJson("content") === Js.Str("{ \"content\": \"This is an example content\" }"))
     assert(exampleJson("type") === Js.Str("json"))
@@ -183,7 +203,7 @@ class ParserSpec extends FlatSpec  {
 
   it should "parse apiparamexample element" in {
     val result = apiParamExample("{json} Request-Example:\n                 { \"content\": \"This is an example content\" }")
-    val exampleJson = result.get.apply("local")("parameter")("examples")
+    val exampleJson = result.get.apply("local")("parameter")("examples")(0)
     assert(exampleJson("title") === Js.Str("Request-Example:"))
     assert(exampleJson("content") === Js.Str("{ \"content\": \"This is an example content\" }"))
     assert(exampleJson("type") === Js.Str("json"))
@@ -191,7 +211,7 @@ class ParserSpec extends FlatSpec  {
 
   it should "parse apisuccessexample element" in {
     val result = apiSuccessExample("Success-Response:\n    HTTP/1.1 200 OK\n    HTML for welcome page\n    {\n      \"emailAvailable\": \"true\"\n    }\n")
-    val exampleJson = result.get.apply("local")("success")("examples")
+    val exampleJson = result.get.apply("local")("success")("examples")(0)
     assert(exampleJson("title") === Js.Str("Success-Response:"))
     assert(exampleJson("content") === Js.Str("HTTP/1.1 200 OK\nHTML for welcome page\n{\n  \"emailAvailable\": \"true\"\n}"))
     assert(exampleJson("type") === Js.Str("json"))
@@ -235,7 +255,7 @@ class ParserSpec extends FlatSpec  {
     forAll(apiParamTestCase) { (content, group, `type`, optional, field, defaultValue, size, allowedValue, description) =>
 
       val result = apiParam(content)
-      val parameterJson = result.get.apply("local")("parameter")("fields")(group)
+      val parameterJson = result.get.apply("local")("parameter")("fields")(group)(0)
       assert(parameterJson("group") === Js.Str(group))
       assert(parameterJson("type") === `type`)
       assert(parameterJson("optional") === optional)
@@ -250,7 +270,7 @@ class ParserSpec extends FlatSpec  {
   it should "parse apisuccess element" in {
 
       val result = apiSuccess("{String} firstname Firstname of the User.")
-      val parameterJson = result.get.apply("local")("success")("fields")("Success 200")
+      val parameterJson = result.get.apply("local")("success")("fields")("Success 200")(0)
       assert(parameterJson("group") === Js.Str("Success 200"))
       assert(parameterJson("type") === Js.Str("String"))
       assert(parameterJson("optional") === Js.Bool(false))
@@ -263,7 +283,7 @@ class ParserSpec extends FlatSpec  {
 
   it should "parse apiuse element" in {
     val result = apiUse("MySuccess")
-    assert(result.get.apply("local")("use")("name") === Js.Str("MySuccess"))
+    assert(result.get.apply("local")("use")(0)("name") === Js.Str("MySuccess"))
   }
 
   it should "parse apipermission element" in {

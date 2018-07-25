@@ -15,9 +15,7 @@ libraryDependencies ++= Seq(
 )
 
 bintrayPackageLabels := Seq("sbt","plugin")
-bintrayVcsUrl := Some("""git@github.com:org.example/sbt-apidocjs.git""")
-
-initialCommands in console := """import org.example.sbt._"""
+bintrayVcsUrl := Some("""git@github.com:valydi/sbt-apidoc.git""")
 
 // set up 'scripted; sbt plugin for testing sbt plugins
 scriptedLaunchOpts ++=
