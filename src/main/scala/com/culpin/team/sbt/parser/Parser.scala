@@ -270,8 +270,6 @@ object Parser {
     val url = trim(content)
     if (url.isEmpty) None
     else
-      //TODO investigate if not this.....
-      //Option(Js.Obj("local" -> Js.Obj("sampleRequest" -> Js.Obj("url" -> url))))
       Option(Js.Obj("local" -> Js.Obj("sampleRequest" -> Js.Arr(Js.Obj("url" -> url)))))
   }
 

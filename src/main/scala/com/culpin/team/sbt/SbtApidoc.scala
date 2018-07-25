@@ -65,18 +65,20 @@ object SbtApidoc extends AutoPlugin {
     val sortedFiles = Util.sortBlocks(filter(processedFiles))
     if (sortedFiles.arr.isEmpty || sortedFiles.arr.forall(_ == Js.Null)) None
     else {
-      val config =
-        s"""
-          |{
-          |   "name": "${apidocConfig.name}",
-          |   "title": "${apidocConfig.title}",
-          |   "description": "${apidocConfig.description}",
-          |   "version": "${apidocConfig.version}",
-          |   ${apidocConfig.url.fold("")(s => s"url: $s,")}
-          |   ${apidocConfig.sampleUrl.fold("")(s => s"sampleUrl: $s")}
-          |}
-        """.stripMargin
-      Some((ujson.write(sortedFiles, 2), config))
+
+      val config = Js.Obj(
+        "name" -> apidocConfig.name,
+        "title" -> apidocConfig.title,
+        "description" -> apidocConfig.description,
+        "version" -> apidocConfig.version,
+        "url" -> apidocConfig.url.fold("")(identity),
+        "sampleUrl" -> apidocConfig.sampleUrl.fold("")(identity),
+        "template" -> Js.Obj(
+          "withCompare" -> true,
+          "withGenerator" -> true
+        )
+      )
+      Some((sortedFiles.render(2), config.render(2)))
     }
   }
 
