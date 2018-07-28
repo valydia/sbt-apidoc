@@ -51,11 +51,11 @@ object SbtApidoc extends AutoPlugin {
     )
 
     val sourceFiles = (sources in Compile).value.toList
-    val result = run(sourceFiles, config, log) match {
-      case Some((apiData, apiProject)) => Some(generateApidoc(apiData, apiProject, apidocOutputDir.value, log))
-      case _ => None
-    }
-    log.info("Done.")
+    val result =
+      run(sourceFiles, config, log) map { case (apiData, apiProject) =>
+        generateApidoc(apiData, apiProject, apidocOutputDir.value, log)
+      }
+    result.fold(log.info("Nothing to do."))(_ => log.info("Done."))
     result
   }
 
@@ -71,7 +71,7 @@ object SbtApidoc extends AutoPlugin {
         "title" -> apidocConfig.title,
         "description" -> apidocConfig.description,
         "version" -> apidocConfig.version,
-        "url" -> apidocConfig.url.getOrElse(""),
+        "url" -> apidocConfig.url.fold("")(identity),
         "sampleUrl" -> apidocConfig.sampleUrl.fold("")(identity),
         "template" -> Js.Obj(
           "withCompare" -> true,
@@ -111,16 +111,16 @@ object SbtApidoc extends AutoPlugin {
     IO.delete(tmp)
 
     log.info(s"write json file: $relativePath/api_data.json")
-    IO.write(apidocOutput / "api_data.json", apiData)
+    IO.write(apidocOutput / "api_data.json", apiData + "\n")
 
     log.info(s"write js file: $relativePath/api_data.js")
-    IO.write(apidocOutput / "api_data.js", "define({ \"api\":  " + apiData + "  });")
+    IO.write(apidocOutput / "api_data.js", "define({ \"api\":  " + apiData + "  });" + "\n")
 
     log.info(s"write json file: $relativePath/api_project.json")
-    IO.write(apidocOutput / "api_project.json", apiProject)
+    IO.write(apidocOutput / "api_project.json", apiProject + "\n")
 
     log.info(s"write js file: $relativePath/api_project.js")
-    IO.write(apidocOutput / "api_project.js", "define( " + apiProject + " );")
+    IO.write(apidocOutput / "api_project.js", "define( " + apiProject + " );" + "\n")
 
     log.info("Generated output into folder " + relativePath)
     apidocOutput
