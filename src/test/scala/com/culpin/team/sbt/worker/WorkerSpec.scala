@@ -4,10 +4,10 @@ import java.io.File
 
 import com.culpin.team.sbt.parser.Parser
 import org.scalatest.FlatSpec
-import sbt.util.{Level, Logger}
+import sbt.util.{ Level, Logger }
 import ujson.Js
 
-class WorkerSpec extends FlatSpec  {
+class WorkerSpec extends FlatSpec {
 
   val stubLogger = new Logger {
     override def log(level: Level.Value, message: => String): Unit = ()
@@ -21,10 +21,9 @@ class WorkerSpec extends FlatSpec  {
     val preProcessFiles = new File(getClass.getResource(preprocessUrl).getFile)
     val preProcessString = readFile(preProcessFiles)
 
-
     val parsedFilesFiles = new File(getClass.getResource(parsedFilesUrl).getFile)
     val parsedFileString = readFile(parsedFilesFiles)
-    (ujson.read(parsedFileString).asInstanceOf[Js.Arr],  ujson.read(preProcessString))
+    (ujson.read(parsedFileString).asInstanceOf[Js.Arr], ujson.read(preProcessString))
 
   }
 
@@ -91,14 +90,14 @@ class WorkerSpec extends FlatSpec  {
     val worker = new ApiUseWorker
     val result = worker.preProcess(jarray)()
 
-    val createUser = result("define")("CreateUserError" )("0.2.0")
+    val createUser = result("define")("CreateUserError")("0.2.0")
     assert(createUser("version") === Js.Str("0.2.0"))
-    val errorField = createUser("error" )("fields" )( "Error 4xx")
+    val errorField = createUser("error")("fields")("Error 4xx")
 
     val error1 = errorField(0)
     assert(error1("group") === Js.Str("Error 4xx"))
     assert(error1("optional") === Js.Bool(false))
-    assert(error1( "field") === Js.Str("NoAccessRight"))
+    assert(error1("field") === Js.Str("NoAccessRight"))
     assert(error1("description") === Js.Str("Only authenticated Admins can access the data."))
 
     val error2 = errorField(1)
@@ -116,11 +115,11 @@ class WorkerSpec extends FlatSpec  {
 
   "ApiUser Worker" should " postprocess" in {
 
-    val (parsedFiles, preProcessJson) = loadFixture("/apiuseBlocks.json","/apiusePreprocess.json")
+    val (parsedFiles, preProcessJson) = loadFixture("/apiuseBlocks.json", "/apiusePreprocess.json")
     val worker = new ApiUseWorker
 
     val result = worker.postProcess(parsedFiles, List(), None, preProcessJson)
-    val error = result(0)(0)("local")( "error")
+    val error = result(0)(0)("local")("error")
 
     val error4XX = error("fields")("Error 4xx")
     val error4XX_0 = error4XX(0)
@@ -149,7 +148,7 @@ class WorkerSpec extends FlatSpec  {
 
     val result = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), None, preProcessJson)
 
-    val (file1, file2)= (result(0), result(1))
+    val (file1, file2) = (result(0), result(1))
 
     val (block4, block5, block6) = (file1(3), file1(4), file1(5))
     val (block2_1, block2_2, block2_3) = (file2(0), file2(1), file2(2))
@@ -159,7 +158,7 @@ class WorkerSpec extends FlatSpec  {
     assert(block2_1("local")("groupTitle") === Js.Str("User"))
     assert(block2_2("local")("groupTitle") === Js.Str("User"))
     assert(block2_3("local")("groupTitle") === Js.Str("User"))
-//      assert((result \\ "groupTitle").children.size === 6)
+    //      assert((result \\ "groupTitle").children.size === 6)
 
   }
 
@@ -170,8 +169,7 @@ class WorkerSpec extends FlatSpec  {
 
     val result = worker.postProcess(parsedFiles, List(), None, preProcessJson)
 
-
-    val (file1, file2)= (result(0), result(1))
+    val (file1, file2) = (result(0), result(1))
 
     val (block4, block5, block6) = (file1(3), file1(4), file1(5))
     val (block2_1, block2_2, block2_3) = (file2(0), file2(1), file2(2))
@@ -184,7 +182,6 @@ class WorkerSpec extends FlatSpec  {
 
   }
 
-
   "ApiPermissionWorker" should " postprocess" in {
 
     val (parsedFiles, preProcessJson) = loadFixture()
@@ -192,10 +189,9 @@ class WorkerSpec extends FlatSpec  {
 
     val result = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), None, preProcessJson)
 
-    val (file1, file2)= (result(0), result(1))
+    val (file1, file2) = (result(0), result(1))
 
     val (block4, block5, block6) = (file1(3), file1(4), file1(5))
-
 
     val permission4 = block4("local")("permission")(0)
     assert(permission4("name") === Js.Str("admin"))
@@ -213,7 +209,6 @@ class WorkerSpec extends FlatSpec  {
     assert(permission6("name") === Js.Str("none"))
     assert(permission6("title") === Js.Null)
     assert(permission6("description") === Js.Str(""))
-
 
     val (block1, block2, block3) = (file2(0), file2(1), file2(2))
 
@@ -235,8 +230,8 @@ class WorkerSpec extends FlatSpec  {
     assert(permission3("title") === Js.Null)
     assert(permission3("description") === Js.Str(""))
 
-//      assert(JArray(l).diff(result).deleted === Js.Null)
-//      assert(JArray(l).diff(result).changed === Js.Null)
+    //      assert(JArray(l).diff(result).deleted === Js.Null)
+    //      assert(JArray(l).diff(result).changed === Js.Null)
 
   }
 
@@ -254,7 +249,6 @@ class WorkerSpec extends FlatSpec  {
 
     val (parsedFiles, filenames) = Parser(List(new File(getClass.getResource("/sampleRequest.js").getFile)), stubLogger)
 
-
     val worker = new ApiSampleRequestWorker
 
     val result = worker.postProcess(parsedFiles, filenames, Option("https://api.github.com/v1"), Js.Null)
@@ -262,14 +256,13 @@ class WorkerSpec extends FlatSpec  {
     val file1 = result(0)
     val (block1, block2, block3) = (file1(0), file1(1), file1(2))
     assert(block1("local")("sampleRequest")(0)("url") === Js.Str("http://www.example.com/user/4711"))
-    assert(block2("local")("sampleRequest")(0)("url")  === Js.Str("https://api.github.com/v1/car/4711"))
+    assert(block2("local")("sampleRequest")(0)("url") === Js.Str("https://api.github.com/v1/car/4711"))
     assert(block3("local")("sampleRequest") === Js.Null)
   }
 
   "ApiSampleRequestWorker" should " postprocess without sampleURL" in {
 
     val (parsedFiles, filenames) = Parser(List(new File(getClass.getResource("/sampleRequest.js").getFile)), stubLogger)
-
 
     val worker = new ApiSampleRequestWorker
 
@@ -278,7 +271,7 @@ class WorkerSpec extends FlatSpec  {
     val file1 = result(0)
     val (block1, block2, block3) = (file1(0), file1(1), file1(2))
     assert(block1("local")("sampleRequest")(0)("url") === Js.Str("http://www.example.com/user/4711"))
-    assert(block2("local")("sampleRequest")(0)("url")  === Js.Str("/car/4711"))
+    assert(block2("local")("sampleRequest")(0)("url") === Js.Str("/car/4711"))
     assert(block3("local")("sampleRequest") === Js.Null)
 
   }

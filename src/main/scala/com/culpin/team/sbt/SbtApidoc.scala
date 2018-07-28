@@ -2,19 +2,18 @@ package com.culpin.team.sbt
 
 import com.culpin.team.sbt.parser.Parser
 import com.culpin.team.sbt.worker.Worker
-import sbt.Keys.{name, version, _}
+import sbt.Keys.{ name, version, _ }
 import sbt.plugins.JvmPlugin
-import sbt.{IO, Logger, _}
+import sbt.{ IO, Logger, _ }
 import ujson.Js
 
 case class Config(
-   name: String,
-   title: String,
-   description: String,
-   version: String,
-   url: Option[String],
-   sampleUrl: Option[String]
-)
+  name: String,
+  title: String,
+  description: String,
+  version: String,
+  url: Option[String],
+  sampleUrl: Option[String])
 
 object SbtApidoc extends AutoPlugin {
 
@@ -32,8 +31,7 @@ object SbtApidoc extends AutoPlugin {
     apidocOutputDir := target.value / "apidoc",
     apidocDescription := "",
     apidocURL := None,
-    apidocSampleURL := None
-  )
+    apidocSampleURL := None)
 
   override lazy val projectSettings: Seq[Setting[_]] = defaultSettings ++ Seq(apidocSetting)
 
@@ -47,13 +45,13 @@ object SbtApidoc extends AutoPlugin {
       apidocDescription.value,
       apidocVersion.value.getOrElse("0.0.0"),
       apidocURL.value.map(_.toString),
-      apidocSampleURL.value.map(_.toString)
-    )
+      apidocSampleURL.value.map(_.toString))
 
     val sourceFiles = (sources in Compile).value.toList
     val result =
-      run(sourceFiles, config, log) map { case (apiData, apiProject) =>
-        generateApidoc(apiData, apiProject, apidocOutputDir.value, log)
+      run(sourceFiles, config, log) map {
+        case (apiData, apiProject) =>
+          generateApidoc(apiData, apiProject, apidocOutputDir.value, log)
       }
     result.fold(log.info("Nothing to do."))(_ => log.info("Done."))
     result
@@ -61,7 +59,7 @@ object SbtApidoc extends AutoPlugin {
 
   def run(sourceFiles: List[File], apidocConfig: Config, log: Logger): Option[(String, String)] = {
     val (parsedFiles, filenames) = Parser(sourceFiles, log)
-    val processedFiles = Worker(parsedFiles,filenames, apidocConfig.sampleUrl)
+    val processedFiles = Worker(parsedFiles, filenames, apidocConfig.sampleUrl)
     val sortedFiles = Util.sortBlocks(filter(processedFiles))
     if (sortedFiles.arr.isEmpty || sortedFiles.arr.forall(_ == Js.Null)) None
     else {
@@ -75,9 +73,7 @@ object SbtApidoc extends AutoPlugin {
         "sampleUrl" -> apidocConfig.sampleUrl.fold("")(identity),
         "template" -> Js.Obj(
           "withCompare" -> true,
-          "withGenerator" -> true
-        )
-      )
+          "withGenerator" -> true))
       Some((sortedFiles.render(2), config.render(2)))
     }
   }
@@ -93,7 +89,6 @@ object SbtApidoc extends AutoPlugin {
       case _ => mutable.ArrayBuffer[Js.Value]()
     })
   }
-
 
   def generateApidoc(apiData: String, apiProject: String, apidocOutput: File, log: Logger): File = {
 
@@ -125,7 +120,5 @@ object SbtApidoc extends AutoPlugin {
     log.info("Generated output into folder " + relativePath)
     apidocOutput
   }
-
-
 
 }

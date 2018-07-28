@@ -7,12 +7,12 @@ import com.culpin.team.sbt.Util.merge
 
 object Parser {
 
-  def apply(sourceFiles: List[File], log: Logger): (Js.Arr, List[String]) = {
+  def apply(sourceFiles: List[File], log: Logger): (Js.Arr, List[String]) =
     (sourceFiles.map { f =>
       log.info("parse file: " + f.getName)
       processFileContent(f, log)
     }, sourceFiles map (_.getName))
-  }
+
 
   private def processFileContent(file: File, log: Logger): Js.Arr = {
     log.debug(s"inspect file ${file.getName}")

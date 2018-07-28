@@ -6,9 +6,9 @@ import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.FlatSpec
 import ujson.Js
 import Parser._
-import sbt.util.{Level, Logger}
+import sbt.util.{ Level, Logger }
 
-class ParserSpec extends FlatSpec  {
+class ParserSpec extends FlatSpec {
 
   val stubLogger = new Logger {
     override def log(level: Level.Value, message: => String): Unit = ()
@@ -57,9 +57,8 @@ class ParserSpec extends FlatSpec  {
                  |  def foo(): Unit = {}
                  |}""".stripMargin
 
-
     val result = parseCommentBlocks(file)
-    assert(result === Seq("A simple class and objects to write tests against.","Block 1\n@param arg","@apiDefine admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.\n\n@apiVersion 0.3.0"))
+    assert(result === Seq("A simple class and objects to write tests against.", "Block 1\n@param arg", "@apiDefine admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.\n\n@apiVersion 0.3.0"))
   }
 
   //TODO rewrite using TableProperties
@@ -76,8 +75,7 @@ class ParserSpec extends FlatSpec  {
       Element("@param arg The array of string", "param", "param", "arg The array of string"),
       Element("@param theString the string", "param", "param", "theString the string"),
       Element("@param theInt the int", "param", "param", "theInt the int"),
-      Element("@return the result string", "return", "return", "the result string")
-    )
+      Element("@return the result string", "return", "return", "the result string"))
     assert(result2.toList === expected2)
 
     val result3 = parseElement("Ignored block\n@apiIgnore Not finished Method\n" +
@@ -87,24 +85,21 @@ class ParserSpec extends FlatSpec  {
       Element("@apiIgnore Not finished Method", "apiignore", "apiIgnore", "Not finished Method"),
       Element("@param theString the string", "param", "param", "theString the string"),
       Element("@param theInt the int", "param", "param", "theInt the int"),
-      Element("@return the result string", "return", "return", "the result string")
-    )
+      Element("@return the result string", "return", "return", "the result string"))
     assert(result3.toList === expected3)
 
     val result4 = parseElement("@apiDefine admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.\n\n@apiVersion 0.3.0")
     val expected4 = List(
-      Element("@apiDefine admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.","apidefine", "apiDefine", "admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."),
-      Element("@apiVersion 0.3.0","apiversion","apiVersion","0.3.0")
-    )
+      Element("@apiDefine admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.", "apidefine", "apiDefine", "admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."),
+      Element("@apiVersion 0.3.0", "apiversion", "apiVersion", "0.3.0"))
 
     assert(result4.toList === expected4)
 
-//TODO Check what the expected behaviour with the original library
-//    val result4 = SbtApidocjsPlugin.parseElement("Api block\n@apiParam")
-//    val expected4 = List(Element("@apiParam", "apipara", "apiPara", "m"))
-//    assert(result4.toList === expected4)
+    //TODO Check what the expected behaviour with the original library
+    //    val result4 = SbtApidocjsPlugin.parseElement("Api block\n@apiParam")
+    //    val expected4 = List(Element("@apiParam", "apipara", "apiPara", "m"))
+    //    assert(result4.toList === expected4)
   }
-
 
   it should "parse api element with title" in {
     val result = api("{get} /user/:id some title")
@@ -128,11 +123,10 @@ class ParserSpec extends FlatSpec  {
       ("admin This title is visible in version 0.1.0 and 0.2.0", Js.Str("admin"): Js.Value, Js.Str("This title is visible in version 0.1.0 and 0.2.0"): Js.Value, Js.Null: Js.Value),
       ("admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.",
         Js.Str("admin"): Js.Value, Js.Str("Admin access rights needed."): Js.Value,
-        Js.Str("Optionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."): Js.Value)
-    )
+        Js.Str("Optionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."): Js.Value))
 
   it should "parse apidefine element" in {
-    forAll(apidefineTestCases){ (content, name, title, description) =>
+    forAll(apidefineTestCases) { (content, name, title, description) =>
       val result = apiDefine(content)
       val defineJson = result.get.apply("global")("define")
       assert(defineJson("name") === name)
@@ -151,12 +145,10 @@ class ParserSpec extends FlatSpec  {
       ("    Text line 1 (Begin: 4xSpaces (3 removed)).\n   Text line 2 (Begin: 3xSpaces (3 removed), End: 2xSpaces).  ",
         Js.Str("Text line 1 (Begin: 4xSpaces (3 removed)).\n   Text line 2 (Begin: 3xSpaces (3 removed), End: 2xSpaces).")),
       ("\t\t\tText line 1 (Begin: 3xTab (2 removed)).\n\t\tText line 2 (Begin: 2x Tab (2 removed), End: 1xTab).\t",
-        Js.Str("Text line 1 (Begin: 3xTab (2 removed)).\n\t\tText line 2 (Begin: 2x Tab (2 removed), End: 1xTab)."))
-    )
-
+        Js.Str("Text line 1 (Begin: 3xTab (2 removed)).\n\t\tText line 2 (Begin: 2x Tab (2 removed), End: 1xTab).")))
 
   it should "parse apidescription element" in {
-    forAll(descriptions){ (content, expected) =>
+    forAll(descriptions) { (content, expected) =>
       val result = apiDescription(content)
       val localJson = result.get.apply("local")
       assert(localJson("description") === expected)
@@ -191,7 +183,6 @@ class ParserSpec extends FlatSpec  {
     assert(exampleJson("content") === Js.Str("{\n  \"Accept-Encoding\": \"Accept-Encoding: gzip, deflate\"\n}"))
     assert(exampleJson("type") === Js.Str("json"))
   }
-
 
   it should "parse apiheaderexample element - 2" in {
     val result = apiHeaderExample("{json} Request-Example:\n{ \"content\": \"This is an example content\" }")
@@ -229,11 +220,10 @@ class ParserSpec extends FlatSpec  {
       ("\t\ta\n\t\t\t\tb\n\t\t\tc", "a\n\t\tb\n\tc"),
       ("   \t   a", "a"),
       ("    a\n   b\nc   d\n   e", "    a\n   b\nc   d\n   e"),
-      ("\ta\n\t  b\n\t c", "a\n  b\n c")
-    )
+      ("\ta\n\t  b\n\t c", "a\n  b\n c"))
 
   it should "unindent" in {
-    forAll(unindents){ (content, expected) =>
+    forAll(unindents) { (content, expected) =>
       val result = unindent(content)
       assert(result === expected)
     }
@@ -247,9 +237,7 @@ class ParserSpec extends FlatSpec  {
       ("simple", "Parameter", Js.Null, Js.Bool(false), Js.Str("simple"), Js.Null, Js.Null, Js.Null, Js.Null),
       ("{String} name The users name.", "Parameter", Js.Str("String"), Js.Bool(false), Js.Str("name"), Js.Null, Js.Null, Js.Null, Js.Str("The users name.")),
       ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  [ \\MyClass\\field.user_first-name = \'John Doe\' ] Some description.", "MyGroup", Js.Str("\\Object\\String.uni-code_char[]"), Js.Bool(true), Js.Str("\\MyClass\\field.user_first-name"), Js.Str("John Doe"), Js.Str("1..10"), Js.Arr("\'abc\'", "\'def\'"), Js.Str("Some description.")),
-      ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  \\MyClass\\field.user_first-name = John_Doe Some description.", "MyGroup", Js.Str("\\Object\\String.uni-code_char[]"), Js.Bool(false), Js.Str("\\MyClass\\field.user_first-name"), Js.Str("John_Doe"), Js.Str("1..10"), Js.Arr("\'abc\'", "\'def\'"), Js.Str("Some description."))
-    )
-
+      ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  \\MyClass\\field.user_first-name = John_Doe Some description.", "MyGroup", Js.Str("\\Object\\String.uni-code_char[]"), Js.Bool(false), Js.Str("\\MyClass\\field.user_first-name"), Js.Str("John_Doe"), Js.Str("1..10"), Js.Arr("\'abc\'", "\'def\'"), Js.Str("Some description.")))
 
   it should "parse apiparam element" in {
     forAll(apiParamTestCase) { (content, group, `type`, optional, field, defaultValue, size, allowedValue, description) =>
@@ -269,16 +257,16 @@ class ParserSpec extends FlatSpec  {
 
   it should "parse apisuccess element" in {
 
-      val result = apiSuccess("{String} firstname Firstname of the User.")
-      val parameterJson = result.get.apply("local")("success")("fields")("Success 200")(0)
-      assert(parameterJson("group") === Js.Str("Success 200"))
-      assert(parameterJson("type") === Js.Str("String"))
-      assert(parameterJson("optional") === Js.Bool(false))
-      assert(parameterJson("field") === Js.Str("firstname"))
-      assert(parameterJson("defaultValue") === Js.Null)
-      assert(parameterJson("size") === Js.Null)
-      assert(parameterJson("allowedValue") === Js.Null)
-      assert(parameterJson("description") === Js.Str("Firstname of the User."))
+    val result = apiSuccess("{String} firstname Firstname of the User.")
+    val parameterJson = result.get.apply("local")("success")("fields")("Success 200")(0)
+    assert(parameterJson("group") === Js.Str("Success 200"))
+    assert(parameterJson("type") === Js.Str("String"))
+    assert(parameterJson("optional") === Js.Bool(false))
+    assert(parameterJson("field") === Js.Str("firstname"))
+    assert(parameterJson("defaultValue") === Js.Null)
+    assert(parameterJson("size") === Js.Null)
+    assert(parameterJson("allowedValue") === Js.Null)
+    assert(parameterJson("description") === Js.Str("Firstname of the User."))
   }
 
   it should "parse apiuse element" in {
@@ -298,7 +286,7 @@ class ParserSpec extends FlatSpec  {
 
   it should "parse apiversion element" in {
     val result = apiVersion("1.6.2")
-    assert(result.get.apply("local")("version")=== Js.Str("1.6.2"))
+    assert(result.get.apply("local")("version") === Js.Str("1.6.2"))
   }
 
 }

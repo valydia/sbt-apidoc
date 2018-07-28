@@ -1,3 +1,5 @@
+import scalariform.formatter.preferences._
+
 name := """sbt-apidoc"""
 organization := "com.culpin.team"
 version := "0.5.3-SNAPSHOT"
@@ -15,10 +17,13 @@ libraryDependencies ++= Seq(
 )
 
 bintrayPackageLabels := Seq("sbt","plugin")
-bintrayVcsUrl := Some("""git@github.com:valydi/sbt-apidoc.git""")
+bintrayVcsUrl := Some("""git@github.com:valydia/sbt-apidoc.git""")
 
 // set up 'scripted; sbt plugin for testing sbt plugins
 scriptedLaunchOpts ++=
   Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
 
 scriptedBufferLog := false
+
+//Scalariform
+scalariformPreferences := scalariformPreferences.value

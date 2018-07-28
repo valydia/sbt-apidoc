@@ -3,7 +3,6 @@ package com.culpin.team.sbt
 import org.scalatest.FlatSpec
 import ujson.Js
 
-
 class UtilSpec extends FlatSpec {
 
   "Util" should "merge json" in {
@@ -47,16 +46,16 @@ class UtilSpec extends FlatSpec {
 
   it should "sort by group ASC, name ASC, version DESC" in {
     val block1 =
-      Js.Obj("group" -> "group1","name" -> "name1", "version" -> "0.1.0")
+      Js.Obj("group" -> "group1", "name" -> "name1", "version" -> "0.1.0")
 
     val block2 =
       Js.Obj("group" -> "abc", "name" -> "efg", "version" -> "0.1.1")
 
     val block3 =
-      Js.Obj("group" -> "abc","name" -> "hij","version" -> "3.1.1")
+      Js.Obj("group" -> "abc", "name" -> "hij", "version" -> "3.1.1")
 
     val block4 =
-      Js.Obj("group" -> "abc","name" -> "efg","version" -> "3.1.1")
+      Js.Obj("group" -> "abc", "name" -> "efg", "version" -> "3.1.1")
 
     val blocks = Js.Arr(block1, block2, block3, block4)
 
