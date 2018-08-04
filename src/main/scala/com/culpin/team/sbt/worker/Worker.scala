@@ -276,7 +276,7 @@ class ApiSampleRequestWorker extends Worker {
     parsedFiles: Js.Arr, fileNames: List[String], maybeSampleUrl: Option[String],
     preProcess: Value, source: String = "",
     target: String = "sampleRequest", errorMessage: ErrorMessage = ErrorMessage("", "", "")): Js.Arr = {
-
+    //FIXME
     def appendSampleUrl(url: String): Js.Obj = {
       maybeSampleUrl match {
         case Some(sampleUrl) if url.length >= 4 && !url.toLowerCase.startsWith("http") =>
@@ -437,7 +437,6 @@ object Worker {
       var lastVersion = "0.0.0"
       versionKeys.zipWithIndex.foreach {
         case (currentVersion, versionIndex) =>
-          VersionNumber(version)
           if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
             ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
             foundIndex = versionIndex

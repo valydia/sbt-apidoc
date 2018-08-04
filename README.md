@@ -17,8 +17,8 @@ You can custom the different apidoc keys into the `build.sbt`:
   apidocName := """apidoc-example""",
   apidocTitle := """"Custom apiDoc browser title"""",
   apidocDescription := "apidoc example project",
-  apidocURL := Some(sbt.URL("https://api.github.com/v1")),
-  apidocSampleURL := Some(sbt.URL("https://api.github.com/v1")),
+  apidocURL := Some(url("https://api.github.com/v1")),
+  apidocSampleURL := Some(url("https://api.github.com/v1")),
   apidocVersion := Some("0.3.0")
 ```
 

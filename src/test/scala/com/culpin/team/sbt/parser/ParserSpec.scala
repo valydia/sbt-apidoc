@@ -6,6 +6,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.FlatSpec
 import ujson.Js
 import Parser._
+import com.culpin.team.sbt.Util.renderMarkDown
 import sbt.util.{ Level, Logger }
 
 class ParserSpec extends FlatSpec {
@@ -232,12 +233,12 @@ class ParserSpec extends FlatSpec {
   val apiParamTestCase =
     Table(
       ("content", "group", "type", "optional", "field", "defaultValue", "size", "allowedValue", "description"),
-      ("{String} country=\"DE\" Mandatory with default value \"DE\".", "Parameter", Js.Str("String"), Js.Bool(false), Js.Str("country"), Js.Str("DE"), Js.Null, Js.Null, Js.Str("Mandatory with default value \"DE\".")),
-      ("{String} lastname     Mandatory Lastname.", "Parameter", Js.Str("String"), Js.Bool(false), Js.Str("lastname"), Js.Null, Js.Null, Js.Null, Js.Str("Mandatory Lastname.")),
+      ("{String} country=\"DE\" Mandatory with default value \"DE\".", "Parameter", Js.Str("String"), Js.Bool(false), Js.Str("country"), Js.Str("DE"), Js.Null, Js.Null, Js.Str(renderMarkDown("Mandatory with default value \"DE\"."))),
+      ("{String} lastname     Mandatory Lastname.", "Parameter", Js.Str("String"), Js.Bool(false), Js.Str("lastname"), Js.Null, Js.Null, Js.Null, Js.Str(renderMarkDown("Mandatory Lastname."))),
       ("simple", "Parameter", Js.Null, Js.Bool(false), Js.Str("simple"), Js.Null, Js.Null, Js.Null, Js.Null),
-      ("{String} name The users name.", "Parameter", Js.Str("String"), Js.Bool(false), Js.Str("name"), Js.Null, Js.Null, Js.Null, Js.Str("The users name.")),
-      ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  [ \\MyClass\\field.user_first-name = \'John Doe\' ] Some description.", "MyGroup", Js.Str("\\Object\\String.uni-code_char[]"), Js.Bool(true), Js.Str("\\MyClass\\field.user_first-name"), Js.Str("John Doe"), Js.Str("1..10"), Js.Arr("\'abc\'", "\'def\'"), Js.Str("Some description.")),
-      ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  \\MyClass\\field.user_first-name = John_Doe Some description.", "MyGroup", Js.Str("\\Object\\String.uni-code_char[]"), Js.Bool(false), Js.Str("\\MyClass\\field.user_first-name"), Js.Str("John_Doe"), Js.Str("1..10"), Js.Arr("\'abc\'", "\'def\'"), Js.Str("Some description.")))
+      ("{String} name The users name.", "Parameter", Js.Str("String"), Js.Bool(false), Js.Str("name"), Js.Null, Js.Null, Js.Null, Js.Str(renderMarkDown("The users name."))),
+      ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  [ \\MyClass\\field.user_first-name = \'John Doe\' ] Some description.", "MyGroup", Js.Str("\\Object\\String.uni-code_char[]"), Js.Bool(true), Js.Str("\\MyClass\\field.user_first-name"), Js.Str("John Doe"), Js.Str("1..10"), Js.Arr("\'abc\'", "\'def\'"), Js.Str(renderMarkDown("Some description."))),
+      ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  \\MyClass\\field.user_first-name = John_Doe Some description.", "MyGroup", Js.Str("\\Object\\String.uni-code_char[]"), Js.Bool(false), Js.Str("\\MyClass\\field.user_first-name"), Js.Str("John_Doe"), Js.Str("1..10"), Js.Arr("\'abc\'", "\'def\'"), Js.Str(renderMarkDown("Some description."))))
 
   it should "parse apiparam element" in {
     forAll(apiParamTestCase) { (content, group, `type`, optional, field, defaultValue, size, allowedValue, description) =>
@@ -266,7 +267,7 @@ class ParserSpec extends FlatSpec {
     assert(parameterJson("defaultValue") === Js.Null)
     assert(parameterJson("size") === Js.Null)
     assert(parameterJson("allowedValue") === Js.Null)
-    assert(parameterJson("description") === Js.Str("Firstname of the User."))
+    assert(parameterJson("description") === Js.Str(renderMarkDown("Firstname of the User.")))
   }
 
   it should "parse apiuse element" in {

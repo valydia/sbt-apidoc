@@ -2,6 +2,9 @@ package com.culpin.team.sbt
 
 import com.gilt.gfc.semver.SemVer
 import ujson.Js
+import com.vladsch.flexmark.html.{ HtmlRenderer, HtmlRendererOptions }
+import com.vladsch.flexmark.parser.Parser
+import com.vladsch.flexmark.util.options.MutableDataSet
 
 object Util {
 
@@ -66,5 +69,20 @@ object Util {
     }
     Js.Arr(sortedChildren)
   }
+
+  private[sbt] def renderMarkDown(value: String): String = {
+    val options = new MutableDataSet()
+    //TODO handle other blank line
+    options.set[Integer](HtmlRenderer.MAX_TRAILING_BLANK_LINES, -1)
+
+    val parser = Parser.builder(options).build
+    val renderer = HtmlRenderer.builder(options).build
+
+    val document = parser.parse(value)
+    renderer.render(document)
+  }
+
+  private[sbt] def renderMarkDownNoPTags(value: String): String =
+    renderMarkDown(value).replaceAll("<p>|</p>", "")
 
 }

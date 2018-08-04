@@ -1,9 +1,9 @@
 package com.culpin.team.sbt.parser
 
+import com.culpin.team.sbt.Util._
 import sbt.{File, IO, Logger}
 import ujson.Js
 import fastparse.all._
-import com.culpin.team.sbt.Util.merge
 
 object Parser {
 
@@ -97,7 +97,7 @@ object Parser {
 
     def onSuccess(comments: Seq[String], index: Int): Seq[String] = {
       //TODO use another parser?
-      comments.map(_.dropRight(3).replace("\n  * ","\n").replace("\n  *","\n"))
+      comments.map(_.dropRight(3).replace("\n    *","\n").replace("\n    * ","\n").replace("\n  * ","\n").replace("\n  *","\n"))
     }
 
     commentBlocks.parse(file).fold((_, _, _) => Seq(), onSuccess)
@@ -135,7 +135,7 @@ object Parser {
         Js.Obj(
           "name" -> name,
           "title" -> title.fold(Js.Null: Js.Value)(Js.Str.apply),
-          "description" -> _description.fold(Js.Null: Js.Value)(s => Js.Str(unindent(s)))
+          "description" -> _description.fold(Js.Null: Js.Value)(s => Js.Str(renderMarkDown(unindent(s))))
         )
     }
 
@@ -143,11 +143,18 @@ object Parser {
     apiDefineParser.parse(content).toOption("global", "define")
 
 
+  private[parser] def apiDeprecated(content: String): Option[Js.Obj] = {
+    val description = trim(content)
+    if (description.isEmpty) None
+    else
+      Option(Js.Obj("deprecated" -> Js.Obj("content" -> unindent(description))))
+  }
+
   private[parser] def apiDescription(content: String): Option[Js.Obj] = {
     val description = trim(content)
     if (description.isEmpty) None
     else
-      Option(Js.Obj("local" -> Js.Obj("description" -> unindent(description))))
+      Option(Js.Obj("local" -> Js.Obj("description" -> renderMarkDown(unindent(description)))))
   }
 
   private val trim: Parser[String] = P( CharIn("\r\n\t\f ").rep.? ~ (!(CharIn("\r\n\t\f ").rep ~ End) ~ AnyChar).rep.!)
@@ -161,7 +168,7 @@ object Parser {
   private val apiExampleParser: Parser[Js.Value] =
     P( ("{" ~ (!"}" ~ AnyChar).rep.! ~ "}" ~ " " ).?  ~ (!"\n" ~ AnyChar).rep.! ~ "\n" ~ AnyChar.rep.!) map {
       case (t, title, content) =>
-        Js.Arr(Js.Obj("type" -> t.fold(Js.Str("json"))(Js.Str.apply), "title" -> title, "content" -> unindent(content)))
+        Js.Arr(Js.Obj("type" -> t.getOrElse("json"), "title" -> title, "content" -> unindent(content)))
     }
   private[parser] def apiExample(content: String): Option[Js.Obj] =
     apiExampleParser.parse(trim(content)).toOption("local", "examples")
@@ -224,9 +231,9 @@ object Parser {
     P( ("{" ~ " ".rep ~ (!CharIn("{} ") ~ AnyChar).rep.! ~ " ".rep ~ ("{" ~ " ".rep ~ (!CharIn("} ") ~ AnyChar).rep.! ~ " ".rep ~ "}" ~ " ".rep).? ~  " ".rep ~ ("=" ~ " ".rep ~ enum).? ~ " ".rep ~ "}"  ~ " ".rep).? ) map {
       case Some((_type, size, allowedValues)) =>
         Js.Obj(
-          "type" -> _type,
+          "type" -> renderMarkDownNoPTags(_type),
           "size" -> size.fold(Js.Null: Js.Value)(Js.Str.apply),
-          "allowedValue" -> allowedValues.fold(Js.Null: Js.Value)( av => av.map(Js.Str.apply))
+          "allowedValue" -> allowedValues.fold(Js.Null: Js.Value)(_.map(Js.Str.apply))
         )
       case _ => Js.Obj("type" -> Js.Null, "size" -> Js.Null, "allowedValue" -> Js.Null)
     }
@@ -244,7 +251,7 @@ object Parser {
       Js.Obj("field" -> f, "optional" -> o.isDefined, "defaultValue" -> dv.fold(Js.Null: Js.Value)(Js.Str.apply))
   }
   private val description: Parser[Js.Obj] =
-    P( AnyChar.rep.!.? ).map(description => Js.Obj("description" -> description.fold(Js.Null: Js.Value)(d => if (d.isEmpty) Js.Null else Js.Str(d))))
+    P( AnyChar.rep.!.? ).map(description => Js.Obj("description" -> description.fold(Js.Null: Js.Value)(d => if (d.isEmpty) Js.Null else Js.Str(renderMarkDown(d)))))
 
   private def apiParamParser(defaultGroup: String): Parser[Js.Obj] =
     P( group(defaultGroup) ~ typeSizeAllowedValues ~ field ~ description) map {
@@ -278,6 +285,7 @@ object Parser {
       Option(Js.Obj("local" -> Js.Obj("permission" -> Js.Arr(Js.Obj("name" -> name)))))
   }
 
+  //FIXME
   private[parser] def apiSampleRequest(content: String): Option[Js.Obj] = {
     val url = trim(content)
     if (url.isEmpty) None
