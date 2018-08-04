@@ -124,7 +124,7 @@ class ParserSpec extends FlatSpec {
       ("admin This title is visible in version 0.1.0 and 0.2.0", Js.Str("admin"): Js.Value, Js.Str("This title is visible in version 0.1.0 and 0.2.0"): Js.Value, Js.Null: Js.Value),
       ("admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.",
         Js.Str("admin"): Js.Value, Js.Str("Admin access rights needed."): Js.Value,
-        Js.Str("Optionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version."): Js.Value))
+        Js.Str(renderMarkDown("Optionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.")): Js.Value))
 
   it should "parse apidefine element" in {
     forAll(apidefineTestCases) { (content, name, title, description) =>
@@ -139,24 +139,24 @@ class ParserSpec extends FlatSpec {
   val descriptions =
     Table(
       ("content", "result"),
-      ("Some Description", Js.Str("Some Description")),
-      ("Text", Js.Str("Text")),
+      ("Some Description", "Some Description"),
+      ("Text", "Text"),
       ("   Text line 1 (Begin: 3xSpaces (3 removed), End: 1xSpace). ",
-        Js.Str("Text line 1 (Begin: 3xSpaces (3 removed), End: 1xSpace).")),
+        "Text line 1 (Begin: 3xSpaces (3 removed), End: 1xSpace)."),
       ("    Text line 1 (Begin: 4xSpaces (3 removed)).\n   Text line 2 (Begin: 3xSpaces (3 removed), End: 2xSpaces).  ",
-        Js.Str("Text line 1 (Begin: 4xSpaces (3 removed)).\n   Text line 2 (Begin: 3xSpaces (3 removed), End: 2xSpaces).")),
+        "Text line 1 (Begin: 4xSpaces (3 removed)).\n   Text line 2 (Begin: 3xSpaces (3 removed), End: 2xSpaces)."),
       ("\t\t\tText line 1 (Begin: 3xTab (2 removed)).\n\t\tText line 2 (Begin: 2x Tab (2 removed), End: 1xTab).\t",
-        Js.Str("Text line 1 (Begin: 3xTab (2 removed)).\n\t\tText line 2 (Begin: 2x Tab (2 removed), End: 1xTab).")))
+        "Text line 1 (Begin: 3xTab (2 removed)).\n\t\tText line 2 (Begin: 2x Tab (2 removed), End: 1xTab)."))
 
   it should "parse apidescription element" in {
     forAll(descriptions) { (content, expected) =>
-      val result = apiDescription(content)
-      val localJson = result.get.apply("local")
-      assert(localJson("description") === expected)
+      val Some(result) = apiDescription(content)
+      val description = result("local")("description")
+      assert(description.str === renderMarkDown(expected))
     }
   }
 
-  it should "parse apidescription element - empty" in {
+  it should "parse apidescription an empty element" in {
     val result = apiDescription("")
     assert(result === None)
   }
@@ -177,20 +177,21 @@ class ParserSpec extends FlatSpec {
     assert(exampleJson("type") === Js.Str("json"))
   }
 
-  it should "parse apiheaderexample element" in {
-    val result = apiHeaderExample("{json} Header-Example:\n    {\n      \"Accept-Encoding\": \"Accept-Encoding: gzip, deflate\"\n    }")
-    val exampleJson = result.get.apply("local")("header")("examples")(0)
-    assert(exampleJson("title") === Js.Str("Header-Example:"))
-    assert(exampleJson("content") === Js.Str("{\n  \"Accept-Encoding\": \"Accept-Encoding: gzip, deflate\"\n}"))
-    assert(exampleJson("type") === Js.Str("json"))
-  }
+  val headers =
+    Table(
+      ("data", "title", "content", "type"),
+      ("{json} Header-Example:\n    {\n      \"Accept-Encoding\": \"Accept-Encoding: gzip, deflate\"\n    }", "Header-Example:", "{\n  \"Accept-Encoding\": \"Accept-Encoding: gzip, deflate\"\n}", "json"),
+      ("{json} Request-Example:\n{ \"content\": \"This is an example content\" }", "Request-Example:", "{ \"content\": \"This is an example content\" }", "json"))
 
-  it should "parse apiheaderexample element - 2" in {
-    val result = apiHeaderExample("{json} Request-Example:\n{ \"content\": \"This is an example content\" }")
-    val exampleJson = result.get.apply("local")("header")("examples")(0)
-    assert(exampleJson("title") === Js.Str("Request-Example:"))
-    assert(exampleJson("content") === Js.Str("{ \"content\": \"This is an example content\" }"))
-    assert(exampleJson("type") === Js.Str("json"))
+  it should "parse apiheaderexample element" in {
+    forAll(headers) {
+      case (data, title, content, _type) =>
+        val result = apiHeaderExample(data)
+        val exampleJson = result.get.apply("local")("header")("examples")(0)
+        assert(exampleJson("title").str === title)
+        assert(exampleJson("content").str === content)
+        assert(exampleJson("type").str === _type)
+    }
   }
 
   it should "parse apiparamexample element" in {
