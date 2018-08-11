@@ -58,8 +58,8 @@ class ParserSpec extends FlatSpec {
                  |  def foo(): Unit = {}
                  |}""".stripMargin
 
-    val result = parseCommentBlocks(file)
-    assert(result === Seq("A simple class and objects to write tests against.", "Block 1\n@param arg", "@apiDefine admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.\n\n@apiVersion 0.3.0"))
+    val result = parseCommentBlocks(file).toList
+    assert(result === List("A simple class and objects to write tests against.", "Block 1\n@param arg", "@apiDefine admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.\n\n@apiVersion 0.3.0"))
   }
 
   //TODO rewrite using TableProperties

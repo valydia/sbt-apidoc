@@ -91,16 +91,24 @@ object Parser {
   private val commentChunk: Parser[Any] = P( CharsWhile(c => c != '/' && c != '*') | multilineComment | !"*/" ~ AnyChar )
   private lazy val multilineComment: Parser[String] = P( "/**" ~ "\n".? ~ " ".rep() ~ "* " ~/ commentChunk.rep.! ~ "*/" )
   private val commentBlock: Parser[String] = P( (!"/**" ~ AnyChar).rep ~ multilineComment ~ (!"/**" ~ AnyChar).rep )
-  private val commentBlocks: Parser[Seq[String]] = commentBlock.rep
+
+
+  private val endOfCommentLine = P( "\n" ~ " ".rep ~ "*".? ~ " ".?)
+  private val startOfCommentBlock: Parser[Seq[String]] = P( (!endOfCommentLine ~ AnyChar).rep.! ~ endOfCommentLine).rep
+
+  //TODO use flatmap on parser
+  private val fullComment = commentBlock map { comment =>
+    startOfCommentBlock.parse(comment).fold((_, _, _) => "",(fractions, _) =>  fractions.mkString("\n"))
+  }
+
+  private val commentBlocksParser: Parser[Seq[String]] = fullComment.rep
 
   private[parser] def parseCommentBlocks(file: String): Seq[String] = {
 
-    def onSuccess(comments: Seq[String], index: Int): Seq[String] = {
-      //TODO use another parser?
-      comments.map(_.dropRight(3).replace("\n    *","\n").replace("\n    * ","\n").replace("\n  * ","\n").replace("\n  *","\n"))
-    }
-
-    commentBlocks.parse(file).fold((_, _, _) => Seq(), onSuccess)
+    commentBlocksParser.parse(file).fold(
+      (_, _, _) => Seq(),
+      (commentBlocks, _) => commentBlocks
+    )
   }
 
   private val identifier: Parser[String]  = P( (!" " ~ AnyChar).rep.! )
