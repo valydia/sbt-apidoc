@@ -115,16 +115,15 @@ class ParserSpec extends FlatSpec {
     val localJson = result.get.apply("local")
     assert(localJson("type") === Js.Str("get"))
     assert(localJson("url") === Js.Str("/user/:id"))
-    assert(localJson("title") === Js.Null)
   }
 
   val apidefineTestCases =
     Table(
       ("content", "name", "title", "description"),
-      ("admin This title is visible in version 0.1.0 and 0.2.0", Js.Str("admin"): Js.Value, Js.Str("This title is visible in version 0.1.0 and 0.2.0"): Js.Value, Js.Null: Js.Value),
+      ("admin This title is visible in version 0.1.0 and 0.2.0", Js.Str("admin"): Js.Value, Js.Str("This title is visible in version 0.1.0 and 0.2.0"): Js.Value, None),
       ("admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.",
         Js.Str("admin"): Js.Value, Js.Str("Admin access rights needed."): Js.Value,
-        Js.Str(renderMarkDown("Optionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.")): Js.Value))
+        Some(Js.Str(renderMarkDown("Optionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.")))))
 
   it should "parse apidefine element" in {
     forAll(apidefineTestCases) { (content, name, title, description) =>
@@ -132,7 +131,7 @@ class ParserSpec extends FlatSpec {
       val defineJson = result.get.apply("global")("define")
       assert(defineJson("name") === name)
       assert(defineJson("title") === title)
-      assert(defineJson("description") === description)
+      description.foreach(s => assert(defineJson("description") === s))
     }
   }
 
@@ -234,12 +233,12 @@ class ParserSpec extends FlatSpec {
   val apiParamTestCase =
     Table(
       ("content", "group", "type", "optional", "field", "defaultValue", "size", "allowedValue", "description"),
-      ("{String} country=\"DE\" Mandatory with default value \"DE\".", "Parameter", Js.Str("String"), Js.Bool(false), Js.Str("country"), Js.Str("DE"), Js.Null, Js.Null, Js.Str(renderMarkDown("Mandatory with default value \"DE\"."))),
-      ("{String} lastname     Mandatory Lastname.", "Parameter", Js.Str("String"), Js.Bool(false), Js.Str("lastname"), Js.Null, Js.Null, Js.Null, Js.Str(renderMarkDown("Mandatory Lastname."))),
-      ("simple", "Parameter", Js.Null, Js.Bool(false), Js.Str("simple"), Js.Null, Js.Null, Js.Null, Js.Null),
-      ("{String} name The users name.", "Parameter", Js.Str("String"), Js.Bool(false), Js.Str("name"), Js.Null, Js.Null, Js.Null, Js.Str(renderMarkDown("The users name."))),
-      ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  [ \\MyClass\\field.user_first-name = \'John Doe\' ] Some description.", "MyGroup", Js.Str("\\Object\\String.uni-code_char[]"), Js.Bool(true), Js.Str("\\MyClass\\field.user_first-name"), Js.Str("John Doe"), Js.Str("1..10"), Js.Arr("\'abc\'", "\'def\'"), Js.Str(renderMarkDown("Some description."))),
-      ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  \\MyClass\\field.user_first-name = John_Doe Some description.", "MyGroup", Js.Str("\\Object\\String.uni-code_char[]"), Js.Bool(false), Js.Str("\\MyClass\\field.user_first-name"), Js.Str("John_Doe"), Js.Str("1..10"), Js.Arr("\'abc\'", "\'def\'"), Js.Str(renderMarkDown("Some description."))))
+      ("{String} country=\"DE\" Mandatory with default value \"DE\".", "Parameter", Some(Js.Str("String")), Js.Bool(false), Js.Str("country"), Some(Js.Str("DE")), None, None, Some(Js.Str(renderMarkDown("Mandatory with default value \"DE\".")))),
+      ("{String} lastname     Mandatory Lastname.", "Parameter", Some(Js.Str("String")), Js.Bool(false), Js.Str("lastname"), None, None, None, Some(Js.Str(renderMarkDown("Mandatory Lastname.")))),
+      ("simple", "Parameter", None, Js.Bool(false), Js.Str("simple"), None, None, None, None),
+      ("{String} name The users name.", "Parameter", Some(Js.Str("String")), Js.Bool(false), Js.Str("name"), None, None, None, Some(Js.Str(renderMarkDown("The users name.")))),
+      ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  [ \\MyClass\\field.user_first-name = \'John Doe\' ] Some description.", "MyGroup", Some(Js.Str("\\Object\\String.uni-code_char[]")), Js.Bool(true), Js.Str("\\MyClass\\field.user_first-name"), Some(Js.Str("John Doe")), Some(Js.Str("1..10")), Some(Js.Arr("\'abc\'", "\'def\'")), Some(Js.Str(renderMarkDown("Some description.")))),
+      ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  \\MyClass\\field.user_first-name = John_Doe Some description.", "MyGroup", Some(Js.Str("\\Object\\String.uni-code_char[]")), Js.Bool(false), Js.Str("\\MyClass\\field.user_first-name"), Some(Js.Str("John_Doe")), Some(Js.Str("1..10")), Some(Js.Arr("\'abc\'", "\'def\'")), Some(Js.Str(renderMarkDown("Some description.")))))
 
   it should "parse apiparam element" in {
     forAll(apiParamTestCase) { (content, group, `type`, optional, field, defaultValue, size, allowedValue, description) =>
@@ -247,13 +246,13 @@ class ParserSpec extends FlatSpec {
       val result = apiParam(content)
       val parameterJson = result.get.apply("local")("parameter")("fields")(group)(0)
       assert(parameterJson("group") === Js.Str(group))
-      assert(parameterJson("type") === `type`)
+      `type`.foreach(t => assert(parameterJson("type") === t))
       assert(parameterJson("optional") === optional)
       assert(parameterJson("field") === field)
-      assert(parameterJson("defaultValue") === defaultValue)
-      assert(parameterJson("size") === size)
-      assert(parameterJson("allowedValue") === allowedValue)
-      assert(parameterJson("description") === description)
+      defaultValue.foreach(dv => assert(parameterJson("defaultValue") === dv))
+      size.foreach(s => assert(parameterJson("size") === s))
+      allowedValue.foreach(aw => assert(parameterJson("allowedValue") === aw))
+      description.foreach(d => assert(parameterJson("description") === d))
     }
   }
 
@@ -265,9 +264,6 @@ class ParserSpec extends FlatSpec {
     assert(parameterJson("type") === Js.Str("String"))
     assert(parameterJson("optional") === Js.Bool(false))
     assert(parameterJson("field") === Js.Str("firstname"))
-    assert(parameterJson("defaultValue") === Js.Null)
-    assert(parameterJson("size") === Js.Null)
-    assert(parameterJson("allowedValue") === Js.Null)
     assert(parameterJson("description") === Js.Str(renderMarkDown("Firstname of the User.")))
   }
 
