@@ -6,6 +6,8 @@ import ujson.Js
 import com.gilt.gfc.semver.SemVer
 import ujson.Js.Value
 
+import scala.collection.mutable
+
 case class ErrorMessage(element: String, usage: String, example: String)
 
 /**
@@ -71,7 +73,7 @@ class ApiGroupWorker extends ApiParamTitleWorker {
                   case Js.Str(g) => g
                   case _ => filename
                 }
-              merge(block, Js.Obj("local" -> Js.Obj("target" -> group.replaceAll("""[^\w]""", "_"))))
+              merge(block, Js.Obj("local" -> Js.Obj(target -> group.replaceAll("""[^\w]""", "_"))))
             }
 
           val localTarget: Js.Value = namedBlock("local").obj.getOrElse(target, Js.Null)
@@ -88,8 +90,12 @@ class ApiGroupWorker extends ApiParamTitleWorker {
               if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null)
                 Js.Obj("title" -> localTarget)
               else Worker.matchData(preProcess, source, name, version)
+            val map = new mutable.LinkedHashMap[String, Js.Value]()
+            map.put("groupTitle", matchedData("title"))
+            matchedData.obj.get("description").foreach(s => map.put("groupDescription", s))
+            val newValue =
+              Js.Obj("local" -> Js.Obj.from(map))
 
-            val newValue = Js.Obj("local" -> Js.Obj("groupTitle" -> matchedData("title"), "groupDescription" -> matchedData.obj.getOrElse("description", Js.Null)))
             merge(namedBlock, newValue)
 
           }
@@ -251,10 +257,11 @@ class ApiPermissionWorker extends ApiParamTitleWorker {
 
               val metadata =
                 if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null) {
-                  Js.Obj(
-                    "name" -> name,
-                    "title" -> definition.obj.getOrElse("title", Js.Null),
-                    "description" -> definition.obj.getOrElse("description", ""))
+                  val map = new mutable.LinkedHashMap[String, Js.Value]()
+                  map.put("name", name)
+                  definition.obj.get("title").foreach(t => map.put("title", t))
+                  map.put("description", definition.obj.getOrElse("description", ""))
+                  Js.Obj.from(map)
                 } else Worker.matchData(preProcess, source, name, version)
               merge(permission, Js.Arr(metadata))
           }
@@ -288,8 +295,7 @@ class ApiSampleRequestWorker extends Worker {
     parsedFiles.arr.map { parsedFile =>
       parsedFile.arr.map { block =>
         val sampleBlock: Js.Value = block("local").obj.getOrElse(target, Js.Null)
-        if (sampleBlock == Js.Null) block
-        else {
+        if (sampleBlock != Js.Null) {
           val newBlock = sampleBlock match {
             case Js.Arr(entries) =>
               Js.Arr.from(entries
@@ -298,22 +304,26 @@ class ApiSampleRequestWorker extends Worker {
                     val Js.Str(url) = entry("url")
                     appendSampleUrl(url)
                 })
-            case _ =>
-              if (maybeSampleUrl.isDefined && block("local")("url") != Js.Null) {
-                val Some(sampleUrl) = maybeSampleUrl
-                val Js.Str(url) = block("local")("url")
-                val value = Js.Obj("url" -> (sampleUrl + url))
-                Js.Arr(value)
-              } else Js.Arr()
+            case _ => Js.Arr()
           }
-
           block("local")(target) = if (newBlock.arr.isEmpty) Js.Null else newBlock
           block
-
+        } else {
+          val newBlock =
+            if (maybeSampleUrl.isDefined && block("local").obj.getOrElse("url", Js.Null) != Js.Null) {
+              val Some(sampleUrl) = maybeSampleUrl
+              val Js.Str(url) = block("local")("url")
+              val value = Js.Obj("url" -> (sampleUrl + url))
+              Js.Arr(value)
+            } else Js.Arr()
+          block("local")(target) = if (newBlock.arr.isEmpty) Js.Null else newBlock
+          block
         }
 
       }
+
     }
+
   }
 }
 
@@ -400,7 +410,7 @@ class ApiUseWorker extends Worker {
           } else {
             val metadata = Worker.matchData(preProcess, source, name, version)
 
-            block("local")(target) = Js.Null
+            block("local").obj.remove(target)
             merge(block, Js.Obj("local" -> metadata))
           }
         }

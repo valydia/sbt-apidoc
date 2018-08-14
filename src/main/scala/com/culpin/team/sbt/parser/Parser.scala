@@ -76,7 +76,7 @@ object Parser {
               val map = new mutable.LinkedHashMap[String, Js.Value]()
               if (element.name.toLowerCase == "apiversion")
                 map.put("version", values("local")("version"))
-              map.put("index", (index + 1))
+              map.put("index", index + 1)
               merge(acc, merge(values, Js.Obj.from(map)))
             } getOrElse {
               //TODO what to log?????

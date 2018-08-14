@@ -207,7 +207,6 @@ class WorkerSpec extends FlatSpec {
     val permission6 = block6("local")("permission")(0)
 
     assert(permission6("name") === Js.Str("none"))
-    assert(permission6("title") === Js.Null)
     assert(permission6("description") === Js.Str(""))
 
     val (block1, block2, block3) = (file2(0), file2(1), file2(2))
@@ -221,13 +220,11 @@ class WorkerSpec extends FlatSpec {
     val permission2 = block2("local")("permission")(0)
 
     assert(permission2("name") === Js.Str("none"))
-    assert(permission2("title") === Js.Null)
     assert(permission2("description") === Js.Str(""))
 
     val permission3 = block3("local")("permission")(0)
 
     assert(permission3("name") === Js.Str("none"))
-    assert(permission3("title") === Js.Null)
     assert(permission3("description") === Js.Str(""))
 
     //      assert(JArray(l).diff(result).deleted === Js.Null)
