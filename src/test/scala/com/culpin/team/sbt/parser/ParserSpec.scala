@@ -62,6 +62,69 @@ class ParserSpec extends FlatSpec {
     assert(result === List("A simple class and objects to write tests against.", "Block 1\n@param arg", "@apiDefine admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.\n\n@apiVersion 0.3.0"))
   }
 
+  it should "parse comment block - 2" in {
+    val jennyFromDaBlock = """|/**
+                              |  * @apiDefine admin Admin access rights needed.
+                              |  * Optionally you can write here further Informations about the permission.
+                              |  *
+                              |  * An "apiDefinePermission"-block can have an "apiVersion", so you can attach the block to a specific version.
+                              |  *
+                              |  * @apiVersion 0.3.0
+                              |  */""".stripMargin
+
+    val List(commentBlock) = parseCommentBlocks(jennyFromDaBlock).toList
+    val expected = """|@apiDefine admin Admin access rights needed.
+                      |Optionally you can write here further Informations about the permission.
+                      |
+                      |An "apiDefinePermission"-block can have an "apiVersion", so you can attach the block to a specific version.
+                      |
+                      |@apiVersion 0.3.0""".stripMargin
+    assert(commentBlock === expected)
+  }
+
+  it should "parse elements - 2" in {
+    val block =
+      """|@apiDefine admin Admin access rights needed.
+         |Optionally you can write here further Informations about the permission.
+         |
+         |An "apiDefinePermission"-block can have an "apiVersion", so you can attach the block to a specific version.
+         |
+         |@apiVersion 0.3.0""".stripMargin
+
+    val List(result, _) = parseElement(block).toList
+
+    val mainString =
+      """|admin Admin access rights needed.
+         |Optionally you can write here further Informations about the permission.
+         |
+         |An "apiDefinePermission"-block can have an "apiVersion", so you can attach the block to a specific version.""".stripMargin
+
+    val elementTag = "apiDefine"
+    val expected = Element(s"@$elementTag $mainString", elementTag.toLowerCase, elementTag, mainString)
+    assert(result === expected)
+
+  }
+
+  it should "process elements" in {
+    val mainString =
+      """|admin Admin access rights needed.
+         |Optionally you can write here further Informations about the permission.
+         |
+         |An "apiDefinePermission"-block can have an "apiVersion", so you can attach the block to a specific version.""".stripMargin
+
+    val elementTag = "apiDefine"
+    val element = Element(s"@$elementTag $mainString", elementTag.toLowerCase, elementTag, mainString)
+
+    val result = processElements(Seq(Seq(element)), stubLogger)
+    println(result)
+    val global = result(0)("global")
+    val define = global("define")
+    assert(define("name") === Js.Str("admin"))
+    assert(define("title") === Js.Str("Admin access rights needed."))
+    assert(define("description") === Js.Str("<p>Optionally you can write here further Informations about the permission.</p> <p>An &quot;apiDefinePermission&quot;-block can have an &quot;apiVersion&quot;, so you can attach the block to a specific version.</p>"))
+
+  }
+
   //TODO rewrite using TableProperties
   it should "find element in block" in {
 

@@ -1,8 +1,12 @@
 package com.culpin.team.sbt
 
+import java.util.Collections
+
 import com.gilt.gfc.semver.SemVer
+import com.vladsch.flexmark.ext.typographic.TypographicExtension
+import com.vladsch.flexmark.formatter.internal.Formatter
 import ujson.Js
-import com.vladsch.flexmark.html.{ HtmlRenderer, HtmlRendererOptions }
+import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.util.options.MutableDataSet
 
@@ -71,15 +75,20 @@ object Util {
   }
 
   private[sbt] def renderMarkDown(value: String): String = {
-    val options = new MutableDataSet()
+
+    val options = new MutableDataSet().set(Parser.EXTENSIONS, Collections.singleton(TypographicExtension.create()))
+
     //TODO handle other blank line
     options.set[Integer](HtmlRenderer.MAX_TRAILING_BLANK_LINES, -1)
+//    options.set(HtmlRenderer.SOFT_BREAK, " ")
+    options.set(TypographicExtension.DOUBLE_QUOTE_OPEN, "&quot;")
+    options.set(TypographicExtension.DOUBLE_QUOTE_CLOSE, "&quot;")
 
     val parser = Parser.builder(options).build
     val renderer = HtmlRenderer.builder(options).build
 
     val document = parser.parse(value)
-    renderer.render(document)
+    renderer.render(document).replaceAll("</p>\n<p>", "</p> <p>") // FIXME hack
   }
 
   private[sbt] def renderMarkDownNoPTags(value: String): String =

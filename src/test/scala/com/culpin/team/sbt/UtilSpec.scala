@@ -64,4 +64,21 @@ class UtilSpec extends FlatSpec {
     assert(res === Js.Arr(block4, block2, block3, block1))
   }
 
+  it should "render markdown with soft break" in {
+
+    assert(Util.renderMarkDown("This is *Sparta*\n") === "<p>This is <em>Sparta</em></p>")
+  }
+
+  it should "render markdown and handle breaklines between p blocks" in {
+    val description =
+      """|Optionally you can write here further Informations about the permission.
+         |
+         |An "apiDefinePermission"-block can have an "apiVersion", so you can attach the block to a specific version.""".stripMargin
+
+    val expected =
+      "<p>Optionally you can write here further Informations about the permission.</p> <p>An &quot;apiDefinePermission&quot;-block can have an &quot;apiVersion&quot;, so you can attach the block to a specific version.</p>"
+
+    assert(Util.renderMarkDown(description) === expected)
+  }
+
 }
