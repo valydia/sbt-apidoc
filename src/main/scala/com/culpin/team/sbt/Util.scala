@@ -66,10 +66,10 @@ object Util {
         if (labelA.equals(labelB)) {
           val Js.Str(versionA) = a("version")
           val Js.Str(versionB) = b("version")
-          SemVer(versionA) >= SemVer(versionB)
-        } else {
+          SemVer(versionA) > SemVer(versionB)
+        } else
           labelA <= labelB
-        }
+
     }
     Js.Arr(sortedChildren)
   }
@@ -80,7 +80,7 @@ object Util {
 
     //TODO handle other blank line
     options.set[Integer](HtmlRenderer.MAX_TRAILING_BLANK_LINES, -1)
-//    options.set(HtmlRenderer.SOFT_BREAK, " ")
+    options.set(HtmlRenderer.SOFT_BREAK, " ")
     options.set(TypographicExtension.DOUBLE_QUOTE_OPEN, "&quot;")
     options.set(TypographicExtension.DOUBLE_QUOTE_CLOSE, "&quot;")
 

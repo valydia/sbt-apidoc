@@ -57,16 +57,19 @@ class UtilSpec extends FlatSpec {
     val block4 =
       Js.Obj("group" -> "abc", "name" -> "efg", "version" -> "3.1.1")
 
-    val blocks = Js.Arr(block1, block2, block3, block4)
+    val block5 =
+      Js.Obj("group" -> "group1", "name" -> "name1", "version" -> "0.1.1")
+
+    val blocks = Js.Arr(block1, block2, block3, block4, block5)
 
     val res = Util.sortBlocks(blocks)
 
-    assert(res === Js.Arr(block4, block2, block3, block1))
+    assert(res === Js.Arr(block4, block2, block3, block5, block1))
   }
 
   it should "render markdown with soft break" in {
 
-    assert(Util.renderMarkDown("This is *Sparta*\n") === "<p>This is <em>Sparta</em></p>")
+    assert(Util.renderMarkDown("Here you can describe the function.\nMultilines are possible.") === "<p>Here you can describe the function. Multilines are possible.</p>")
   }
 
   it should "render markdown and handle breaklines between p blocks" in {

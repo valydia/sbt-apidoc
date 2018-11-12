@@ -152,8 +152,10 @@ object Parser {
       case (name, title, _description) =>
         val map = new mutable.LinkedHashMap[String, Js.Value]()
         map.put("name", renderMarkDownNoPTags(name))
-        title.foreach(t => map.put("title", t))
+        title.foreach(map.put("title", _))
         _description.foreach(d => map.put("description", Js.Str(renderMarkDown(unindent(d)))))
+//        val descritptionString = _description.fold(Js.Str(""))(d => Js.Str(renderMarkDown(unindent(d))))
+//        map.put("description", descritptionString)
         Js.Obj.from(map)
     }
 
@@ -267,8 +269,8 @@ object Parser {
   private val field: Parser[Js.Obj] = P( "[".!.? ~ " ".rep ~ CharIn(fieldCharacter).rep.! ~ defaultValue.? ~ " ".rep ~ "]".? ~ " ".rep) map {
     case (o, f, dv) =>
       val map = new mutable.LinkedHashMap[String, Js.Value]()
-      map.put("field", f)
       map.put("optional", o.isDefined)
+      map.put("field", f)
       dv.foreach(d => map.put("defaultValue", d))
       Js.Obj.from(map)
   }
@@ -314,6 +316,7 @@ object Parser {
   //FIXME
   private[parser] def apiSampleRequest(content: String): Option[Js.Obj] = {
     val url = trim(content)
+    println(s"URL ============== $content")
     if (url.isEmpty) None
     else
       Option(Js.Obj("local" -> Js.Obj("sampleRequest" -> Js.Arr(Js.Obj("url" -> url)))))

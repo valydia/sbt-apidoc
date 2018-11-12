@@ -292,35 +292,49 @@ class ApiSampleRequestWorker extends Worker {
       }
     }
 
-    parsedFiles.arr.map { parsedFile =>
-      parsedFile.arr.map { block =>
-        val sampleBlock: Js.Value = block("local").obj.getOrElse(target, Js.Null)
-        if (sampleBlock != Js.Null) {
-          val newBlock = sampleBlock match {
-            case Js.Arr(entries) =>
-              Js.Arr.from(entries
-                .collect {
-                  case entry if !entry("url").str.equals("off") =>
-                    val Js.Str(url) = entry("url")
-                    appendSampleUrl(url)
-                })
-            case _ => Js.Arr()
-          }
-          block("local")(target) = if (newBlock.arr.isEmpty) Js.Null else newBlock
-          block
-        } else {
-          val newBlock =
-            if (maybeSampleUrl.isDefined && block("local").obj.getOrElse("url", Js.Null) != Js.Null) {
-              val Some(sampleUrl) = maybeSampleUrl
-              val Js.Str(url) = block("local")("url")
-              val value = Js.Obj("url" -> (sampleUrl + url))
-              Js.Arr(value)
-            } else Js.Arr()
-          block("local")(target) = if (newBlock.arr.isEmpty) Js.Null else newBlock
-          block
-        }
+    parsedFiles.arr.foldLeft(Js.Arr()) {
+      case (acc, parsedFile) =>
+        parsedFile.arr.foldLeft(Js.Arr()) {
+          case (a, block) =>
+            val sampleBlock: Js.Value = block("local").obj.getOrElse(target, Js.Null)
+            println(s"sampleBlock ========= $sampleBlock")
+            if (sampleBlock != Js.Null) {
+              println(s"1 =========")
+              val newBlock = sampleBlock match {
+                case Js.Arr(entries) =>
+                  println(s"1a ========= $entries")
+                  Js.Arr.from(entries
+                    .collect {
+                      case entry if !entry("url").str.equals("off") =>
+                        val Js.Str(url) = entry("url")
+                        println(s"Work Work Work ========== $url")
+                        appendSampleUrl(url)
+                    })
+                case _ =>
+                  println(s"1b ========= ")
+                  Js.Arr()
+              }
+              //          block("local")(target) = if (newBlock.arr.isEmpty) Js.Null else newBlock
+              val result = Js.Obj(block.obj)
+              result("local")(target) = if (newBlock.arr.isEmpty) Js.Null else newBlock
+              a.arr += result
+            } else {
+val newBlock =
+                        if (maybeSampleUrl.isDefined && block("local").obj.getOrElse("url", Js.Null) != Js.Null) {
+                          val Some(sampleUrl) = maybeSampleUrl
+                          val Js.Str(url) = block("local")("url")
+                          val value = Js.Obj("url" -> (sampleUrl + url))
+                          block("local")(target) = Js.Arr(value)
+                          block
+                        } else {
+                          block
+                        }
+            }
+            acc.arr += a
+            a
 
-      }
+        }
+        acc
 
     }
 
@@ -437,6 +451,7 @@ object Worker {
     new ApiSuccessTitleWorker,
     new ApiUseWorker)
 
+  //FIXME
   def matchData(preProcess: Js.Value, source: String, name: String, version: String): Js.Value = {
     preProcess(source)(name).obj.getOrElse(version, {
 
@@ -447,8 +462,8 @@ object Worker {
       var lastVersion = "0.0.0"
       versionKeys.zipWithIndex.foreach {
         case (currentVersion, versionIndex) =>
-          if (((SemVer(version) compareTo SemVer(currentVersion)) > 0) &&
-            ((SemVer(currentVersion) compareTo SemVer(lastVersion)) > 0)) {
+          if ((SemVer(version) >= SemVer(currentVersion)) &&
+            (SemVer(currentVersion) >= SemVer(lastVersion))) {
             foundIndex = versionIndex
             lastVersion = currentVersion
           }

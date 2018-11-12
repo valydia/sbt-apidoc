@@ -14,7 +14,7 @@ function getUser() { return; }
 
 /**
  * @api {get} /car/:id Read data of a User
- * @apiVersion 0.3.0
+ * @apiVersion 0.2.0
  * @apiName GetCar
  * @apiPermission admin
  *
@@ -27,7 +27,7 @@ function getCar() { return; }
 
 /**
  * @api {get} /book/:id Read data of a User
- * @apiVersion 0.3.0
+ * @apiVersion 0.1.0
  * @apiName GetBook
  * @apiPermission admin
  *

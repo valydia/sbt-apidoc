@@ -10,5 +10,5 @@ trait SbtApidocKeys {
   lazy val apidocDescription = settingKey[String]("The Description of the API")
   lazy val apidocURL = settingKey[Option[URL]]("The url of the API")
   lazy val apidocSampleURL = settingKey[Option[URL]]("If set, a form to test an api method (send a request) will be visible")
-  lazy val apidocVersion = settingKey[Option[String]]("The version of the API")
+  lazy val apidocVersion = settingKey[Option[String]]("The default version of the API")
 }

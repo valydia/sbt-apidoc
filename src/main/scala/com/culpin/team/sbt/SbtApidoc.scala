@@ -7,11 +7,14 @@ import sbt.plugins.JvmPlugin
 import sbt.{ IO, Logger, _ }
 import ujson.Js
 
+import scala.collection.mutable
+
 case class Config(
   name: String,
   title: String,
   description: String,
-  version: String,
+  defaultVersion: String,
+  apidocVersion: Option[String],
   url: Option[String],
   sampleUrl: Option[String])
 
@@ -43,7 +46,8 @@ object SbtApidoc extends AutoPlugin {
       apidocName.value,
       apidocTitle.value,
       apidocDescription.value,
-      apidocVersion.value.getOrElse("0.0.0"),
+      Option(version.value).getOrElse("0.0.0"),
+      apidocVersion.value.filter(_.nonEmpty),
       apidocURL.value.map(_.toString),
       apidocSampleURL.value.map(_.toString))
 
@@ -59,21 +63,27 @@ object SbtApidoc extends AutoPlugin {
 
   def run(sourceFiles: List[File], apidocConfig: Config, log: Logger): Option[(String, String)] = {
     val (parsedFiles, filenames) = Parser(sourceFiles, log)
+    //    log.info(parsedFiles.render(2))
+    println("So Missing again -------> Yoyoyoyoyooy")
     val processedFiles = Worker(parsedFiles, filenames, apidocConfig.sampleUrl)
     val sortedFiles = Util.sortBlocks(filter(processedFiles))
     if (sortedFiles.arr.isEmpty || sortedFiles.arr.forall(_ == Js.Null)) None
     else {
+      //Weird JS bullshit going on
+      val sampleUrl: Js.Value = apidocConfig.sampleUrl.fold(Js.Bool(false): Js.Value)(Js.Str.apply)
+      //TODO Test config
+      val map =
+        mutable.LinkedHashMap(
+          "name" -> Js.Str(apidocConfig.name),
+          "title" -> Js.Str(apidocConfig.title),
+          "description" -> Js.Str(apidocConfig.description),
+          "version" -> Js.Str(apidocConfig.defaultVersion),
+          "sampleUrl" -> sampleUrl)
+      apidocConfig.url.foreach(v => map.put("url", Js.Str(v)))
+      apidocConfig.apidocVersion.foreach(v => map.put("apidoc", Js.Str(v)))
 
-      val config = Js.Obj(
-        "name" -> apidocConfig.name,
-        "title" -> apidocConfig.title,
-        "description" -> apidocConfig.description,
-        "version" -> apidocConfig.version,
-        "url" -> apidocConfig.url.fold("")(identity),
-        "sampleUrl" -> apidocConfig.sampleUrl.fold("")(identity),
-        "template" -> Js.Obj(
-          "withCompare" -> true,
-          "withGenerator" -> true))
+      val config = Js.Obj(map)
+
       Some((sortedFiles.render(2), config.render(2)))
     }
   }
