@@ -2,21 +2,20 @@ package com.culpin.team.sbt
 
 import com.culpin.team.sbt.parser.Parser
 import com.culpin.team.sbt.worker.Worker
-import sbt.Keys.{ name, version, _ }
+import sbt.Keys.{name, version, _}
 import sbt.plugins.JvmPlugin
-import sbt.{ IO, Logger, _ }
+import sbt.{IO, Logger, _}
 import ujson.Js
 
 import scala.collection.mutable
 
-case class Config(
-  name: String,
-  title: String,
-  description: String,
-  defaultVersion: String,
-  apidocVersion: Option[String],
-  url: Option[String],
-  sampleUrl: Option[String])
+case class Config(name: String,
+                  title: String,
+                  description: String,
+                  defaultVersion: String,
+                  apidocVersion: Option[String],
+                  url: Option[String],
+                  sampleUrl: Option[String])
 
 object SbtApidoc extends AutoPlugin {
 
@@ -34,9 +33,11 @@ object SbtApidoc extends AutoPlugin {
     apidocOutputDir := target.value / "apidoc",
     apidocDescription := "",
     apidocURL := None,
-    apidocSampleURL := None)
+    apidocSampleURL := None
+  )
 
-  override lazy val projectSettings: Seq[Setting[_]] = defaultSettings ++ Seq(apidocSetting)
+  override lazy val projectSettings: Seq[Setting[_]] = defaultSettings ++ Seq(
+    apidocSetting)
 
   def apidocSetting: Setting[_] = apidoc := {
 
@@ -49,7 +50,8 @@ object SbtApidoc extends AutoPlugin {
       Option(version.value).getOrElse("0.0.0"),
       apidocVersion.value.filter(_.nonEmpty),
       apidocURL.value.map(_.toString),
-      apidocSampleURL.value.map(_.toString))
+      apidocSampleURL.value.map(_.toString)
+    )
 
     val sourceFiles = (sources in Compile).value.toList
     val result =
@@ -61,16 +63,17 @@ object SbtApidoc extends AutoPlugin {
     result
   }
 
-  def run(sourceFiles: List[File], apidocConfig: Config, log: Logger): Option[(String, String)] = {
+  def run(sourceFiles: List[File],
+          apidocConfig: Config,
+          log: Logger): Option[(String, String)] = {
     val (parsedFiles, filenames) = Parser(sourceFiles, log)
-    //    log.info(parsedFiles.render(2))
-    println("So Missing again -------> Yoyoyoyoyooy")
     val processedFiles = Worker(parsedFiles, filenames, apidocConfig.sampleUrl)
     val sortedFiles = Util.sortBlocks(filter(processedFiles))
     if (sortedFiles.arr.isEmpty || sortedFiles.arr.forall(_ == Js.Null)) None
     else {
       //Weird JS bullshit going on
-      val sampleUrl: Js.Value = apidocConfig.sampleUrl.fold(Js.Bool(false): Js.Value)(Js.Str.apply)
+      val sampleUrl: Js.Value =
+        apidocConfig.sampleUrl.fold(Js.Bool(false): Js.Value)(Js.Str.apply)
       //TODO Test config
       val map =
         mutable.LinkedHashMap(
@@ -78,7 +81,8 @@ object SbtApidoc extends AutoPlugin {
           "title" -> Js.Str(apidocConfig.title),
           "description" -> Js.Str(apidocConfig.description),
           "version" -> Js.Str(apidocConfig.defaultVersion),
-          "sampleUrl" -> sampleUrl)
+          "sampleUrl" -> sampleUrl
+        )
       apidocConfig.url.foreach(v => map.put("url", Js.Str(v)))
       apidocConfig.apidocVersion.foreach(v => map.put("apidoc", Js.Str(v)))
 
@@ -93,20 +97,26 @@ object SbtApidoc extends AutoPlugin {
     Js.Arr(parsedFiles.arr flatMap {
       case Js.Arr(parsedFile) =>
         parsedFile.collect {
-          case block if block("global").obj.isEmpty && block("local").obj.nonEmpty => block("local")
+          case block
+              if block("global").obj.isEmpty && block("local").obj.nonEmpty =>
+            block("local")
         }
 
       case _ => mutable.ArrayBuffer[Js.Value]()
     })
   }
 
-  def generateApidoc(apiData: String, apiProject: String, apidocOutput: File, log: Logger): File = {
+  def generateApidoc(apiData: String,
+                     apiProject: String,
+                     apidocOutput: File,
+                     log: Logger): File = {
 
     val relativePath = apidocOutput.getParentFile.getName + "/" + apidocOutput.getName
 
     log.info(s"copy template to $relativePath")
 
-    val templateStream = getClass.getClassLoader.getResourceAsStream("template.zip")
+    val templateStream =
+      getClass.getClassLoader.getResourceAsStream("template.zip")
 
     val tmp = IO.createTemporaryDirectory
     IO.unzipStream(templateStream, tmp)
@@ -119,13 +129,15 @@ object SbtApidoc extends AutoPlugin {
     IO.write(apidocOutput / "api_data.json", apiData + "\n")
 
     log.info(s"write js file: $relativePath/api_data.js")
-    IO.write(apidocOutput / "api_data.js", "define({ \"api\":  " + apiData + "  });" + "\n")
+    IO.write(apidocOutput / "api_data.js",
+             "define({ \"api\":  " + apiData + "  });" + "\n")
 
     log.info(s"write json file: $relativePath/api_project.json")
     IO.write(apidocOutput / "api_project.json", apiProject + "\n")
 
     log.info(s"write js file: $relativePath/api_project.js")
-    IO.write(apidocOutput / "api_project.js", "define( " + apiProject + " );" + "\n")
+    IO.write(apidocOutput / "api_project.js",
+             "define( " + apiProject + " );" + "\n")
 
     log.info("Generated output into folder " + relativePath)
     apidocOutput

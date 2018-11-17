@@ -1,5 +1,3 @@
-import scalariform.formatter.preferences._
-
 name := """sbt-apidoc"""
 organization := "com.culpin.team"
 version := "0.5.3-SNAPSHOT"
@@ -26,6 +24,3 @@ scriptedLaunchOpts ++=
   Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
 
 scriptedBufferLog := false
-
-//Scalariform
-scalariformPreferences := scalariformPreferences.value
