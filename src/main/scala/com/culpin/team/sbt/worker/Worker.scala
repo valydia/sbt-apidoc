@@ -283,7 +283,7 @@ class ApiSampleRequestWorker extends Worker {
     parsedFiles: Js.Arr, fileNames: List[String], maybeSampleUrl: Option[String],
     preProcess: Value, source: String = "",
     target: String = "sampleRequest", errorMessage: ErrorMessage = ErrorMessage("", "", "")): Js.Arr = {
-    //FIXME
+
     def appendSampleUrl(url: String): Js.Obj = {
       maybeSampleUrl match {
         case Some(sampleUrl) if url.length >= 4 && !url.toLowerCase.startsWith("http") =>
@@ -292,53 +292,38 @@ class ApiSampleRequestWorker extends Worker {
       }
     }
 
-    parsedFiles.arr.foldLeft(Js.Arr()) {
-      case (acc, parsedFile) =>
-        parsedFile.arr.foldLeft(Js.Arr()) {
-          case (a, block) =>
-            val sampleBlock: Js.Value = block("local").obj.getOrElse(target, Js.Null)
-            println(s"sampleBlock ========= $sampleBlock")
-            if (sampleBlock != Js.Null) {
-              println(s"1 =========")
-              val newBlock = sampleBlock match {
-                case Js.Arr(entries) =>
-                  println(s"1a ========= $entries")
-                  Js.Arr.from(entries
-                    .collect {
-                      case entry if !entry("url").str.equals("off") =>
-                        val Js.Str(url) = entry("url")
-                        println(s"Work Work Work ========== $url")
-                        appendSampleUrl(url)
-                    })
-                case _ =>
-                  println(s"1b ========= ")
-                  Js.Arr()
-              }
-              //          block("local")(target) = if (newBlock.arr.isEmpty) Js.Null else newBlock
-              val result = Js.Obj(block.obj)
-              result("local")(target) = if (newBlock.arr.isEmpty) Js.Null else newBlock
-              a.arr += result
-            } else {
-val newBlock =
-                        if (maybeSampleUrl.isDefined && block("local").obj.getOrElse("url", Js.Null) != Js.Null) {
-                          val Some(sampleUrl) = maybeSampleUrl
-                          val Js.Str(url) = block("local")("url")
-                          val value = Js.Obj("url" -> (sampleUrl + url))
-                          block("local")(target) = Js.Arr(value)
-                          block
-                        } else {
-                          block
-                        }
-            }
-            acc.arr += a
-            a
+    parsedFiles.arr.map { parsedFile =>
+      parsedFile.arr.map { block =>
+        val sampleBlock: Js.Value = block("local").obj.getOrElse(target, Js.Null)
+        if (sampleBlock != Js.Null) {
+          sampleBlock match {
+            case Js.Arr(entries) =>
+              val newTarget =
+                Js.Arr.from(entries
+                  .collect {
+                    case entry if !entry("url").str.equals("off") =>
+                      val Js.Str(url) = entry("url")
+                      appendSampleUrl(url)
+                  })
+              block("local")(target) = newTarget
+            case _ => //silently ignore
+          }
+          block
+        } else {
 
+          if (maybeSampleUrl.isDefined && block("local").obj.getOrElse("url", Js.Null) != Js.Null) {
+            val Some(sampleUrl) = maybeSampleUrl
+            val Js.Str(url) = block("local")("url")
+            val value = Js.Obj("url" -> (sampleUrl + url))
+            block("local")(target) = Js.Arr(value)
+          }
+          block
         }
-        acc
+      }
 
     }
-
   }
+
 }
 
 class ApiStructureWorker extends ApiUseWorker {
@@ -363,9 +348,6 @@ class ApiSuccessStructureWorker extends ApiUseWorker {
 class ApiSuccessTitleWorker extends ApiParamTitleWorker {
   override def preProcess(parsedFiles: Js.Arr, target: String = "defineSuccessTitle")(source: String): Value =
     super.preProcess(parsedFiles, target)(source)
-
-  //  override def postProcess(parsedFiles: Js.Arr, fileNames: List[String], maybeSampleUrl: Option[String], preProcess: Value, source: String = "defineSuccessStructure", target: String = "successStructure", errorMessage: ErrorMessage): Js.Arr =
-  //    super.postProcess(parsedFiles, fileNames, maybeSampleUrl, preProcess, source, target, errorMessage)
 
 }
 

@@ -4,7 +4,6 @@ import java.util.Collections
 
 import com.gilt.gfc.semver.SemVer
 import com.vladsch.flexmark.ext.typographic.TypographicExtension
-import com.vladsch.flexmark.formatter.internal.Formatter
 import ujson.Js
 import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser

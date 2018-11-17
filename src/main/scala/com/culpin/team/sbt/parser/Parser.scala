@@ -154,8 +154,6 @@ object Parser {
         map.put("name", renderMarkDownNoPTags(name))
         title.foreach(map.put("title", _))
         _description.foreach(d => map.put("description", Js.Str(renderMarkDown(unindent(d)))))
-//        val descritptionString = _description.fold(Js.Str(""))(d => Js.Str(renderMarkDown(unindent(d))))
-//        map.put("description", descritptionString)
         Js.Obj.from(map)
     }
 
@@ -316,7 +314,6 @@ object Parser {
   //FIXME
   private[parser] def apiSampleRequest(content: String): Option[Js.Obj] = {
     val url = trim(content)
-    println(s"URL ============== $content")
     if (url.isEmpty) None
     else
       Option(Js.Obj("local" -> Js.Obj("sampleRequest" -> Js.Arr(Js.Obj("url" -> url)))))
