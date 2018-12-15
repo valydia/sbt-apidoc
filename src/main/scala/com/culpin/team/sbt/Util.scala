@@ -102,7 +102,8 @@ object Util {
     val renderer = HtmlRenderer.builder(options).build
 
     val document = parser.parse(value)
-    renderer.render(document).replaceAll("</p>\n<p>", "</p> <p>") // FIXME hack
+    // FIXME hack
+    renderer.render(document).replaceAll("</p>\n<p>", "</p> <p>")
   }
 
   private[sbt] def renderMarkDownNoPTags(value: String): String =
