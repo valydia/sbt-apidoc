@@ -1,7 +1,6 @@
 package com.culpin.team.sbt.worker
 
 import com.culpin.team.sbt.Util.merge
-import sbt.librarymanagement.VersionNumber
 import ujson.Js
 import com.gilt.gfc.semver.SemVer
 import ujson.Js.Value
@@ -563,21 +562,28 @@ class ApiUseWorker extends Worker {
           block("local").obj.getOrElse(target, Js.Null)
         if (localTarget == Js.Null) block
         else {
-          val Js.Str(name) = localTarget(0)("name")
-          val version =
-            block("version") match {
-              case Js.Str(v) => v
-              case _         => "0.0.0"
-            }
-          if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null) {
-            val Js.Num(index) = block("index")
-            val Js.Str(filename) = block("local")("filename")
-            ???
-          } else {
-            val metadata = Worker.matchData(preProcess, source, name, version)
+          localTarget.arr.foldLeft(block) { case (acc, definition) =>
+            val Js.Str(name) = definition("name")
+            val version =
+              acc("version") match {
+                case Js.Str(v) => v
+                case _         => "0.0.0"
+              }
+            if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null) {
+              val Js.Num(index) = acc("index")
+              val Js.Str(filename) = acc("local")("filename")
+              //FIXME Handle the error dem
+              ???
+            } else {
+              val metadata =
+                if (preProcess(source).obj.getOrElse(name, Js.Obj()).obj.getOrElse(version, Js.Null) != Js.Null) {
+                  preProcess(source)(name)(version)
+                }
+                else Worker.matchData(preProcess, source, name, version)
 
-            block("local").obj.remove(target)
-            merge(block, Js.Obj("local" -> metadata))
+              acc("local").obj.remove(target)
+              merge(acc, Js.Obj("local" -> metadata))
+            }
           }
         }
       }

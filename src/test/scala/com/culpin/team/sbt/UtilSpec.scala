@@ -5,7 +5,7 @@ import ujson.Js
 
 class UtilSpec extends FlatSpec {
 
-  "Util" should "merge json" in {
+  "Util" should "merge json giving precedence to the left side" in {
     val scala1 = ujson.read("""
     {
       "lang": "scala",
@@ -13,7 +13,7 @@ class UtilSpec extends FlatSpec {
       "tags": ["fp", "oo"],
       "features": {
         "key1":"val1",
-        "key2":"val2"
+        "key2":"oldval2"
       }
     }""")
 
@@ -35,7 +35,7 @@ class UtilSpec extends FlatSpec {
       "tags": ["fp", "oo", "static-typing"],
       "features": {
         "key1":"val1",
-        "key2":"newval2",
+        "key2":"oldval2",
         "key3":"val3"
       },
       "compiled": true

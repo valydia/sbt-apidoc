@@ -21,7 +21,7 @@ object Util {
       case (Js.Arr(xs), Js.Arr(ys)) => mergeVals(xs.toList, ys.toList)
       case (Js.Null, x)             => x
       case (x, Js.Null)             => x
-      case (_, y)                   => y
+      case (x, _)                   => x
     }
 
   private def mergeFields(
@@ -92,7 +92,6 @@ object Util {
       Parser.EXTENSIONS,
       Collections.singleton(TypographicExtension.create()))
 
-    //TODO handle other blank line
     options.set[Integer](HtmlRenderer.MAX_TRAILING_BLANK_LINES, -1)
     options.set(HtmlRenderer.SOFT_BREAK, " ")
     options.set(TypographicExtension.DOUBLE_QUOTE_OPEN, "&quot;")
