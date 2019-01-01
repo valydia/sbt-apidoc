@@ -1,5 +1,6 @@
 package com.culpin.team.sbt.parser
 
+import com.culpin.team.sbt.SbtApidoc.RelativeFilename
 import com.culpin.team.sbt.Util._
 import sbt.{File, IO, Logger}
 import ujson.Js
@@ -9,14 +10,15 @@ import scala.collection.mutable
 
 object Parser {
 
-  def apply(sourceFiles: List[File], log: Logger): (Js.Arr, List[String]) =
-    (sourceFiles.map { f =>
-      log.info("parse file: " + f.getName)
-      processFileContent(f, log)
-    }, sourceFiles map (_.getName))
+  def apply(sourceFileAndName: List[(File, RelativeFilename)], log: Logger): (Js.Arr, List[RelativeFilename]) =
+    (sourceFileAndName map { case (f, name) =>
+      log.info("parse file: " + name)
+      processFileContent(f, name, log)
+    }, sourceFileAndName.map(_._2))
 
-  private def processFileContent(file: File, log: Logger): Js.Arr = {
-    log.debug(s"inspect file ${file.getName}")
+
+  private def processFileContent(file: File, filename: RelativeFilename, log: Logger): Js.Arr = {
+    log.debug(s"inspect file $filename")
     log.debug(s"size: ${file.length} bytes")
     val commentBlocks = parseCommentBlocks(IO.read(file))
     if (commentBlocks.nonEmpty)

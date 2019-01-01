@@ -39,6 +39,8 @@ object SbtApidoc extends AutoPlugin {
   override lazy val projectSettings: Seq[Setting[_]] = defaultSettings ++ Seq(
     apidocSetting)
 
+  type RelativeFilename = String
+
   def apidocSetting: Setting[_] = apidoc := {
 
     val log = streams.value.log
@@ -53,9 +55,14 @@ object SbtApidoc extends AutoPlugin {
       apidocSampleURL.value.map(_.toString)
     )
 
-    val sourceFiles = (sources in Compile).value.toList
+    val projectDirectory = baseDirectory.value.getAbsolutePath
+
+    val sourceFileAndName =
+      (sources in Compile).value.toList map { f =>
+       f -> f.getAbsolutePath.replaceFirst(projectDirectory, ".")
+      }
     val result =
-      run(sourceFiles, config, log) map {
+      run(sourceFileAndName, config, log) map {
         case (apiData, apiProject) =>
           generateApidoc(apiData, apiProject, apidocOutputDir.value, log)
       }
@@ -63,10 +70,10 @@ object SbtApidoc extends AutoPlugin {
     result
   }
 
-  def run(sourceFiles: List[File],
+  def run(sourceFileAndName: List[(File, RelativeFilename)],
           apidocConfig: Config,
           log: Logger): Option[(String, String)] = {
-    val (parsedFiles, filenames) = Parser(sourceFiles, log)
+    val (parsedFiles, filenames) = Parser(sourceFileAndName, log)
     val processedFiles = Worker(parsedFiles, filenames, apidocConfig.sampleUrl)
     val sortedFiles = Util.sortBlocks(filter(processedFiles))
     if (sortedFiles.arr.isEmpty || sortedFiles.arr.forall(_ == Js.Null)) None

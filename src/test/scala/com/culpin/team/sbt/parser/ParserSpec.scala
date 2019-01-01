@@ -19,7 +19,8 @@ class ParserSpec extends FlatSpec {
     override def success(message: => String): Unit = ()
   }
   "Parser" should "parse empty files" in {
-    assert(Parser(List(new File(getClass.getResource("/NoApidocApplication.scala").getFile)), stubLogger) === (Js.Arr(Js.Arr()), List("NoApidocApplication.scala")))
+    val resourceFile = new File(getClass.getResource("/NoApidocApplication.scala").getFile)
+    assert(Parser(List(resourceFile -> "./relative/path/to/NoApidocApplication.scala"), stubLogger) === (Js.Arr(Js.Arr()), List("./relative/path/to/NoApidocApplication.scala")))
   }
 
   it should "parse comment block" in {

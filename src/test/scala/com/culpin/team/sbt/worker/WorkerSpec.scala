@@ -244,7 +244,8 @@ class WorkerSpec extends FlatSpec {
 
   it should " postprocess with sampleURL" in {
 
-    val (parsedFiles, filenames) = Parser(List(new File(getClass.getResource("/sampleRequest.js").getFile)), stubLogger)
+    val resourceFile = new File(getClass.getResource("/sampleRequest.js").getFile)
+    val (parsedFiles, filenames) = Parser(List(resourceFile -> "relativeFilename"), stubLogger)
 
     val worker = new ApiSampleRequestWorker
 
@@ -259,7 +260,8 @@ class WorkerSpec extends FlatSpec {
 
   it should " postprocess without sampleURL" in {
 
-    val (parsedFiles, filenames) = Parser(List(new File(getClass.getResource("/sampleRequest.js").getFile)), stubLogger)
+    val resourceFile = new File(getClass.getResource("/sampleRequest.js").getFile)
+    val (parsedFiles, filenames) = Parser(List(resourceFile -> "relativeFilename"), stubLogger)
 
     val worker = new ApiSampleRequestWorker
 
