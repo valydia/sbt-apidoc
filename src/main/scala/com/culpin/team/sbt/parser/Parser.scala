@@ -170,8 +170,7 @@ object Parser {
         val map = new mutable.LinkedHashMap[String, Js.Value]()
         map.put("name", renderMarkDownNoPTags(name))
         title.foreach(map.put("title", _))
-        _description.foreach(d =>
-          map.put("description", Js.Str(renderMarkDown(unindent(d)))))
+          map.put("description", Js.Str(_description.fold("")(d => renderMarkDown(unindent(d)))))
         Js.Obj.from(map)
     }
 

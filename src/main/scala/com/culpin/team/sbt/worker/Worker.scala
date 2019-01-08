@@ -378,8 +378,7 @@ class ApiPermissionWorker extends ApiParamTitleWorker {
                   val map = new mutable.LinkedHashMap[String, Js.Value]()
                   map.put("name", name)
                   definition.obj.get("title").foreach(t => map.put("title", t))
-                  map.put("description",
-                          definition.obj.getOrElse("description", ""))
+                  definition.obj.get("description").foreach(d => map.put("description", d))
                   Js.Obj.from(map)
                 } else Worker.matchData(preProcess, source, name, version)
               merge(permission, Js.Arr(metadata))
