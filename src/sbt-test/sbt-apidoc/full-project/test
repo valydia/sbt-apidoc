@@ -1,0 +1,10 @@
+# call the apidoc task
+> apidoc
+> check
+$ exists target/apidoc
+$ exists target/apidoc/api_data.js
+$ exists target/apidoc/api_project.js
+$ exists target/apidoc/api_data.json
+$ exists target/apidoc/api_project.json
+
+

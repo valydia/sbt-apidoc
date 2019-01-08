@@ -215,9 +215,9 @@ object Parser {
       case (t, title, content) =>
         Js.Arr(
           Js.Obj(
-            "type" -> t.getOrElse("json"),
             "title" -> title,
-            "content" -> unindent(content)
+            "content" -> unindent(content),
+            "type" -> t.fold("json")(identity)
           )
         )
     }
