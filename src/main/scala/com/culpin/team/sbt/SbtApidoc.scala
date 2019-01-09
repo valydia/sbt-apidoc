@@ -10,7 +10,7 @@ import ujson.Js
 import scala.collection.mutable
 
 case class Config(name: String,
-                  title: String,
+                  title: Option[String],
                   description: String,
                   defaultVersion: String,
                   apidocVersion: Option[String],
@@ -28,7 +28,7 @@ object SbtApidoc extends AutoPlugin {
 
   lazy val defaultSettings = List(
     apidocName := name.value,
-    apidocTitle := apidocName.value,
+    apidocTitle := None,
     apidocVersion := Option(version.value),
     apidocOutputDir := target.value / "apidoc",
     apidocDescription := "",
@@ -78,21 +78,30 @@ object SbtApidoc extends AutoPlugin {
     val sortedFiles = Util.sortBlocks(filter(processedFiles))
     if (sortedFiles.arr.isEmpty || sortedFiles.arr.forall(_ == Js.Null)) None
     else {
-      //Weird JS bullshit going on
+      //For some reason, the default value is set to false
       val sampleUrl: Js.Value =
         apidocConfig.sampleUrl.fold(Js.Bool(false): Js.Value)(Js.Str.apply)
-      //TODO Test config
-      val map =
-        mutable.LinkedHashMap(
-          "name" -> Js.Str(apidocConfig.name),
-          "title" -> Js.Str(apidocConfig.title),
-          "description" -> Js.Str(apidocConfig.description),
-          "version" -> Js.Str(apidocConfig.defaultVersion),
-          "sampleUrl" -> sampleUrl
-        )
-      apidocConfig.url.foreach(v => map.put("url", Js.Str(v)))
-      apidocConfig.apidocVersion.foreach(v => map.put("apidoc", Js.Str(v)))
 
+      val generator = Js.Obj(
+        "name" -> "sbt-apidoc",
+        "time" -> java.time.LocalDateTime.now().toString,
+        "url" -> "https://github.com/valydia/sbt-apidoc",
+        "version" -> "0.17.6"
+      )
+
+      val map =
+        mutable.LinkedHashMap[String, Js.Value](
+          "name" -> Js.Str(apidocConfig.name),
+          "version" -> Js.Str(apidocConfig.defaultVersion),
+          "description" -> Js.Str(apidocConfig.description),
+          "sampleUrl" -> sampleUrl,
+          "defaultVersion" -> Js.Str(apidocConfig.defaultVersion),
+          "apidoc" -> Js.Str("0.3.0") // see SPECIFICATION_VERSION,
+        )
+
+      apidocConfig.title.foreach(t => map.put("title", Js.Str(t)))
+      apidocConfig.url.foreach(v => map.put("url", Js.Str(v)))
+      map.put("generator", generator)
       val config = Js.Obj(map)
 
       Some((sortedFiles.render(2), config.render(2)))

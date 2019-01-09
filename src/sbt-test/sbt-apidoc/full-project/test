@@ -6,5 +6,6 @@ $ exists target/apidoc/api_data.js
 $ exists target/apidoc/api_project.js
 $ exists target/apidoc/api_data.json
 $ exists target/apidoc/api_project.json
+$ exists target/apidoc/css/style.css
 
 

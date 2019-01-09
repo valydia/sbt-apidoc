@@ -8,7 +8,7 @@ trait SbtApidocKeys {
   lazy val apidocOutputDir =
     settingKey[File]("The output directory of the apidoc")
   lazy val apidocName = settingKey[String]("The Name of the API")
-  lazy val apidocTitle = settingKey[String]("Browser title text.")
+  lazy val apidocTitle = settingKey[Option[String]]("Browser title text.")
   lazy val apidocDescription = settingKey[String]("The Description of the API")
   lazy val apidocURL = settingKey[Option[URL]]("The url of the API")
   lazy val apidocSampleURL = settingKey[Option[URL]](

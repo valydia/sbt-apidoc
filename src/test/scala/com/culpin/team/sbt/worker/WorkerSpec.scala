@@ -2,20 +2,13 @@ package com.culpin.team.sbt.worker
 
 import java.io.File
 
+import com.culpin.team.sbt.LoggerHelper
 import com.culpin.team.sbt.parser.Parser
 import org.scalatest.FlatSpec
-import sbt.util.{ Level, Logger }
 import ujson.Js
 
-class WorkerSpec extends FlatSpec {
+class WorkerSpec extends FlatSpec with LoggerHelper{
 
-  val stubLogger = new Logger {
-    override def log(level: Level.Value, message: => String): Unit = ()
-
-    override def trace(t: => Throwable): Unit = ()
-
-    override def success(message: => String): Unit = ()
-  }
 
   private def loadFixture(parsedFilesUrl: String = "/parsedFiles-filename.json", preprocessUrl: String = "/preprocess.json"): (Js.Arr, Js.Value) = {
     val preProcessFiles = new File(getClass.getResource(preprocessUrl).getFile)
