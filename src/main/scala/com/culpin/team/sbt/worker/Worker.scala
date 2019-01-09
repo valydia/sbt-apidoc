@@ -571,7 +571,7 @@ class ApiUseWorker extends Worker {
             if (preProcess(source).obj.getOrElse(name, Js.Null) == Js.Null) {
               val Js.Num(index) = acc("index")
               val Js.Str(filename) = acc("local")("filename")
-              //FIXME Handle the error dem
+              //FIXME Handle the error
               ???
             } else {
               val metadata =

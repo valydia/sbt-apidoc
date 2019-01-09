@@ -84,7 +84,7 @@ object Parser {
                 map.put("index", index + 1)
                 merge(acc, merge(values, Js.Obj.from(map)))
               } getOrElse {
-                //TODO what to log?????
+                //TODO what to log?
                 acc
               }
             } getOrElse {
