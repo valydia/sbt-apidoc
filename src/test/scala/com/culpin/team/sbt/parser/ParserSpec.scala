@@ -117,7 +117,6 @@ class ParserSpec extends FlatSpec {
     val element = Element(s"@$elementTag $mainString", elementTag.toLowerCase, elementTag, mainString)
 
     val result = processElements(Seq(Seq(element)), stubLogger)
-    println(result)
     val global = result(0)("global")
     val define = global("define")
     assert(define("name") === Js.Str("admin"))

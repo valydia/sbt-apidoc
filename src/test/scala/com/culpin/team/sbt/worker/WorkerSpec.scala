@@ -57,7 +57,7 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
     val (parsedFiles, preProcessJson) = loadFixture()
     val worker = new ApiParamTitleWorker
 
-    val result = worker.postProcess(parsedFiles, List(), None, preProcessJson)
+    val Right(result) = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), None, preProcessJson)
 
     assert(result === parsedFiles)
   }
@@ -74,7 +74,7 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
     assert(structure == Js.Obj())
   }
 
-  "ApiUseWorker" should " preProcess parsed Files 2" in {
+  it should " preProcess parsed Files 2" in {
 
     val file = new File(getClass.getResource("/parsedFiles.json").getFile)
     val jsonString = readFile(file)
@@ -106,12 +106,12 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
 
   }
 
-  "ApiUser Worker" should " postprocess" in {
+  it should " postprocess" in {
 
     val (parsedFiles, preProcessJson) = loadFixture("/apiuseBlocks.json", "/apiusePreprocess.json")
     val worker = new ApiUseWorker
 
-    val result = worker.postProcess(parsedFiles, List(), None, preProcessJson)
+    val Right(result) = worker.postProcess(parsedFiles, List("./path/to/my/File.scala"), None, preProcessJson)
     val error = result(0)(0)("local")("error")
 
     val error4XX = error("fields")("Error 4xx")
@@ -139,7 +139,7 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
     val (parsedFiles, preProcessJson) = loadFixture()
     val worker = new ApiGroupWorker
 
-    val result = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), None, preProcessJson)
+    val Right(result) =  worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), None, preProcessJson)
 
     val (file1, file2) = (result(0), result(1))
 
@@ -160,7 +160,7 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
     val (parsedFiles, preProcessJson) = loadFixture()
     val worker = new ApiNameWorker
 
-    val result = worker.postProcess(parsedFiles, List(), None, preProcessJson)
+    val Right(result) = worker.postProcess(parsedFiles, List("relativeFilename1","relativeFilename2"), None, preProcessJson)
 
     val (file1, file2) = (result(0), result(1))
 
@@ -180,7 +180,7 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
     val (parsedFiles, preProcessJson) = loadFixture()
     val worker = new ApiPermissionWorker
 
-    val result = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), None, preProcessJson)
+    val Right(result) = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), None, preProcessJson)
 
     val (file1, file2) = (result(0), result(1))
 
@@ -228,7 +228,7 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
     val (parsedFiles, preProcessJson) = loadFixture()
     val worker = new ApiSampleRequestWorker
 
-    val result = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), Option("https://api.github.com/v1"), preProcessJson)
+    val Right(result) = worker.postProcess(parsedFiles, List("_apidoc.js", "full-example.js"), Option("https://api.github.com/v1"), preProcessJson)
     assert(result === parsedFiles)
 
   }
@@ -240,7 +240,7 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
 
     val worker = new ApiSampleRequestWorker
 
-    val result = worker.postProcess(parsedFiles, filenames, Option("https://api.github.com/v1"), Js.Null)
+    val Right(result) = worker.postProcess(parsedFiles, filenames, Option("https://api.github.com/v1"), Js.Null)
 
     val file1 = result(0)
     val (block1, block2, block3) = (file1(0), file1(1), file1(2))
@@ -256,7 +256,7 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
 
     val worker = new ApiSampleRequestWorker
 
-    val result = worker.postProcess(parsedFiles, filenames, None, Js.Null)
+    val Right(result) = worker.postProcess(parsedFiles, filenames, None, Js.Null)
 
     val file1 = result(0)
     val (block1, block2, block3) = (file1(0), file1(1), file1(2))
@@ -279,7 +279,7 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
 
     val worker = new ApiSampleRequestWorker
 
-    val result = worker.postProcess(parsedFiles, List(), None, Js.Null)
+    val Right(result)= worker.postProcess(parsedFiles, List("relativeFilename"), None, Js.Null)
 
     assert(result === parsedFiles)
 

@@ -1,7 +1,9 @@
 package com.culpin.team.sbt
 
+import java.io
+
 import com.culpin.team.sbt.parser.Parser
-import com.culpin.team.sbt.worker.Worker
+import com.culpin.team.sbt.worker.{Worker, WorkerError}
 import sbt.Keys.{name, version, _}
 import sbt.plugins.JvmPlugin
 import sbt.{IO, Logger, _}
@@ -61,51 +63,63 @@ object SbtApidoc extends AutoPlugin {
       (sources in Compile).value.toList map { f =>
        f -> f.getAbsolutePath.replaceFirst(projectDirectory, ".")
       }
-    val result =
-      run(sourceFileAndName, config, log) map {
-        case (apiData, apiProject) =>
-          generateApidoc(apiData, apiProject, apidocOutputDir.value, log)
-      }
-    result.fold(log.info("Nothing to do."))(_ => log.info("Done."))
-    result
+
+    run(sourceFileAndName, config, log) match {
+        case Left(err) =>
+        log.error(err.message)
+        None
+      case Right(None) =>
+        log.info("Nothing to do.")
+        None
+      case Right(Some((apiData, apiProject))) =>
+        val result = generateApidoc(apiData, apiProject, apidocOutputDir.value, log)
+        log.info("Done.")
+        Some(result)
+    }
+
   }
 
   def run(sourceFileAndName: List[(File, RelativeFilename)],
           apidocConfig: Config,
-          log: Logger): Option[(String, String)] = {
+          log: Logger): Either[WorkerError, Option[(String, String)] ]= {
     val (parsedFiles, filenames) = Parser(sourceFileAndName, log)
     val processedFiles = Worker(parsedFiles, filenames, apidocConfig.sampleUrl)
-    val sortedFiles = Util.sortBlocks(filter(processedFiles))
-    if (sortedFiles.arr.isEmpty || sortedFiles.arr.forall(_ == Js.Null)) None
-    else {
-      //For some reason, the default value is set to false
-      val sampleUrl: Js.Value =
-        apidocConfig.sampleUrl.fold(Js.Bool(false): Js.Value)(Js.Str.apply)
+    val sortedFiles = processedFiles.map(pf => Util.sortBlocks(filter(pf)))
+    sortedFiles match {
+      case Left(value) => Left(value)
+      case Right(sf) =>
+        if (sf.arr.isEmpty || sf.arr.forall(_ == Js.Null)) Right(None)
+        else {
+          //For some reason, the default value is set to false
+          val sampleUrl: Js.Value =
+            apidocConfig.sampleUrl.fold(Js.Bool(false): Js.Value)(Js.Str.apply)
 
-      val generator = Js.Obj(
-        "name" -> "sbt-apidoc",
-        "time" -> java.time.LocalDateTime.now().toString,
-        "url" -> "https://github.com/valydia/sbt-apidoc",
-        "version" -> "0.17.6"
-      )
+          val generator = Js.Obj(
+            "name" -> "sbt-apidoc",
+            "time" -> java.time.LocalDateTime.now().toString,
+            "url" -> "https://github.com/valydia/sbt-apidoc",
+            "version" -> "0.17.6"
+          )
 
-      val map =
-        mutable.LinkedHashMap[String, Js.Value](
-          "name" -> Js.Str(apidocConfig.name),
-          "version" -> Js.Str(apidocConfig.defaultVersion),
-          "description" -> Js.Str(apidocConfig.description),
-          "sampleUrl" -> sampleUrl,
-          "defaultVersion" -> Js.Str(apidocConfig.defaultVersion),
-          "apidoc" -> Js.Str("0.3.0") // see SPECIFICATION_VERSION,
-        )
+          val map =
+            mutable.LinkedHashMap[String, Js.Value](
+              "name" -> Js.Str(apidocConfig.name),
+              "version" -> Js.Str(apidocConfig.defaultVersion),
+              "description" -> Js.Str(apidocConfig.description),
+              "sampleUrl" -> sampleUrl,
+              "defaultVersion" -> Js.Str(apidocConfig.defaultVersion),
+              "apidoc" -> Js.Str("0.3.0") // see SPECIFICATION_VERSION,
+            )
 
-      apidocConfig.title.foreach(t => map.put("title", Js.Str(t)))
-      apidocConfig.url.foreach(v => map.put("url", Js.Str(v)))
-      map.put("generator", generator)
-      val config = Js.Obj(map)
+          apidocConfig.title.foreach(t => map.put("title", Js.Str(t)))
+          apidocConfig.url.foreach(v => map.put("url", Js.Str(v)))
+          map.put("generator", generator)
+          val config = Js.Obj(map)
 
-      Some((sortedFiles.render(2), config.render(2)))
+          Right(Some((sf.render(2), config.render(2))))
+        }
     }
+
   }
 
   def filter(parsedFiles: Js.Arr): Js.Arr = {

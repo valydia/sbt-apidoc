@@ -10,7 +10,7 @@ class SbtapidocSpec extends FlatSpec with Matchers with LoggerHelper {
     val apidocName = "apidoc-example"
     val apidocDescription = "description"
     val config = Config(apidocName, None, apidocDescription, "0.0.0", None, None, None)
-    val Some((_, apiProjectString)) =  SbtApidoc.run(List(new File(getClass.getResource("/ApidocExample").getFile) -> "./the/path/ApidocExample"), config, stubLogger)
+    val Right(Some((_, apiProjectString))) =  SbtApidoc.run(List(new File(getClass.getResource("/ApidocExample").getFile) -> "./the/path/ApidocExample"), config, stubLogger)
     val apiProject = ujson.read(apiProjectString)
     assert(apiProject("name").str === apidocName)
     assert(apiProject("description").str === apidocDescription)
