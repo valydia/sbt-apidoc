@@ -2,7 +2,7 @@ package com.culpin.team.sbt.parser
 
 import com.culpin.team.sbt.SbtApidoc.RelativeFilename
 import com.culpin.team.sbt.Util._
-import sbt.{File, IO, Logger}
+import sbt.{ File, IO, Logger }
 import ujson.Js
 import fastparse.all._
 
@@ -10,12 +10,15 @@ import scala.collection.mutable
 
 object Parser {
 
-  def apply(sourceFileAndName: List[(File, RelativeFilename)], log: Logger): (Js.Arr, List[RelativeFilename]) =
-    (sourceFileAndName map { case (f, name) =>
-      log.info("parse file: " + name)
-      processFileContent(f, name, log)
+  def apply(
+    sourceFileAndName: List[(File, RelativeFilename)],
+    log: Logger
+  ): (Js.Arr, List[RelativeFilename]) =
+    (sourceFileAndName map {
+      case (f, name) =>
+        log.info("parse file: " + name)
+        processFileContent(f, name, log)
     }, sourceFileAndName.map(_._2))
-
 
   private def processFileContent(file: File, filename: RelativeFilename, log: Logger): Js.Arr = {
     log.debug(s"inspect file $filename")
@@ -36,28 +39,27 @@ object Parser {
 
   private val parserMap: Map[String, String => Option[Js.Obj]] =
     Map(
-      "api" -> api,
-      "apidefine" -> apiDefine,
-      "apidescription" -> apiDescription,
-      "apierror" -> apiError,
-      "apierrorexample" -> apiErrorExample,
-      "apiexample" -> apiExample,
-      "apigroup" -> apiGroup,
-      "apiheader" -> apiHeader,
-      "apiheaderexample" -> apiHeaderExample,
-      "apiname" -> apiName,
-      "apiparam" -> apiParam,
-      "apiparamexample" -> apiParamExample,
-      "apipermission" -> apiPermission,
-      "apisamplerequest" -> apiSampleRequest,
+      "api"               -> api,
+      "apidefine"         -> apiDefine,
+      "apidescription"    -> apiDescription,
+      "apierror"          -> apiError,
+      "apierrorexample"   -> apiErrorExample,
+      "apiexample"        -> apiExample,
+      "apigroup"          -> apiGroup,
+      "apiheader"         -> apiHeader,
+      "apiheaderexample"  -> apiHeaderExample,
+      "apiname"           -> apiName,
+      "apiparam"          -> apiParam,
+      "apiparamexample"   -> apiParamExample,
+      "apipermission"     -> apiPermission,
+      "apisamplerequest"  -> apiSampleRequest,
       "apisuccessexample" -> apiSuccessExample,
-      "apisuccess" -> apiSuccess,
-      "apiuse" -> apiUse,
-      "apiversion" -> apiVersion,
+      "apisuccess"        -> apiSuccess,
+      "apiuse"            -> apiUse,
+      "apiversion"        -> apiVersion,
     )
 
-  def processElements(detectedElements: Seq[Seq[Element]],
-                      log: Logger): Js.Arr = {
+  def processElements(detectedElements: Seq[Seq[Element]], log: Logger): Js.Arr = {
 
     def isApiBlock(elements: Seq[Element]): Boolean = {
       val apiIgnore = elements.exists { elem =>
@@ -88,8 +90,7 @@ object Parser {
                 acc
               }
             } getOrElse {
-              log.warn(
-                s"parser plugin '${element.name}' not found in block: $index")
+              log.warn(s"parser plugin '${element.name}' not found in block: $index")
               acc
             }
         }
@@ -100,15 +101,19 @@ object Parser {
     (!stringToExclude ~ AnyChar).rep
 
   private val commentChunk: Parser[Any] = P(
-    CharsWhile(c => c != '/' && c != '*') | multilineComment | !"*/" ~ AnyChar)
+    CharsWhile(c => c != '/' && c != '*') | multilineComment | !"*/" ~ AnyChar
+  )
   private lazy val multilineComment: Parser[String] = P(
-    "/**" ~ "\n".? ~ " ".rep() ~ "* " ~/ commentChunk.rep.! ~ "*/")
+    "/**" ~ "\n".? ~ " ".rep() ~ "* " ~/ commentChunk.rep.! ~ "*/"
+  )
   private val commentBlock: Parser[String] = P(
-    allCharBut("/**") ~ multilineComment ~ allCharBut("/**"))
+    allCharBut("/**") ~ multilineComment ~ allCharBut("/**")
+  )
 
   private val endOfCommentLine = P("\n" ~ " ".rep ~ "*".? ~ " ".?)
   private val startOfCommentBlock: Parser[Seq[String]] = P(
-    (!endOfCommentLine ~ AnyChar).rep.! ~ endOfCommentLine).rep
+    (!endOfCommentLine ~ AnyChar).rep.! ~ endOfCommentLine
+  ).rep
 
   //TODO use flatmap on parser
   private val fullComment = commentBlock map { comment =>
@@ -119,29 +124,24 @@ object Parser {
 
   private val commentBlocksParser: Parser[Seq[String]] = fullComment.rep
 
-  private[parser] def parseCommentBlocks(file: String): Seq[String] = {
-
+  private[parser] def parseCommentBlocks(file: String): Seq[String] =
     commentBlocksParser
       .parse(file)
       .fold(
         (_, _, _) => Seq(),
         (commentBlocks, _) => commentBlocks
       )
-  }
 
   private val identifier: Parser[String] = P(allCharBut(" ").!)
-  private val prefix: Parser[Unit] = allCharBut("@")
-  private val argument: Parser[String] = prefix.!.map(_.trim)
+  private val prefix: Parser[Unit]       = allCharBut("@")
+  private val argument: Parser[String]   = prefix.!.map(_.trim)
   private val elementParser: Parser[Element] =
     P(prefix ~ ("@" ~ identifier ~ " " ~ argument)).map {
       case (id, arg) => Element(s"@$id $arg", id.toLowerCase, id, arg)
     }
   private val elements: Parser[Seq[Element]] = elementParser.rep
 
-  case class Element(source: String,
-                     name: String,
-                     sourceName: String,
-                     content: String)
+  case class Element(source: String, name: String, sourceName: String, content: String)
 
   private[parser] def parseElement(block: String): Seq[Element] =
     elements
@@ -170,7 +170,7 @@ object Parser {
         val map = new mutable.LinkedHashMap[String, Js.Value]()
         map.put("name", renderMarkDownNoPTags(name))
         title.foreach(map.put("title", _))
-          map.put("description", Js.Str(_description.fold("")(d => renderMarkDown(unindent(d)))))
+        map.put("description", Js.Str(_description.fold("")(d => renderMarkDown(unindent(d)))))
         Js.Obj.from(map)
     }
 
@@ -198,25 +198,26 @@ object Parser {
       )
   }
 
-  private val trim: Parser[String] = P(CharIn("\r\n\t\f ").rep.? ~ (!(CharIn(
-    "\r\n\t\f ").rep ~ End) ~ AnyChar).rep.!)
-  def trim(str: String): String = {
+  private val trim: Parser[String] = P(
+    CharIn("\r\n\t\f ").rep.? ~ (!(CharIn("\r\n\t\f ").rep ~ End) ~ AnyChar).rep.!
+  )
+
+  def trim(str: String): String =
     trim
       .parse(str)
       .fold(
         (_, _, _) => str,
         (result, _) => result
       )
-  }
 
   private val apiExampleParser: Parser[Js.Value] =
     P(("{" ~ allCharBut("}").! ~ "}" ~ " ").? ~ allCharBut("\n").! ~ "\n" ~ AnyChar.rep.!) map {
       case (t, title, content) =>
         Js.Arr(
           Js.Obj(
-            "title" -> title,
+            "title"   -> title,
             "content" -> unindent(content),
-            "type" -> t.fold("json")(identity)
+            "type"    -> t.fold("json")(identity)
           )
         )
     }
@@ -231,17 +232,15 @@ object Parser {
       .parse(trim(content))
       .toOption("local", "header", "examples")
 
-  private[parser] def apiParamExample(content: String): Option[Js.Obj] = {
+  private[parser] def apiParamExample(content: String): Option[Js.Obj] =
     apiExampleParser
       .parse(trim(content))
       .toOption("local", "parameter", "examples")
-  }
 
-  private[parser] def apiSuccessExample(content: String): Option[Js.Obj] = {
+  private[parser] def apiSuccessExample(content: String): Option[Js.Obj] =
     apiExampleParser
       .parse(trim(content))
       .toOption("local", "success", "examples")
-  }
 
   private[parser] def apiGroup(content: String): Option[Js.Obj] = {
     val group = trim(content)
@@ -271,7 +270,7 @@ object Parser {
       )
   }
 
-  private val whiteSpace: Parser[String] = P(CharIn("\r\n\t\f ").rep(min = 1).!)
+  private val whiteSpace: Parser[String]    = P(CharIn("\r\n\t\f ").rep(min = 1).!)
   private val nonWhiteSpace: Parser[String] = P((!whiteSpace ~ AnyChar).rep.!)
 
   private[parser] def unindent(content: String): String = {
@@ -310,25 +309,22 @@ object Parser {
         .map("\'" + _ + "\'")
         .rep(1)
     )
-  private val noQuoteEnum: Parser[Seq[String]] = P(
-    (allCharBut(",").! ~ ",".? ~ " ".rep).rep)
-  private val enum
-    : Parser[Seq[String]] = doubleQuoteEnum | singleQuoteEnum | noQuoteEnum
+  private val noQuoteEnum: Parser[Seq[String]] = P((allCharBut(",").! ~ ",".? ~ " ".rep).rep)
+  private val enum: Parser[Seq[String]]        = doubleQuoteEnum | singleQuoteEnum | noQuoteEnum
   private val typeSizeAllowedValues: Parser[Js.Obj] =
-    P(("{" ~ " ".rep ~ (!CharIn("{} ") ~ AnyChar).rep.! ~ " ".rep ~ ("{" ~ " ".rep ~ (!CharIn(
-      "} ") ~ AnyChar).rep.! ~ " ".rep ~ "}" ~ " ".rep).? ~ " ".rep ~ ("=" ~ " ".rep ~ enum).? ~ " ".rep ~ "}" ~ " ".rep).?) map {
+    P(
+      ("{" ~ " ".rep ~ (!CharIn("{} ") ~ AnyChar).rep.! ~ " ".rep ~ ("{" ~ " ".rep ~ (!CharIn("} ") ~ AnyChar).rep.! ~ " ".rep ~ "}" ~ " ".rep).? ~ " ".rep ~ ("=" ~ " ".rep ~ enum).? ~ " ".rep ~ "}" ~ " ".rep).?
+    ) map {
       case Some((_type, size, allowedValues)) =>
         val map = new mutable.LinkedHashMap[String, Js.Value]()
         map.put("type", renderMarkDownNoPTags(_type))
         size.foreach(s => map.put("size", s))
-        allowedValues.foreach(aw =>
-          map.put("allowedValue", aw.map(Js.Str.apply)))
+        allowedValues.foreach(aw => map.put("allowedValue", aw.map(Js.Str.apply)))
         Js.Obj.from(map)
       case _ => Js.Obj()
     }
   private val fieldCharacter: Seq[Char] =
-    Seq('.', '-', '/') ++ ('A' to 'z').filterNot(c =>
-      c == '`' || c == '^' || c == '[' || c == ']')
+    Seq('.', '-', '/') ++ ('A' to 'z').filterNot(c => c == '`' || c == '^' || c == '[' || c == ']')
   private val doubleQuotedDefaultValue =
     P("\"" ~ (!CharIn("]\"") ~ AnyChar).rep.! ~ "\"")
   private val singleQuotedDefaultValue =
@@ -336,9 +332,11 @@ object Parser {
   private val noQuotedDefaultValue =
     P((!CharIn("] ") ~ AnyChar).rep.!)
   private val defaultValue: Parser[String] = P(
-    " ".rep ~ "=" ~ " ".rep ~ (doubleQuotedDefaultValue | singleQuotedDefaultValue | noQuotedDefaultValue))
-  private val field: Parser[Js.Obj] = P("[".!.? ~ " ".rep ~ CharIn(
-    fieldCharacter).rep.! ~ defaultValue.? ~ " ".rep ~ "]".? ~ " ".rep) map {
+    " ".rep ~ "=" ~ " ".rep ~ (doubleQuotedDefaultValue | singleQuotedDefaultValue | noQuotedDefaultValue)
+  )
+  private val field: Parser[Js.Obj] = P(
+    "[".!.? ~ " ".rep ~ CharIn(fieldCharacter).rep.! ~ defaultValue.? ~ " ".rep ~ "]".? ~ " ".rep
+  ) map {
     case (o, f, dv) =>
       val map = new mutable.LinkedHashMap[String, Js.Value]()
       map.put("optional", o.isDefined)
@@ -360,8 +358,7 @@ object Parser {
       case (g, tsav, f, d) =>
         Js.Obj(
           g -> Js.Arr(
-            Js.Obj.from(
-              Js.Obj("group" -> g).value ++ tsav.value ++ f.value ++ d.value)
+            Js.Obj.from(Js.Obj("group" -> g).value ++ tsav.value ++ f.value ++ d.value)
           )
         )
     }

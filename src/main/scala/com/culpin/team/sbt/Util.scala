@@ -25,20 +25,21 @@ object Util {
     }
 
   private def mergeFields(
-      vs1: List[(String, Js.Value)],
-      vs2: List[(String, Js.Value)]): List[(String, Js.Value)] = {
+    vs1: List[(String, Js.Value)],
+    vs2: List[(String, Js.Value)]
+  ): List[(String, Js.Value)] = {
     @scala.annotation.tailrec
-    def mergeRec(acc: List[(String, Js.Value)],
-                 xleft: List[(String, Js.Value)],
-                 yleft: List[(String, Js.Value)]): List[(String, Js.Value)] =
+    def mergeRec(
+      acc: List[(String, Js.Value)],
+      xleft: List[(String, Js.Value)],
+      yleft: List[(String, Js.Value)]
+    ): List[(String, Js.Value)] =
       xleft match {
         case Nil => acc ++ yleft
         case (xn, xv) :: xs =>
           yleft find (_._1 == xn) match {
             case Some(y @ (_, yv)) =>
-              mergeRec(acc ++ List((xn, merge(xv, yv))),
-                       xs,
-                       yleft filterNot (_ == y))
+              mergeRec(acc ++ List((xn, merge(xv, yv))), xs, yleft filterNot (_ == y))
             case None => mergeRec(acc ++ List((xn, xv)), xs, yleft)
           }
       }
@@ -46,8 +47,7 @@ object Util {
     mergeRec(List(), vs1, vs2)
   }
 
-  private def mergeVals(vs1: List[Js.Value],
-                        vs2: List[Js.Value]): List[Js.Value] = {
+  private def mergeVals(vs1: List[Js.Value], vs2: List[Js.Value]): List[Js.Value] = {
     def mergeRec(xleft: List[Js.Value], yleft: List[Js.Value]): List[Js.Value] =
       xleft match {
         case Nil => yleft
@@ -67,10 +67,10 @@ object Util {
     val sortedChildren = blocks.arr.sortWith {
       case (a, b) =>
         val Js.Str(groupA) = a("group")
-        val Js.Str(nameA) = a("name")
+        val Js.Str(nameA)  = a("name")
 
         val Js.Str(groupB) = b("group")
-        val Js.Str(nameB) = b("name")
+        val Js.Str(nameB)  = b("name")
 
         val labelA = groupA + nameA
         val labelB = groupB + nameB
@@ -88,16 +88,15 @@ object Util {
 
   private[sbt] def renderMarkDown(value: String): String = {
 
-    val options = new MutableDataSet().set(
-      Parser.EXTENSIONS,
-      Collections.singleton(TypographicExtension.create()))
+    val options = new MutableDataSet()
+      .set(Parser.EXTENSIONS, Collections.singleton(TypographicExtension.create()))
 
     options.set[Integer](HtmlRenderer.MAX_TRAILING_BLANK_LINES, -1)
     options.set(HtmlRenderer.SOFT_BREAK, " ")
     options.set(TypographicExtension.DOUBLE_QUOTE_OPEN, "&quot;")
     options.set(TypographicExtension.DOUBLE_QUOTE_CLOSE, "&quot;")
 
-    val parser = Parser.builder(options).build
+    val parser   = Parser.builder(options).build
     val renderer = HtmlRenderer.builder(options).build
 
     val document = parser.parse(value)

@@ -1,6 +1,6 @@
 package com.culpin.team.sbt
 
-import sbt.util.{Level, Logger}
+import sbt.util.{ Level, Logger }
 
 trait LoggerHelper {
   val stubLogger: Logger = new Logger {

@@ -21,6 +21,8 @@ bintrayVcsUrl := Some("""git@github.com:valydia/sbt-apidoc.git""")
 bintrayOrganization in bintray := None
 publishMavenStyle := false
 
+scalafmtOnCompile.in(ThisBuild) := true
+
 // set up 'scripted; sbt plugin for testing sbt plugins
 scriptedLaunchOpts ++=
   Seq("-Xmx1024M", "-Dplugin.version=" + version.value)

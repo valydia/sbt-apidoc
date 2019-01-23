@@ -3,25 +3,27 @@ package com.culpin.team.sbt
 import java.io
 
 import com.culpin.team.sbt.parser.Parser
-import com.culpin.team.sbt.worker.{Worker, WorkerError}
-import sbt.Keys.{name, version, _}
+import com.culpin.team.sbt.worker.{ Worker, WorkerError }
+import sbt.Keys.{ name, version, _ }
 import sbt.plugins.JvmPlugin
-import sbt.{IO, Logger, _}
+import sbt.{ IO, Logger, _ }
 import ujson.Js
 
 import scala.collection.mutable
 
-case class Config(name: String,
-                  title: Option[String],
-                  description: String,
-                  defaultVersion: String,
-                  apidocVersion: Option[String],
-                  url: Option[String],
-                  sampleUrl: Option[String])
+case class Config(
+  name: String,
+  title: Option[String],
+  description: String,
+  defaultVersion: String,
+  apidocVersion: Option[String],
+  url: Option[String],
+  sampleUrl: Option[String]
+)
 
 object SbtApidoc extends AutoPlugin {
 
-  override def trigger = allRequirements
+  override def trigger  = allRequirements
   override def requires = JvmPlugin
 
   object autoImport extends SbtApidocKeys
@@ -38,8 +40,7 @@ object SbtApidoc extends AutoPlugin {
     apidocSampleURL := None
   )
 
-  override lazy val projectSettings: Seq[Setting[_]] = defaultSettings ++ Seq(
-    apidocSetting)
+  override lazy val projectSettings: Seq[Setting[_]] = defaultSettings ++ Seq(apidocSetting)
 
   type RelativeFilename = String
 
@@ -61,11 +62,11 @@ object SbtApidoc extends AutoPlugin {
 
     val sourceFileAndName =
       (sources in Compile).value.toList map { f =>
-       f -> f.getAbsolutePath.replaceFirst(projectDirectory, ".")
+        f -> f.getAbsolutePath.replaceFirst(projectDirectory, ".")
       }
 
     run(sourceFileAndName, config, log) match {
-        case Left(err) =>
+      case Left(err) =>
         log.error(err.message)
         None
       case Right(None) =>
@@ -79,12 +80,14 @@ object SbtApidoc extends AutoPlugin {
 
   }
 
-  def run(sourceFileAndName: List[(File, RelativeFilename)],
-          apidocConfig: Config,
-          log: Logger): Either[WorkerError, Option[(String, String)] ]= {
+  def run(
+    sourceFileAndName: List[(File, RelativeFilename)],
+    apidocConfig: Config,
+    log: Logger
+  ): Either[WorkerError, Option[(String, String)]] = {
     val (parsedFiles, filenames) = Parser(sourceFileAndName, log)
-    val processedFiles = Worker(parsedFiles, filenames, apidocConfig.sampleUrl)
-    val sortedFiles = processedFiles.map(pf => Util.sortBlocks(filter(pf)))
+    val processedFiles           = Worker(parsedFiles, filenames, apidocConfig.sampleUrl)
+    val sortedFiles              = processedFiles.map(pf => Util.sortBlocks(filter(pf)))
     sortedFiles match {
       case Left(value) => Left(value)
       case Right(sf) =>
@@ -95,20 +98,20 @@ object SbtApidoc extends AutoPlugin {
             apidocConfig.sampleUrl.fold(Js.Bool(false): Js.Value)(Js.Str.apply)
 
           val generator = Js.Obj(
-            "name" -> "sbt-apidoc",
-            "time" -> java.time.LocalDateTime.now().toString,
-            "url" -> "https://github.com/valydia/sbt-apidoc",
+            "name"    -> "sbt-apidoc",
+            "time"    -> java.time.LocalDateTime.now().toString,
+            "url"     -> "https://github.com/valydia/sbt-apidoc",
             "version" -> "0.17.6"
           )
 
           val map =
             mutable.LinkedHashMap[String, Js.Value](
-              "name" -> Js.Str(apidocConfig.name),
-              "version" -> Js.Str(apidocConfig.defaultVersion),
-              "description" -> Js.Str(apidocConfig.description),
-              "sampleUrl" -> sampleUrl,
+              "name"           -> Js.Str(apidocConfig.name),
+              "version"        -> Js.Str(apidocConfig.defaultVersion),
+              "description"    -> Js.Str(apidocConfig.description),
+              "sampleUrl"      -> sampleUrl,
               "defaultVersion" -> Js.Str(apidocConfig.defaultVersion),
-              "apidoc" -> Js.Str("0.3.0") // see SPECIFICATION_VERSION,
+              "apidoc"         -> Js.Str("0.3.0") // see SPECIFICATION_VERSION,
             )
 
           apidocConfig.title.foreach(t => map.put("title", Js.Str(t)))
@@ -127,8 +130,7 @@ object SbtApidoc extends AutoPlugin {
     Js.Arr(parsedFiles.arr flatMap {
       case Js.Arr(parsedFile) =>
         parsedFile.collect {
-          case block
-              if block("global").obj.isEmpty && block("local").obj.nonEmpty =>
+          case block if block("global").obj.isEmpty && block("local").obj.nonEmpty =>
             block("local")
         }
 
@@ -136,10 +138,7 @@ object SbtApidoc extends AutoPlugin {
     })
   }
 
-  def generateApidoc(apiData: String,
-                     apiProject: String,
-                     apidocOutput: File,
-                     log: Logger): File = {
+  def generateApidoc(apiData: String, apiProject: String, apidocOutput: File, log: Logger): File = {
 
     val relativePath = apidocOutput.getParentFile.getName + "/" + apidocOutput.getName
 
@@ -151,7 +150,7 @@ object SbtApidoc extends AutoPlugin {
     val tmp = IO.createTemporaryDirectory
     IO.unzipStream(templateStream, tmp)
     val template = tmp / "template"
-    val files = template.listFiles() zip template.list().map(apidocOutput / _)
+    val files    = template.listFiles() zip template.list().map(apidocOutput / _)
     IO.move(files)
     IO.delete(tmp)
 
@@ -159,15 +158,13 @@ object SbtApidoc extends AutoPlugin {
     IO.write(apidocOutput / "api_data.json", apiData + "\n")
 
     log.info(s"write js file: $relativePath/api_data.js")
-    IO.write(apidocOutput / "api_data.js",
-             "define({ \"api\":  " + apiData + "  });" + "\n")
+    IO.write(apidocOutput / "api_data.js", "define({ \"api\":  " + apiData + "  });" + "\n")
 
     log.info(s"write json file: $relativePath/api_project.json")
     IO.write(apidocOutput / "api_project.json", apiProject + "\n")
 
     log.info(s"write js file: $relativePath/api_project.js")
-    IO.write(apidocOutput / "api_project.js",
-             "define( " + apiProject + " );" + "\n")
+    IO.write(apidocOutput / "api_project.js", "define( " + apiProject + " );" + "\n")
 
     log.info("Generated output into folder " + relativePath)
     apidocOutput

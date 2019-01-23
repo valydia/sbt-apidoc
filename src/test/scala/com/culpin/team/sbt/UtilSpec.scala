@@ -69,7 +69,9 @@ class UtilSpec extends FlatSpec {
 
   it should "render markdown with soft break" in {
 
-    assert(Util.renderMarkDown("Here you can describe the function.\nMultilines are possible.") === "<p>Here you can describe the function. Multilines are possible.</p>")
+    assert(
+      Util.renderMarkDown("Here you can describe the function.\nMultilines are possible.") === "<p>Here you can describe the function. Multilines are possible.</p>"
+    )
   }
 
   it should "render markdown and handle breaklines between p blocks" in {
