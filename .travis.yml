@@ -18,21 +18,6 @@ matrix:
 script:
   - sbt -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M "^^${SBT_VERSION}" test scripted
 
-
-#jdk:
-#  - oraclejdk8
-#
-#script:
-#  ## runs both regular tests and sbt-scripted integration tests
-#  - sbt -Dfile.encoding=UTF8 test scripted
-
-
-## https://docs.travis-ci.com/user/languages/java/
-#addons:
-#  apt:
-#    packages:
-#      - oracle-java8-installer
-
 before_cache:
   # Tricks to avoid unnecessary cache updates
   - find $HOME/.sbt -name "*.lock" | xargs rm

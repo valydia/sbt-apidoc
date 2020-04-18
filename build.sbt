@@ -22,12 +22,6 @@ bintrayOrganization in bintray := None
 publishMavenStyle := false
 
 lazy val root = (project in file("."))
-  .enablePlugins(SbtPlugin)
   .settings(
     name := "sbt-apidoc",
-    // set up 'scripted; sbt plugin for testing sbt plugins
-    scriptedLaunchOpts := { scriptedLaunchOpts.value ++
-      Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
-    },
-    scriptedBufferLog := false
   )
