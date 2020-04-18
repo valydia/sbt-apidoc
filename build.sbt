@@ -3,11 +3,6 @@ lazy val commonSettings: Seq[Setting[_]] = Seq(
   organization in ThisBuild := "com.culpin.team"
 )
 
-bintrayPackageLabels := Seq("sbt","plugin")
-bintrayVcsUrl := Some("""git@github.com:valydia/sbt-apidoc.git""")
-bintrayOrganization in bintray := None
-publishMavenStyle := false
-
 lazy val root = (project in file("."))
   .settings(commonSettings)
   .settings(
@@ -21,5 +16,4 @@ lazy val root = (project in file("."))
       "com.vladsch.flexmark"  %      "flexmark-ext-typographic"   %    "0.34.48",
       "org.scalatest"         %%     "scalatest"                  %    "3.0.5"   % "test"
     )
-
   )
