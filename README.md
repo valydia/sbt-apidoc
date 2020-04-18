@@ -22,24 +22,21 @@ You can custom the different apidoc keys into the `build.sbt`:
   apidocVersion := Some("0.3.0")
 ```
 
+And the task:
+>apidoc
+
+The output is generated under `target/apidoc`. 
+And you can open in your browser the `target/apidoc/index.html`
+
 
 ### Using SBT Apidoc
 
 Annotate your comments as described in this [page][apidocjs].
 
-### Running
-
-    >sbt
-    
-    >apidoc
-    
-The output is generated under target/apidoc. 
+[apidocjs]: http://apidocjs.com/
 
 ### Testing
 
 Run `test` for regular unit tests.
 
 Run `scripted` for [sbt script tests](http://www.scala-sbt.org/1.x/docs/Testing-sbt-plugins.html).
-
-
-[apidocjs]: http://apidocjs.com/
