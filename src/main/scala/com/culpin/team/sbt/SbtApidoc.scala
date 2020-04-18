@@ -13,7 +13,6 @@ case class Config(name: String,
                   title: Option[String],
                   description: String,
                   defaultVersion: String,
-                  apidocVersion: Option[String],
                   url: Option[String],
                   sampleUrl: Option[String])
 
@@ -50,7 +49,6 @@ object SbtApidoc extends AutoPlugin {
       apidocTitle.value,
       apidocDescription.value,
       Option(version.value).getOrElse("0.0.0"),
-      apidocVersion.value.filter(_.nonEmpty),
       apidocURL.value.map(_.toString),
       apidocSampleURL.value.map(_.toString)
     )
@@ -96,7 +94,7 @@ object SbtApidoc extends AutoPlugin {
           "description" -> Js.Str(apidocConfig.description),
           "sampleUrl" -> sampleUrl,
           "defaultVersion" -> Js.Str(apidocConfig.defaultVersion),
-          "apidoc" -> Js.Str("0.3.0") // see SPECIFICATION_VERSION,
+          "apidoc" -> Js.Str("0.3.0") // see SPECIFICATION_VERSION
         )
 
       apidocConfig.title.foreach(t => map.put("title", Js.Str(t)))

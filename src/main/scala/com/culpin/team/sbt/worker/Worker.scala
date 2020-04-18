@@ -8,7 +8,6 @@ import ujson.Js.Value
 import scala.collection.mutable
 
 case class ErrorMessage(element: String, usage: String, example: String)
-
 /**
   *
   * Attaches defined data to parameter which inherit the data.
