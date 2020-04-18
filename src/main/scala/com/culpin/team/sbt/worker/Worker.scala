@@ -112,7 +112,7 @@ class ApiGroupWorker extends ApiParamTitleWorker {
             if (block("global").obj.nonEmpty) block
             else {
               val group =
-                block("local")(target) match {
+                block("local").obj.getOrElse(target, Js.Null) match {
                   case Js.Str(g) => g
                   case _         => filename
                 }
@@ -219,7 +219,7 @@ class ApiNameWorker extends Worker {
         else {
 
           val name =
-            block("local")(target) match {
+            block("local").obj.getOrElse(target, Js.Null) match {
               case Js.Str(n) => n
               case _ =>
                 val Js.Str(_type) = block("local")("type")
