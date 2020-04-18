@@ -128,7 +128,7 @@ class ApiGroupWorker extends ApiParamTitleWorker {
           else {
             val Js.Str(name) = localTarget
             val version =
-              namedBlock("version") match {
+              namedBlock.obj.getOrElse("version",  Js.Null) match {
                 case Js.Str(v) => v
                 case _         => "0.0.0"
               }
@@ -631,7 +631,6 @@ object Worker {
             }
         }
         //TODO handle not found case
-
         val versionName = versionKeys(foundIndex)
         preProcess(source)(name)(versionName)
       }
@@ -673,7 +672,7 @@ object Worker {
               case _           => ""
             }
 
-            val newVersion = block("local")("version") match {
+            val newVersion = block("local").obj.getOrElse("version",  Js.Null) match {
               case Js.Str(version) => version
               case _               => "0.0.0"
             }

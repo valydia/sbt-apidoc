@@ -21,8 +21,13 @@ bintrayVcsUrl := Some("""git@github.com:valydia/sbt-apidoc.git""")
 bintrayOrganization in bintray := None
 publishMavenStyle := false
 
-// set up 'scripted; sbt plugin for testing sbt plugins
-scriptedLaunchOpts ++=
-  Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
-
-scriptedBufferLog := false
+lazy val root = (project in file("."))
+  .enablePlugins(SbtPlugin)
+  .settings(
+    name := "sbt-apidoc",
+    // set up 'scripted; sbt plugin for testing sbt plugins
+    scriptedLaunchOpts := { scriptedLaunchOpts.value ++
+      Seq("-Xmx1024M", "-Dplugin.version=" + version.value)
+    },
+    scriptedBufferLog := false
+  )
