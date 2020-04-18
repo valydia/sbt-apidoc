@@ -145,9 +145,7 @@ class ApiGroupWorker extends ApiParamTitleWorker {
               Js.Obj("local" -> Js.Obj.from(map))
 
             merge(namedBlock, newValue)
-
           }
-
         }
     }
 
@@ -266,7 +264,7 @@ class ApiParamTitleWorker extends Worker {
               case jsObj @ Js.Obj(_) =>
                 val Js.Str(name) = jsObj("name")
                 val version =
-                  block("version") match {
+                  block.obj.getOrElse("version", Js.Null) match {
                     case Js.Str(v) => v
                     case _         => "0.0.0"
                   }
@@ -313,7 +311,7 @@ class ApiParamTitleWorker extends Worker {
                 case (newField, definition) =>
                   val Js.Str(name) = definition("group")
                   val version =
-                    definition("version") match {
+                    definition.obj.getOrElse("version", Js.Null) match {
                       case Js.Str(v) => v
                       case _         => "0.0.0"
                     }
@@ -367,7 +365,7 @@ class ApiPermissionWorker extends ApiParamTitleWorker {
             case (permission, definition) =>
               val Js.Str(name) = definition("name")
               val version =
-                block("version") match {
+                block.obj.getOrElse("version", Js.Null) match {
                   case Js.Str(v) => v
                   case _         => "0.0.0"
                 }
@@ -529,7 +527,7 @@ class ApiUseWorker extends Worker {
               case jsObj @ Js.Obj(_) =>
                 val Js.Str(name) = jsObj("name")
                 val version =
-                  block("version") match {
+                  block.obj.getOrElse("version", Js.Null) match {
                     case Js.Str(v) => v
                     case _         => "0.0.0"
                   }
@@ -563,7 +561,7 @@ class ApiUseWorker extends Worker {
           localTarget.arr.foldLeft(block) { case (acc, definition) =>
             val Js.Str(name) = definition("name")
             val version =
-              acc("version") match {
+              acc.obj.getOrElse("version", Js.Null) match {
                 case Js.Str(v) => v
                 case _         => "0.0.0"
               }
