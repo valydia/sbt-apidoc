@@ -10,9 +10,13 @@ trait SbtApidocKeys {
   lazy val apidocName = settingKey[String]("The Name of the API")
   lazy val apidocTitle = settingKey[Option[String]]("Browser title text.")
   lazy val apidocDescription = settingKey[String]("The Description of the API")
-  lazy val apidocURL = settingKey[Option[URL]]("The url of the API")
-  lazy val apidocSampleURL = settingKey[Option[URL]](
+  lazy val apidocURL = settingKey[Option[String]]("The url of the API")
+  lazy val apidocSampleURL = settingKey[Option[String]](
     "If set, a form to test an api method (send a request) will be visible")
   lazy val apidocVersion =
     settingKey[Option[String]]("The default version of the API")
+  lazy val apidocHeader =
+    settingKey[Option[File]]("The header file")
+  lazy val apidocFooter =
+    settingKey[Option[File]]("The footer file")
 }

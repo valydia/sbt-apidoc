@@ -90,12 +90,14 @@ object Util {
 
     val options = new MutableDataSet().set(
       Parser.EXTENSIONS,
-      Collections.singleton(TypographicExtension.create()))
+      Collections.singleton(TypographicExtension.create())
+    )
 
     options.set[Integer](HtmlRenderer.MAX_TRAILING_BLANK_LINES, -1)
     options.set(HtmlRenderer.SOFT_BREAK, " ")
     options.set(TypographicExtension.DOUBLE_QUOTE_OPEN, "&quot;")
     options.set(TypographicExtension.DOUBLE_QUOTE_CLOSE, "&quot;")
+    options.set(HtmlRenderer.RENDER_HEADER_ID, new java.lang.Boolean(true))
 
     val parser = Parser.builder(options).build
     val renderer = HtmlRenderer.builder(options).build

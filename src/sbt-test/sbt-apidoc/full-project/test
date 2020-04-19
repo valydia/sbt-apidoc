@@ -1,6 +1,8 @@
 # call the apidoc task
 > apidoc
-> check
+> checkApiData
+> checkApiProjectHeader
+> checkApiProjectFooter
 $ exists target/apidoc
 $ exists target/apidoc/api_data.js
 $ exists target/apidoc/api_project.js
