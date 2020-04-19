@@ -1,19 +1,18 @@
-language: scala
-
-jdk:
-  - oraclejdk8
-
-script:
-  ## runs both regular tests and sbt-scripted integration tests
-  - sbt -Dfile.encoding=UTF8 test scripted
-
 sudo: false
 
-# https://docs.travis-ci.com/user/languages/java/
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer
+language: scala
+
+
+matrix:
+  include:
+    - env: SBT_VERSION="1.2.8"
+      jdk: openjdk8
+
+    - env: SBT_VERSION="1.2.8"
+      jdk: openjdk11
+
+script:
+  - sbt -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M "^^${SBT_VERSION}" test scripted
 
 before_cache:
   # Tricks to avoid unnecessary cache updates

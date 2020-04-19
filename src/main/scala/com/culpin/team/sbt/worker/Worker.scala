@@ -8,7 +8,6 @@ import ujson.Js.Value
 import scala.collection.mutable
 
 case class ErrorMessage(element: String, usage: String, example: String)
-
 /**
   *
   * Attaches defined data to parameter which inherit the data.
@@ -113,7 +112,7 @@ class ApiGroupWorker extends ApiParamTitleWorker {
             if (block("global").obj.nonEmpty) block
             else {
               val group =
-                block("local")(target) match {
+                block("local").obj.getOrElse(target, Js.Null) match {
                   case Js.Str(g) => g
                   case _         => filename
                 }
@@ -128,7 +127,7 @@ class ApiGroupWorker extends ApiParamTitleWorker {
           else {
             val Js.Str(name) = localTarget
             val version =
-              namedBlock("version") match {
+              namedBlock.obj.getOrElse("version",  Js.Null) match {
                 case Js.Str(v) => v
                 case _         => "0.0.0"
               }
@@ -146,9 +145,7 @@ class ApiGroupWorker extends ApiParamTitleWorker {
               Js.Obj("local" -> Js.Obj.from(map))
 
             merge(namedBlock, newValue)
-
           }
-
         }
     }
 
@@ -222,7 +219,7 @@ class ApiNameWorker extends Worker {
         else {
 
           val name =
-            block("local")(target) match {
+            block("local").obj.getOrElse(target, Js.Null) match {
               case Js.Str(n) => n
               case _ =>
                 val Js.Str(_type) = block("local")("type")
@@ -267,7 +264,7 @@ class ApiParamTitleWorker extends Worker {
               case jsObj @ Js.Obj(_) =>
                 val Js.Str(name) = jsObj("name")
                 val version =
-                  block("version") match {
+                  block.obj.getOrElse("version", Js.Null) match {
                     case Js.Str(v) => v
                     case _         => "0.0.0"
                   }
@@ -314,7 +311,7 @@ class ApiParamTitleWorker extends Worker {
                 case (newField, definition) =>
                   val Js.Str(name) = definition("group")
                   val version =
-                    definition("version") match {
+                    definition.obj.getOrElse("version", Js.Null) match {
                       case Js.Str(v) => v
                       case _         => "0.0.0"
                     }
@@ -368,7 +365,7 @@ class ApiPermissionWorker extends ApiParamTitleWorker {
             case (permission, definition) =>
               val Js.Str(name) = definition("name")
               val version =
-                block("version") match {
+                block.obj.getOrElse("version", Js.Null) match {
                   case Js.Str(v) => v
                   case _         => "0.0.0"
                 }
@@ -530,7 +527,7 @@ class ApiUseWorker extends Worker {
               case jsObj @ Js.Obj(_) =>
                 val Js.Str(name) = jsObj("name")
                 val version =
-                  block("version") match {
+                  block.obj.getOrElse("version", Js.Null) match {
                     case Js.Str(v) => v
                     case _         => "0.0.0"
                   }
@@ -564,7 +561,7 @@ class ApiUseWorker extends Worker {
           localTarget.arr.foldLeft(block) { case (acc, definition) =>
             val Js.Str(name) = definition("name")
             val version =
-              acc("version") match {
+              acc.obj.getOrElse("version", Js.Null) match {
                 case Js.Str(v) => v
                 case _         => "0.0.0"
               }
@@ -631,7 +628,6 @@ object Worker {
             }
         }
         //TODO handle not found case
-
         val versionName = versionKeys(foundIndex)
         preProcess(source)(name)(versionName)
       }
@@ -673,7 +669,7 @@ object Worker {
               case _           => ""
             }
 
-            val newVersion = block("local")("version") match {
+            val newVersion = block("local").obj.getOrElse("version",  Js.Null) match {
               case Js.Str(version) => version
               case _               => "0.0.0"
             }
