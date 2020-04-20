@@ -14,7 +14,10 @@ case class Config(name: String,
                   description: String,
                   defaultVersion: String,
                   url: Option[String],
-                  sampleUrl: Option[String])
+                  sampleUrl: Option[String],
+                  header: Option[File],
+                  footer: Option[File]
+                 )
 
 object SbtApidoc extends AutoPlugin {
 
@@ -32,7 +35,9 @@ object SbtApidoc extends AutoPlugin {
     apidocOutputDir := target.value / "apidoc",
     apidocDescription := "",
     apidocURL := None,
-    apidocSampleURL := None
+    apidocSampleURL := None,
+    apidocHeader := None,
+    apidocFooter := None
   )
 
   override lazy val projectSettings: Seq[Setting[_]] = defaultSettings ++ Seq(
@@ -48,13 +53,14 @@ object SbtApidoc extends AutoPlugin {
       apidocName.value,
       apidocTitle.value,
       apidocDescription.value,
-      Option(version.value).getOrElse("0.0.0"),
-      apidocURL.value.map(_.toString),
-      apidocSampleURL.value.map(_.toString)
+      Option(version.value).getOrElse("0.0.0"), // TODO should it be apidocVersion ??
+      apidocURL.value,
+      apidocSampleURL.value,
+      apidocHeader.value,
+      apidocFooter.value
     )
 
     val projectDirectory = baseDirectory.value.getAbsolutePath
-
     val sourceFileAndName =
       (sources in Compile).value.toList map { f =>
        f -> f.getAbsolutePath.replaceFirst(projectDirectory, ".")
@@ -99,6 +105,12 @@ object SbtApidoc extends AutoPlugin {
 
       apidocConfig.title.foreach(t => map.put("title", Js.Str(t)))
       apidocConfig.url.foreach(v => map.put("url", Js.Str(v)))
+      apidocConfig.header.filter(_.exists()).foreach { h =>
+        map.put("header", Js.Obj("content" -> Util.renderMarkDown(IO.read(h))))
+      }
+      apidocConfig.footer.filter(_.exists()).foreach { f =>
+        map.put("footer", Js.Obj("content" -> Util.renderMarkDown(IO.read(f))))
+      }
       map.put("generator", generator)
       val config = Js.Obj(map)
 

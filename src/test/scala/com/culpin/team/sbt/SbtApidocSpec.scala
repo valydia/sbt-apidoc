@@ -9,7 +9,7 @@ class SbtApidocSpec extends FlatSpec with Matchers with LoggerHelper {
   "SbtApidoc" should "produce `api_project.json`" in {
     val apidocName = "apidoc-example"
     val apidocDescription = "description"
-    val config = Config(apidocName, None, apidocDescription, "0.0.0", None, None)
+    val config = Config(apidocName, None, apidocDescription, "0.0.0", None, None, None, None)
     val Some((_, apiProjectString)) =  SbtApidoc.run(List(new File(getClass.getResource("/ApidocExample").getFile) -> "./the/path/ApidocExample"), config, stubLogger)
     val apiProject = ujson.read(apiProjectString)
     assert(apiProject("name").str === apidocName)
@@ -22,7 +22,7 @@ class SbtApidocSpec extends FlatSpec with Matchers with LoggerHelper {
   "SbtApidoc" should "produce `api_project.json` in Inherit" in {
     val apidocName = "apidoc-example"
     val apidocDescription = "description"
-    val config = Config(apidocName, None, apidocDescription, "0.0.0", None, None)
+    val config = Config(apidocName, None, apidocDescription, "0.0.0", None, None, None, None)
     val Some((_, apiProjectString)) =  SbtApidoc.run(List(new File(getClass.getResource("/Inherit.scala").getFile) -> "./the/path/Inherit.scala"), config, stubLogger)
     val apiProject = ujson.read(apiProjectString)
     assert(apiProject("name").str === apidocName)
