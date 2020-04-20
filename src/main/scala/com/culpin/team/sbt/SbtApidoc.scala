@@ -15,8 +15,10 @@ case class Config(name: String,
                   defaultVersion: String,
                   url: Option[String],
                   sampleUrl: Option[String],
-                  header: Option[File],
-                  footer: Option[File]
+                  headerTitle: Option[String],
+                  headerFile: Option[File],
+                  footerTitle: Option[String],
+                  footerFile: Option[File]
                  )
 
 object SbtApidoc extends AutoPlugin {
@@ -36,8 +38,10 @@ object SbtApidoc extends AutoPlugin {
     apidocDescription := "",
     apidocURL := None,
     apidocSampleURL := None,
-    apidocHeader := None,
-    apidocFooter := None
+    apidocHeaderTitle := None,
+    apidocHeaderFile := None,
+    apidocFooterTitle := None,
+    apidocFooterFile := None
   )
 
   override lazy val projectSettings: Seq[Setting[_]] = defaultSettings ++ Seq(
@@ -56,8 +60,10 @@ object SbtApidoc extends AutoPlugin {
       Option(version.value).getOrElse("0.0.0"), // TODO should it be apidocVersion ??
       apidocURL.value,
       apidocSampleURL.value,
-      apidocHeader.value,
-      apidocFooter.value
+      apidocHeaderTitle.value,
+      apidocHeaderFile.value,
+      apidocFooterTitle.value,
+      apidocFooterFile.value
     )
 
     val projectDirectory = baseDirectory.value.getAbsolutePath
@@ -105,11 +111,29 @@ object SbtApidoc extends AutoPlugin {
 
       apidocConfig.title.foreach(t => map.put("title", Js.Str(t)))
       apidocConfig.url.foreach(v => map.put("url", Js.Str(v)))
-      apidocConfig.header.filter(_.exists()).foreach { h =>
-        map.put("header", Js.Obj("content" -> Util.renderMarkDown(IO.read(h))))
+      apidocConfig.headerFile.filter(_.exists()).foreach { h =>
+        map.put("header",
+          apidocConfig.headerTitle.fold(
+            Js.Obj("content" -> Util.renderMarkDown(IO.read(h)))
+          ){ title =>
+            Js.Obj(
+              "content" -> Util.renderMarkDown(IO.read(h)),
+              "title" -> title
+            )
+          }
+        )
       }
-      apidocConfig.footer.filter(_.exists()).foreach { f =>
-        map.put("footer", Js.Obj("content" -> Util.renderMarkDown(IO.read(f))))
+      apidocConfig.footerFile.filter(_.exists()).foreach { f =>
+        map.put("footer",
+          apidocConfig.footerTitle.fold(
+            Js.Obj("content" -> Util.renderMarkDown(IO.read(f)))
+          ){ title =>
+            Js.Obj(
+              "content" -> Util.renderMarkDown(IO.read(f)),
+              "title" -> title
+            )
+          }
+        )
       }
       map.put("generator", generator)
       val config = Js.Obj(map)

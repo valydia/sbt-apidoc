@@ -6,12 +6,15 @@ lazy val root = (project in file(".")).
     name := "example-full",
     version := "0.3.0",
     apidocName := "apidoc-example",
-    apidocSampleURL:= Some("https://api.github.com/v1"),
+    apidocSampleURL:= Some("https://test.github.com/v1"),
+    apidocURL:= Some("https://api.github.com/v1"),
     apidocTitle := Some("Custom apiDoc browser title"),
     apidocVersion := Some("0.3.0"),
     apidocDescription := "apiDoc example project",
-    apidocHeader := Some((Compile / resourceDirectory).value / "header.md"),
-    apidocFooter := Some((Compile / resourceDirectory).value / "footer.md"),
+    apidocHeaderTitle := Some("My own header title"),
+    apidocHeaderFile := Some((Compile / resourceDirectory).value / "header.md"),
+    apidocFooterTitle := Some("My own footer title"),
+    apidocFooterFile := Some((Compile / resourceDirectory).value / "footer.md"),
     TaskKey[Unit]("checkApiData") := {
       import ujson.Js
 
@@ -157,7 +160,7 @@ lazy val root = (project in file(".")).
         |     "groupTitle": "User",
         |     "sampleRequest": [
         |       {
-        |         "url": "https://api.github.com/v1/user/:id"
+        |         "url": "https://test.github.com/v1/user/:id"
         |       }
         |     ]
         |   },
@@ -225,7 +228,7 @@ lazy val root = (project in file(".")).
         |     "groupTitle": "User",
         |     "sampleRequest": [
         |       {
-        |         "url": "https://api.github.com/v1/user/:id"
+        |         "url": "https://test.github.com/v1/user/:id"
         |       }
         |     ]
         |   },
@@ -293,7 +296,7 @@ lazy val root = (project in file(".")).
         |     "groupTitle": "User",
         |     "sampleRequest": [
         |       {
-        |         "url": "https://api.github.com/v1/user/:id"
+        |         "url": "https://test.github.com/v1/user/:id"
         |       }
         |     ]
         |   },
@@ -340,7 +343,7 @@ lazy val root = (project in file(".")).
         |     "groupTitle": "User",
         |     "sampleRequest": [
         |       {
-        |         "url": "https://api.github.com/v1/user"
+        |         "url": "https://test.github.com/v1/user"
         |       }
         |     ],
         |     "error": {
@@ -412,7 +415,7 @@ lazy val root = (project in file(".")).
         |     "groupTitle": "User",
         |     "sampleRequest": [
         |       {
-        |         "url": "https://api.github.com/v1/user"
+        |         "url": "https://test.github.com/v1/user"
         |       }
         |     ],
         |     "error": {
@@ -471,7 +474,7 @@ lazy val root = (project in file(".")).
         |     "groupTitle": "User",
         |     "sampleRequest": [
         |       {
-        |         "url": "https://api.github.com/v1/user/:id"
+        |         "url": "https://test.github.com/v1/user/:id"
         |       }
         |     ],
         |     "error": {
@@ -501,7 +504,7 @@ lazy val root = (project in file(".")).
         |     }
         |   }
         | ]
-        | """.stripMargin
+        |""".stripMargin
       val apiData = target.value / "apidoc" / "api_data.json"
       val output = IO.read(apiData)
       val json = ujson.read(output)
@@ -512,13 +515,17 @@ lazy val root = (project in file(".")).
       val apiProject = target.value / "apidoc" / "api_project.json"
       val output = IO.read(apiProject)
       val content = ujson.read(output)("header")("content").str
-      assert(content == "<h2 id=\"welcome-to-apidoc\">Welcome to apiDoc</h2>\n<p>Please visit <a href=\"http://apidocjs.com\">apidocjs.com</a> with the full documentation.</p>")
+      assert(content == "<h2 id=\"welcome-to-apidoc\">Welcome to apiDoc</h2>\n<p>Please visit <a href=\"http://apidocjs.com\">apidocjs.com</a> with the full documentation.</p>", "Incorrect content header")
+        val title = ujson.read(output)("header")("title").str
+        assert(title ==  "My own header title")
     },
     TaskKey[Unit]("checkApiProjectFooter") := {
       val apiProject = target.value / "apidoc" / "api_project.json"
       val output = IO.read(apiProject)
       val content = ujson.read(output)("footer")("content").str
-      assert(content == "<h2 id=\"epilogue\">Epilogue</h2>\n<p>Suggestions, contact, support and error reporting on <a href=\"https://github.com/apidoc/apidoc/issues\">GitHub</a></p>")
+      assert(content == "<h2 id=\"epilogue\">Epilogue</h2>\n<p>Suggestions, contact, support and error reporting on <a href=\"https://github.com/apidoc/apidoc/issues\">GitHub</a></p>", "Incorrect content footer")
+        val title = ujson.read(output)("footer")("title").str
+        assert(title ==  "My own footer title")
     }
   )
 

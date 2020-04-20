@@ -15,8 +15,12 @@ trait SbtApidocKeys {
     "If set, a form to test an api method (send a request) will be visible")
   lazy val apidocVersion =
     settingKey[Option[String]]("The default version of the API")
-  lazy val apidocHeader =
+  lazy val apidocHeaderTitle =
+    settingKey[Option[String]]("The header title")
+  lazy val apidocHeaderFile =
     settingKey[Option[File]]("The header file")
-  lazy val apidocFooter =
+  lazy val apidocFooterTitle =
+    settingKey[Option[String]]("The footer title")
+  lazy val apidocFooterFile =
     settingKey[Option[File]]("The footer file")
 }
