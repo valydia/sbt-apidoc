@@ -1,11 +1,12 @@
 lazy val commonSettings: Seq[Setting[_]] = Seq(
-  version in ThisBuild := "0.5.3-SNAPSHOT",
   organization in ThisBuild := "com.culpin.team"
 )
 
 lazy val root = (project in file("."))
+  .enablePlugins(GitVersioning)
   .settings(commonSettings)
   .settings(
+    sbtPlugin := true,
     name := "sbt-apidoc",
     scalacOptions ++= Seq("-deprecation", "-feature"),
     licenses := Seq("MIT License" -> url("http://opensource.org/licenses/mit-license.php/")),
