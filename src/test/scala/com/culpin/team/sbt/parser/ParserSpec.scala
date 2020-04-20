@@ -19,7 +19,7 @@ class ParserSpec extends FlatSpec {
     override def success(message: => String): Unit = ()
   }
   "Parser" should "parse empty files" in {
-    val resourceFile = new File(getClass.getResource("/NoApidocApplication.scala").getFile)
+    val resourceFile = new File(getClass.getResource("/parser/NoApidocApplication.scala").getFile)
     assert(Parser(List(resourceFile -> "./relative/path/to/NoApidocApplication.scala"), stubLogger) === (Js.Arr(Js.Arr()), List("./relative/path/to/NoApidocApplication.scala")))
   }
 

@@ -10,7 +10,7 @@ import ujson.Js
 class WorkerSpec extends FlatSpec with LoggerHelper{
 
 
-  private def loadFixture(parsedFilesUrl: String = "/parsedFiles-filename.json", preprocessUrl: String = "/preprocess.json"): (Js.Arr, Js.Value) = {
+  private def loadFixture(parsedFilesUrl: String = "/worker/parsedFiles-filename.json", preprocessUrl: String = "/worker/preprocess.json"): (Js.Arr, Js.Value) = {
     val preProcessFiles = new File(getClass.getResource(preprocessUrl).getFile)
     val preProcessString = readFile(preProcessFiles)
 
@@ -27,7 +27,7 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
   }
 
   "ApiParamTitleWorker" should "preprocess parsed files" in {
-    val file = new File(getClass.getResource("/parsedFiles.json").getFile)
+    val file = new File(getClass.getResource("/worker/parsedFiles.json").getFile)
     val jsonString = readFile(file)
 
     val parsedFiles: Js.Arr = ujson.read(jsonString).asInstanceOf[Js.Arr]
@@ -64,7 +64,7 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
 
   "ApiUseWorker" should " preProcess parsed Files" in {
 
-    val file = new File(getClass.getResource("/parsedFiles.json").getFile)
+    val file = new File(getClass.getResource("/worker/parsedFiles.json").getFile)
     val jsonString = readFile(file)
     val jarray = ujson.read(jsonString).asInstanceOf[Js.Arr]
 
@@ -76,7 +76,7 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
 
   "ApiUseWorker" should " preProcess parsed Files 2" in {
 
-    val file = new File(getClass.getResource("/parsedFiles.json").getFile)
+    val file = new File(getClass.getResource("/worker/parsedFiles.json").getFile)
     val jsonString = readFile(file)
     val jarray = ujson.read(jsonString).asInstanceOf[Js.Arr]
 
@@ -106,9 +106,9 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
 
   }
 
-  "ApiUser Worker" should " postprocess" in {
+  "ApiUse Worker" should " postprocess" in {
 
-    val (parsedFiles, preProcessJson) = loadFixture("/apiuseBlocks.json", "/apiusePreprocess.json")
+    val (parsedFiles, preProcessJson) = loadFixture("/worker/apiUse/apiuseBlocks.json", "/worker/apiUse/apiusePreprocess.json")
     val worker = new ApiUseWorker
 
     val result = worker.postProcess(parsedFiles, List(), None, preProcessJson)
@@ -233,9 +233,9 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
 
   }
 
-  it should " postprocess with sampleURL" in {
+  it should "postprocess with sampleURL" in {
 
-    val resourceFile = new File(getClass.getResource("/sampleRequest.js").getFile)
+    val resourceFile = new File(getClass.getResource("/worker/apiSampleRequest/sampleRequest.js").getFile)
     val (parsedFiles, filenames) = Parser(List(resourceFile -> "relativeFilename"), stubLogger)
 
     val worker = new ApiSampleRequestWorker
@@ -251,7 +251,7 @@ class WorkerSpec extends FlatSpec with LoggerHelper{
 
   it should " postprocess without sampleURL" in {
 
-    val resourceFile = new File(getClass.getResource("/sampleRequest.js").getFile)
+    val resourceFile = new File(getClass.getResource("/worker/apiSampleRequest/sampleRequest.js").getFile)
     val (parsedFiles, filenames) = Parser(List(resourceFile -> "relativeFilename"), stubLogger)
 
     val worker = new ApiSampleRequestWorker
