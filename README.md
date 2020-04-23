@@ -775,7 +775,7 @@ Example:
 @apiSampleRequest url
 ```
 
-Use this parameter in conjunction with the apidoc.json configuration parameter [sampleUrl](#apisamplerequest).
+Use this parameter in conjunction with the `settingsKey` in the `build.sbt` [sampleUrl](#apisamplerequest).
 If `sampleUrl` is set, all methods will have the api test form (the endpoint from [@api](#api) will be appended).
 Without sampleUrl only methods with `@apiSampleRequest` will have a form.
 if `@apiSampleRequest url` is set in a method block, this url will be used for the request (it overrides sampleUrl when it starts with http).
