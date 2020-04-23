@@ -41,7 +41,7 @@ And you can open in your browser the `target/scala-2.12/apidoc/index.html`
 
 ### Basic
 
-In this basic example we have a small project file and an apidoc.json.
+In this basic example we have a small project file and few setting keys in the `build.sbt`.  
 [View example output](http://sbt-apidoc.com/example-basic/)
 
 [`build.sbt`](TODO)
@@ -301,7 +301,7 @@ A defined block can have all params (like `@apiParam`), **except other defined b
 ```
 @api {method} path [title]
 ```
-**Required!**
+**Required!**  
 Without that indicator, apiDoc parser ignore the documentation block.
 The only exception are documentation blocks defined by `@apiDefine`, they not required `@api`.
 
@@ -793,9 +793,9 @@ Usage: `@apiSampleRequest http://test.github.com`
       <td>url</td>
       <td>
         <p>Url to your test api server.</p>
-        <p>Overwrite the configuration parameter sampleUrl and append [@api](#api) url:
+        <p>Overwrite the configuration parameter sampleUrl and append <a href="#api">@api</a> url:
           <strong>@apiSampleRequest http://www.example.com</strong></p>
-        <p>Prefix the [@api](#api) url:
+        <p>Prefix the <a href="#api">@api</a> url:
           <strong>@apiSampleRequest /my_test_path</strong></p>
         <p>Disable api test if configuration parameter sampleUrl is set:
           <strong>@apiSampleRequest off</strong></p>
