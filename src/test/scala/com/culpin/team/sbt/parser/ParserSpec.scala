@@ -117,16 +117,15 @@ class ParserSpec extends FlatSpec {
     val element = Element(s"@$elementTag $mainString", elementTag.toLowerCase, elementTag, mainString)
 
     val result = processElements(Seq(Seq(element)), stubLogger)
-    println(result)
     val global = result(0)("global")
     val define = global("define")
     assert(define("name") === Js.Str("admin"))
     assert(define("title") === Js.Str("Admin access rights needed."))
-    assert(define("description") === Js.Str("<p>Optionally you can write here further Informations about the permission.</p> <p>An &quot;apiDefinePermission&quot;-block can have an &quot;apiVersion&quot;, so you can attach the block to a specific version.</p>"))
+    assert(define("description") === Js.Str("<p>Optionally you can write here further Informations about the permission.</p> " +
+      "<p>An &quot;apiDefinePermission&quot;-block can have an &quot;apiVersion&quot;, so you can attach the block to a specific version.</p>"))
 
   }
 
-  //TODO rewrite using TableProperties
   it should "find element in block" in {
 
     val result = parseElement("Block 1\n@param arg")

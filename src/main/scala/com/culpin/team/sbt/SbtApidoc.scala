@@ -7,18 +7,21 @@ import sbt.plugins.JvmPlugin
 import sbt.{IO, Logger, _}
 import ujson.Js
 
-import scala.collection.mutable
-
 case class Config(name: String,
                   title: Option[String],
                   description: String,
-                  defaultVersion: String,
+                  version: String,
+                  projectVersion: String,
+                  versionFile: File,
                   url: Option[String],
                   sampleUrl: Option[String],
                   headerTitle: Option[String],
                   headerFile: Option[File],
                   footerTitle: Option[String],
-                  footerFile: Option[File]
+                  footerFile: Option[File],
+                  order: List[String],
+                  templateCompare: Option[Boolean],
+                  templateGenerator: Option[Boolean]
                  )
 
 object SbtApidoc extends AutoPlugin {
@@ -33,15 +36,19 @@ object SbtApidoc extends AutoPlugin {
   lazy val defaultSettings = List(
     apidocName := name.value,
     apidocTitle := None,
-    apidocVersion := Option(version.value),
-    apidocOutputDir := target.value / "apidoc",
-    apidocDescription := "",
+    apidocVersion := None,
+    apidocVersionFile := (resourceDirectory in Compile).value / "apidoc",
+    apidocOutputDir := crossTarget.value / "apidoc",
+    apidocDescription := description.value,
     apidocURL := None,
     apidocSampleURL := None,
     apidocHeaderTitle := None,
     apidocHeaderFile := None,
     apidocFooterTitle := None,
-    apidocFooterFile := None
+    apidocFooterFile := None,
+    apidocOrder := List(),
+    apidocTemplateCompare := None,
+    apidocTemplateGenerator := None
   )
 
   override lazy val projectSettings: Seq[Setting[_]] = defaultSettings ++ Seq(
@@ -57,27 +64,44 @@ object SbtApidoc extends AutoPlugin {
       apidocName.value,
       apidocTitle.value,
       apidocDescription.value,
-      Option(version.value).getOrElse("0.0.0"), // TODO should it be apidocVersion ??
+      apidocVersion.value getOrElse version.value,
+      version.value,
+      apidocVersionFile.value,
       apidocURL.value,
       apidocSampleURL.value,
       apidocHeaderTitle.value,
       apidocHeaderFile.value,
       apidocFooterTitle.value,
-      apidocFooterFile.value
+      apidocFooterFile.value,
+      apidocOrder.value,
+      apidocTemplateCompare.value,
+      apidocTemplateGenerator.value
     )
 
-    val projectDirectory = baseDirectory.value.getAbsolutePath
-    val sourceFileAndName =
-      (sources in Compile).value.toList map { f =>
-       f -> f.getAbsolutePath.replaceFirst(projectDirectory, ".")
+    val projectDirectory = baseDirectory.value
+    val apidocFile = apidocVersionFile.value
+    val versionFile =
+      if (apidocFile.exists()) {
+        if (apidocFile.isDirectory)
+          IO.listFiles(apidocFile).toList
+        else
+          List(apidocFile)
+      } else Nil
+    val inputFileAndName =
+      ((sources in Compile).value.toList ++ versionFile) map { f =>
+       f -> relativePath(projectDirectory, f)
       }
     val result =
-      run(sourceFileAndName, config, log) map {
+      run(inputFileAndName, config, log) map {
         case (apiData, apiProject) =>
-          generateApidoc(apiData, apiProject, apidocOutputDir.value, log)
+          generateApidoc(apiData, apiProject, apidocOutputDir.value, relativePath(projectDirectory, apidocOutputDir.value), log)
       }
     result.fold(log.info("Nothing to do."))(_ => log.info("Done."))
     result
+  }
+
+  def relativePath(baseDirectory: File, file: File): String = {
+    file.getAbsolutePath.replaceFirst(baseDirectory.getAbsolutePath, ".")
   }
 
   def run(sourceFileAndName: List[(File, RelativeFilename)],
@@ -88,59 +112,81 @@ object SbtApidoc extends AutoPlugin {
     val sortedFiles = Util.sortBlocks(filter(processedFiles))
     if (sortedFiles.arr.isEmpty || sortedFiles.arr.forall(_ == Js.Null)) None
     else {
-      //For some reason, the default value is set to false
-      val sampleUrl: Js.Value =
-        apidocConfig.sampleUrl.fold(Js.Bool(false): Js.Value)(Js.Str.apply)
-
-      val generator = Js.Obj(
-        "name" -> "sbt-apidoc",
-        "time" -> java.time.LocalDateTime.now().toString,
-        "url" -> "https://github.com/valydia/sbt-apidoc",
-        "version" -> "0.17.6"
-      )
-
-      val map =
-        mutable.LinkedHashMap[String, Js.Value](
-          "name" -> Js.Str(apidocConfig.name),
-          "version" -> Js.Str(apidocConfig.defaultVersion),
-          "description" -> Js.Str(apidocConfig.description),
-          "sampleUrl" -> sampleUrl,
-          "defaultVersion" -> Js.Str(apidocConfig.defaultVersion),
-          "apidoc" -> Js.Str("0.3.0") // see SPECIFICATION_VERSION
-        )
-
-      apidocConfig.title.foreach(t => map.put("title", Js.Str(t)))
-      apidocConfig.url.foreach(v => map.put("url", Js.Str(v)))
-      apidocConfig.headerFile.filter(_.exists()).foreach { h =>
-        map.put("header",
-          apidocConfig.headerTitle.fold(
-            Js.Obj("content" -> Util.renderMarkDown(IO.read(h)))
-          ){ title =>
-            Js.Obj(
-              "content" -> Util.renderMarkDown(IO.read(h)),
-              "title" -> title
-            )
-          }
-        )
-      }
-      apidocConfig.footerFile.filter(_.exists()).foreach { f =>
-        map.put("footer",
-          apidocConfig.footerTitle.fold(
-            Js.Obj("content" -> Util.renderMarkDown(IO.read(f)))
-          ){ title =>
-            Js.Obj(
-              "content" -> Util.renderMarkDown(IO.read(f)),
-              "title" -> title
-            )
-          }
-        )
-      }
-      map.put("generator", generator)
-      val config = Js.Obj(map)
-
+      val config = buildConfig(apidocConfig, log)
       Some((sortedFiles.render(2), config.render(2)))
     }
   }
+
+  private def buildConfig(apidocConfig: Config, log: Logger): Js.Obj = {
+
+    //For some reason, the default value is set to false
+    val sampleUrl: Js.Value =
+      apidocConfig.sampleUrl.fold(Js.Bool(false): Js.Value)(Js.Str.apply)
+
+    val template = Option(Util.buildObj(
+      "withCompare" -> apidocConfig.templateCompare.map(Js.Bool.apply),
+      "withGenerator" -> apidocConfig.templateGenerator.map(Js.Bool.apply)
+    )).filter(_.value.nonEmpty)
+
+    val header =
+      apidocConfig.headerFile.flatMap { file =>
+        if (file.exists()){
+          Some(
+            Util.buildObj(
+              "title" -> apidocConfig.headerTitle.map(Js.Str.apply),
+              "content" -> Some(Js.Str(Util.renderMarkDown(IO.read(file))))
+            )
+          )
+        }
+        else {
+          log.warn(s"The file ${file.getAbsoluteFile} doesn't exist")
+          None
+        }
+      }
+
+    val footer =
+      apidocConfig.footerFile.flatMap { file =>
+        if (file.exists()){
+          Some(
+            Util.buildObj(
+              "title" -> apidocConfig.footerTitle.map(Js.Str.apply),
+              "content" -> Some(Js.Str(Util.renderMarkDown(IO.read(file))))
+            )
+          )
+        }
+        else {
+          log.warn(s"The file ${file.getAbsoluteFile} doesn't exist")
+          None
+        }
+      }
+    val order =
+      if (apidocConfig.order.nonEmpty)
+        Some(Js.Arr.from(apidocConfig.order))
+      else
+        None
+
+    val generator = Js.Obj(
+      "name" -> "sbt-apidoc",
+      "time" -> java.time.LocalDateTime.now().toString,
+      "url" -> "https://github.com/valydia/sbt-apidoc",
+      "version" -> "0.17.6" // this should be project version
+    )
+
+    Util.buildObj(
+      "name" -> Some(Js.Str(apidocConfig.name)),
+      "version" -> Some(Js.Str(apidocConfig.version)),
+      "description" -> Some(Js.Str(apidocConfig.description)),
+      "title" -> apidocConfig.title.map(Js.Str.apply),
+      "template" -> template,
+      "url" -> apidocConfig.url.map(Js.Str.apply),
+      "sampleUrl" -> Some(sampleUrl),
+      "header" -> header,
+      "footer" -> footer,
+      "order" -> order,
+      "generator" -> Some(generator)
+    )
+  }
+
 
   def filter(parsedFiles: Js.Arr): Js.Arr = {
     import scala.collection.mutable
@@ -159,11 +205,9 @@ object SbtApidoc extends AutoPlugin {
   def generateApidoc(apiData: String,
                      apiProject: String,
                      apidocOutput: File,
+                     apidocOutputRelativePath: String,
                      log: Logger): File = {
-
-    val relativePath = apidocOutput.getParentFile.getName + "/" + apidocOutput.getName
-
-    log.info(s"copy template to $relativePath")
+        log.info(s"copy template to $apidocOutputRelativePath")
 
     val templateStream =
       getClass.getClassLoader.getResourceAsStream("template.zip")
@@ -175,21 +219,21 @@ object SbtApidoc extends AutoPlugin {
     IO.move(files)
     IO.delete(tmp)
 
-    log.info(s"write json file: $relativePath/api_data.json")
+    log.info(s"write json file: $apidocOutputRelativePath/api_data.json")
     IO.write(apidocOutput / "api_data.json", apiData + "\n")
 
-    log.info(s"write js file: $relativePath/api_data.js")
+    log.info(s"write js file: $apidocOutputRelativePath/api_data.js")
     IO.write(apidocOutput / "api_data.js",
              "define({ \"api\":  " + apiData + "  });" + "\n")
 
-    log.info(s"write json file: $relativePath/api_project.json")
+    log.info(s"write json file: $apidocOutputRelativePath/api_project.json")
     IO.write(apidocOutput / "api_project.json", apiProject + "\n")
 
-    log.info(s"write js file: $relativePath/api_project.js")
+    log.info(s"write js file: $apidocOutputRelativePath/api_project.js")
     IO.write(apidocOutput / "api_project.js",
              "define( " + apiProject + " );" + "\n")
 
-    log.info("Generated output into folder " + relativePath)
+    log.info("Generated output into folder " + apidocOutputRelativePath)
     apidocOutput
   }
 

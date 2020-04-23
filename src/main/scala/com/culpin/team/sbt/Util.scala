@@ -110,4 +110,17 @@ object Util {
   private[sbt] def renderMarkDownNoPTags(value: String): String =
     renderMarkDown(value).replaceAll("<p>|</p>", "")
 
+  private[sbt] def buildObj(elems: (String, Option[Js.Value])*) : Js.Obj = {
+    val tupleList =
+      elems.foldLeft(List.empty[(String, Js.Value)]) { case (acc, elem) =>
+        val newVal =
+          elem match {
+            case (_, None) => Nil
+            case (key, Some(value)) => List(key -> value)
+          }
+        acc ++ newVal
+      }
+    Js.Obj.from(tupleList)
+  }
+
 }
