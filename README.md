@@ -856,12 +856,12 @@ Configuration parameter sampleUrl is not set
 Success return Parameter.
 Usage: `@apiSuccess {String} firstname Firstname of the User`.
 
-|Name                   |Description                                                                                                                                             |
-|:----------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------|
-|(group)       optional | All parameters will be grouped by this name. Without a group, the default `Success 200` is set. You can set a title and description with `@apiDefine`. |
-|{type}        optional | Return type, e.g. `{Boolean}`, `{Number}`, `{String}`, `{Object}`, `{String[]}` (array of strings), ...                                                |
-|field                  | Return Identifier (returned success code).                                                                                                             |
-|description   optional | Description of the field.                                                                                                                              |
+|Name                   |Description                                                                                                                                                           |
+|:----------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|(group)       optional | All parameters will be grouped by this name. Without a group, the default `Success 200` is set. You can set a title and description with [`@apiDefine`](#apidefine). |
+|{type}        optional | Return type, e.g. `{Boolean}`, `{Number}`, `{String}`, `{Object}`, `{String[]}` (array of strings), ...                                                              |
+|field                  | Return Identifier (returned success code).                                                                                                                           |
+|description   optional | Description of the field.                                                                                                                                            |
 
 Example:
 ```
@@ -872,7 +872,7 @@ Example:
  */
 ```
 
-Example with `(group)`, more group-examples at [@apiSuccessTitle](TODO):
+Example with `(group)`, more group-examples at [@apiSuccessTitle](#apisuccesstitle):
 ```
 /**
  * @api {get} /user/:id
