@@ -59,13 +59,14 @@ object SbtApidoc extends AutoPlugin {
   def apidocSetting: Setting[_] = apidoc := {
 
     val log = streams.value.log
-
+    // This project version
+    val projectVersion = "0.5.3"
     val config = Config(
       apidocName.value,
       apidocTitle.value,
       apidocDescription.value,
       apidocVersion.value getOrElse version.value,
-      version.value,
+      projectVersion,
       apidocVersionFile.value,
       apidocURL.value,
       apidocSampleURL.value,
@@ -169,7 +170,7 @@ object SbtApidoc extends AutoPlugin {
       "name" -> "sbt-apidoc",
       "time" -> java.time.LocalDateTime.now().toString,
       "url" -> "https://github.com/valydia/sbt-apidoc",
-      "version" -> "0.17.6" // this should be project version
+      "version" -> apidocConfig.projectVersion
     )
 
     Util.buildObj(

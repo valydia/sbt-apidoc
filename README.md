@@ -89,11 +89,11 @@ This example describes a `GET` Method to request the User Information by the use
 `@apiName` must be a unique name and should always be used.  
 Format: *method + path* (e.g. Get + User)
 `@apiGroup` should always be used, and is used to group related APIs together.  
-All other fields are optional, look at their description under [apiDoc-Params](#apiDoc-Params).  
+All other fields are optional, look at their description under [apiDoc-Params](#apidoc-params).  
 
 ### Inherit
 
-Using inherit, you can define reusable snippets of your documentation.
+Using inherit, you can define reusable snippets of your documentation.  
 [View example output](TODO)
 
 [`build.sbt`](TODO)
@@ -167,7 +167,7 @@ Inheritance only works with 1 parent, more levels would make the inline code unr
 
 A useful feature provided by apiDoc is the ability to maintain the documentation for all previous versions and the latest version of the API.  
 This makes it possible to compare a methods version with its predecessor. 
-Frontend Developer can thus simply see what have changed and update their code accordingly. 
+Frontend Developer can thus simply see what have changed and update their code accordingly.  
 [View example output](TODO)
 
 In the example, click top right on select box (the main version) and select 
@@ -278,9 +278,9 @@ Files:
 |          `apidocSampleURL` |  `Option[String]` |             `None`           | If set, a form to test an api method (send a request) will be visible. See [@apiSampleRequest](TODO) for more details.      |
 |            `apidocVersion` |  `Option[String]` |   same as `version` value    | Version of your project. If not set uses the same as the project `version`.                                                 |
 |        `apidocVersionFile` |  `Option[File]`   |   same as `version` value    | Version of your project. If not set uses the same as the project `version`.                                                 |
-|        `apidocHeaderTitle` |  `Option[String]` |             `None`           | Navigation text for the included [`Header`](TODO) file.                                                                     |
+|        `apidocHeaderTitle` |  `Option[String]` |             `None`           | Navigation text for the included `Header` file.                                                                     |
 |         `apidocHeaderFile` |   `Option[File]`  |             `None`           | Filename (markdown-file) for the included Header file.                                                                      |
-|        `apidocFooterTitle` |  `Option[String]` |             `None`           | Navigation text for the included [`Footer`](TODO) file.                                                                     |                                   
+|        `apidocFooterTitle` |  `Option[String]` |             `None`           | Navigation text for the included `Footer` file.                                                                     |                                   
 |         `apidocFooterFile` |   `Option[File]`  |             `None`           | Filename (markdown-file) for the included Header file.                                                                      |
 |              `apidocOrder` |  `Option[String]` |             `None`           | A list of api-names / group-names for ordering the output. Not defined names are automatically displayed last.              |
 |    `apidocTemplateCompare` | `Option[Boolean]` |             `None`           | Enable comparison with older api versions. Default: Enabled                                                                 |
@@ -362,7 +362,7 @@ Example:
  * @apiPermission admin
  */
 ```
-For more details, see [inherit example][TODO].
+For more details, see [inherit example](TODO).
 
 ### @apiDeprecated
 
@@ -420,12 +420,12 @@ Example:
 
 Usage: `@apiError UserNotFound`
 
-|Name                   |Description                                                                                                                                           |
-|:----------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------|
-|(group)       optional |All parameters will be grouped by this name.  Without a group, the default `Error 4xx` is set. You can set a title and description with `@apiDefine`. |
-|{type}        optional | Return type, e.g. `{Boolean}`, `{Number}`, `{String}`, `{Object}`, `{String[]}` (array of strings), ...                                              |
-|field                  | Return Identifier (returned error code).                                                                                                             |
-|description   optional | Description of the field.                                                                                                                            |
+|Name                   |Description                                                                                                                                                         |
+|:----------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|(group)       optional |All parameters will be grouped by this name.  Without a group, the default `Error 4xx` is set. You can set a title and description with [`@apiDefine`](#apiDefine). |
+|{type}        optional | Return type, e.g. `{Boolean}`, `{Number}`, `{String}`, `{Object}`, `{String[]}` (array of strings), ...                                                            |
+|field                  | Return Identifier (returned error code).                                                                                                                           |
+|description   optional | Description of the field.                                                                                                                                          |
 
 Example:
 ```scala
@@ -521,18 +521,18 @@ Example:
 @apiHeader [(group)] [{type}] [field=defaultValue] [description]
 ```
 Describe a parameter passed to you API-Header e.g. for Authorization.
-*Similar operation as `@apiParam`, only the output is above the parameters.*
+*Similar operation as [`@apiParam`][#apiparam], only the output is above the parameters.*
 
 Usage: `@apiHeader (MyHeaderGroup) {String} authorization Authorization value`
 
-|Name                   |Description                                                                                                                                                  |
-|:----------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|(group)       optional | All parameters will be grouped by this name. Without a group, the default `Parameter` is set.. You can set a title and description with [@apiDefine](TODO). |
-|{type}        optional | Return type, e.g. {Boolean}, {Number}, {String}, {Object}, {String[]} (array of strings), ...                                                               |
-|field                  | Variable name.                                                                                                                                              |
-|\[field\]              | Fieldname with brackets define the Variable as optional.                                                                                                    |
-|=defaultValue          | The parameters default value.                                                                                                                               |
-|description   optional | Description of the field.                                                                                                                                   |
+|Name                   |Description                                                                                                                                                        |
+|:----------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|(group)       optional | All parameters will be grouped by this name. Without a group, the default `Parameter` is set.. You can set a title and description with [@apiDefine](#apidefine). |
+|{type}        optional | Return type, e.g. {Boolean}, {Number}, {String}, {Object}, {String[]} (array of strings), ...                                                                     |
+|field                  | Variable name.                                                                                                                                                    |
+|\[field\]              | Fieldname with brackets define the Variable as optional.                                                                                                          |
+|=defaultValue          | The parameters default value.                                                                                                                                     |
+|description   optional | Description of the field.                                                                                                                                         |
 
 Example:
 ```
@@ -605,12 +605,6 @@ Structure definition doesn't need `@apiName`.
 
 Usage: `@apiName GetUser`
 
-|Name                 |Description                                                                                                                  |
-|:--------------------|:----------------------------------------------------------------------------------------------------------------------------|
-|text                 |Unique name of the method. Same name with different @apiVersion can be defined.
-                       Format: method + path (e.g. Get + User), only a proposal, you can name as you want.
-                       Also used as navigation title.                                    |
-
 <table>
   <tbody>
     <tr>
@@ -656,7 +650,7 @@ For nested parameters, use square bracket notation (`[]`).
       <td>(group) optional</td>
       <td>
           <p>All parameters will be grouped by this name. Without a group, the default <strong>Parameter</strong> is set.</p>
-          <p>You can set a title and description with <strong>@apiDefine</strong>.</p>
+          <p>You can set a title and description with <strong><a href="#apidefine">@apiDefine</a></strong>.</p>
       </td>
     </tr>
     <tr>
@@ -665,7 +659,7 @@ For nested parameters, use square bracket notation (`[]`).
     </tr>
     <tr>
       <td>{type{size}} optional</td>
-      <td>Information about the size of the variable. <strong>{string{..5}}</strong> a string that has max 5 chars. `{number{100-999}}` a number between 100 and 999.</td>
+      <td>Information about the size of the variable. <strong>{string{..5}}</strong> a string that has max 5 chars. <strong>{number{100-999}}</strong> a number between 100 and 999.</td>
     </tr>
     <tr>
       <td>{type=allowedValues} optional</td>
@@ -759,7 +753,7 @@ Example:
 ```
 
 Outputs the permission name. 
-If the name is defined with @apiDefine the generated documentation include the additional title and description.
+If the name is defined with `@apiDefine` the generated documentation include the additional title and description.
 
 Usage: `@apiPermission admin`
 
@@ -781,8 +775,8 @@ Example:
 @apiSampleRequest url
 ```
 
-Use this parameter in conjunction with the apidoc.json configuration parameter [sampleUrl](TODO).
-If `sampleUrl` is set, all methods will have the api test form (the endpoint from @api will be appended).
+Use this parameter in conjunction with the apidoc.json configuration parameter [sampleUrl](#apisamplerequest).
+If `sampleUrl` is set, all methods will have the api test form (the endpoint from [@api](#api) will be appended).
 Without sampleUrl only methods with `@apiSampleRequest` will have a form.
 if `@apiSampleRequest url` is set in a method block, this url will be used for the request (it overrides sampleUrl when it starts with http).
 If `sampleUrl` is set and you don't want a method with a test form, then add @apiSampleRequest off to the documentation block.
@@ -799,9 +793,9 @@ Usage: `@apiSampleRequest http://test.github.com`
       <td>url</td>
       <td>
         <p>Url to your test api server.</p>
-        <p>Overwrite the configuration parameter sampleUrl and append @api url:
+        <p>Overwrite the configuration parameter sampleUrl and append [@api](#api) url:
           <strong>@apiSampleRequest http://www.example.com</strong></p>
-        <p>Prefix the @api url:
+        <p>Prefix the [@api](#api) url:
           <strong>@apiSampleRequest /my_test_path</strong></p>
         <p>Disable api test if configuration parameter sampleUrl is set:
           <strong>@apiSampleRequest off</strong></p>

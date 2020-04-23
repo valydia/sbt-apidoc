@@ -22,7 +22,7 @@ class SbtApidocSpec extends FlatSpec with Matchers with LoggerHelper {
         None,
         apidocDescription,
         "0.0.0",
-        "0.0.0",
+        "buildVersion",
         new File("whocares"),
         Some(url),
         Some(sampleUrl),
@@ -46,7 +46,7 @@ class SbtApidocSpec extends FlatSpec with Matchers with LoggerHelper {
     assert(apiProject("footer")("title").str === footerTitle.get)
     assert(apiProject("order") === Js.Arr("a", "b", "c"))
     assert(apiProject("generator")("name").str === "sbt-apidoc")
-    assert(apiProject("generator")("version").str === "0.17.6")
+    assert(apiProject("generator")("version").str === "buildVersion")
 
   }
 
@@ -59,7 +59,7 @@ class SbtApidocSpec extends FlatSpec with Matchers with LoggerHelper {
         None,
         apidocDescription,
         "0.0.0",
-        "0.0.0",
+        "buildVersion",
         new File("whocares"),
         None,
         None,
@@ -81,7 +81,7 @@ class SbtApidocSpec extends FlatSpec with Matchers with LoggerHelper {
     assert(apiProject("description").str === apidocDescription)
     assert(apiProject("sampleUrl").bool === false)
     assert(apiProject("generator")("name").str === "sbt-apidoc")
-    assert(apiProject("generator")("version").str === "0.17.6")
+    assert(apiProject("generator")("version").str === "buildVersion")
     assert(!apiProject.obj.contains("template"))
     assert(!apiProject.obj.contains("footer"))
     assert(!apiProject.obj.contains("header"))
