@@ -23,12 +23,34 @@ Add the following to your `project/plugins.sbt` or `~/.sbt/1.0/plugins/plugins.s
 addSbtPlugin("com.culpin.team" % "sbt-apidoc" % "0.5.3")
 ```
     
-You can custom the different apidoc keys into the `build.sbt`:
+And some `apidoc` comments in your source code:
 
-```sbt
-apidocName := name.value,
-apidocVersion := Some("0.3.0"),
-apidocDescription := "A basic apiDoc example"
+```
+/**
+ * @api {get} /user/:id Request User information
+ * @apiName GetUser
+ * @apiGroup User
+ *
+ * @apiParam {Number} id Users unique ID.
+ *
+ * @apiSuccess {String} firstname Firstname of the User.
+ * @apiSuccess {String} lastname  Lastname of the User.
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "firstname": "John",
+ *       "lastname": "Doe"
+ *     }
+ *
+ * @apiError UserNotFound The id of the User was not found.
+ *
+ * @apiErrorExample Error-Response:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "error": "UserNotFound"
+ *     }
+ */
 ```
 
 And the task:
