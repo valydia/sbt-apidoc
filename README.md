@@ -20,7 +20,7 @@ This plugin requires sbt 1.0.0+
 Add the following to your `project/plugins.sbt` or `~/.sbt/1.0/plugins/plugins.sbt` file:
 
 ```sbt
-addSbtPlugin("com.culpin.team" % "sbt-apidoc" % "0.5.3")
+addSbtPlugin("com.culpin.team" % "sbt-apidoc" % "0.5.4")
 ```
     
 And some `apidoc` comments in your source code using the **Javadoc-Style** comments:
@@ -53,11 +53,11 @@ And some `apidoc` comments in your source code using the **Javadoc-Style** comme
  */
 ```
 
-And the task:
+And run the command:
 >sbt apidoc
 
 The output is generated under `target/scala-2.12/apidoc`. 
-And you can open in your browser the `target/scala-2.12/apidoc/index.html`
+And you can open in your browser the file `target/scala-2.12/apidoc/index.html`.
 
 ## Examples
 
@@ -66,7 +66,7 @@ And you can open in your browser the `target/scala-2.12/apidoc/index.html`
 In this basic example we have a small project file and few setting keys in the `build.sbt`.  
 [View example output](http://sbt-apidoc.com/example-basic/)
 
-[`build.sbt`](TODO)
+[`build.sbt`](https://github.com/valydia/sbt-apidoc-example/blob/master/build.sbt)
 ```
   apidocName := "example",
   apidocVersion := Some("0.3.0")
@@ -76,7 +76,7 @@ In this basic example we have a small project file and few setting keys in the `
 `apidocName`, `apidocVersion`, `apidocDescription` are set in the `build.sbt`
 Those values are derived from the project `name`, `version`, `description` values by default.
 
-[Hello.scala](TODO)
+[Basic.scala](https://github.com/valydia/sbt-apidoc-example/blob/master/basic/src/main/scala/example/Basic.scala)
 ```scala
 /**
  * @api {get} /user/:id Request User information
@@ -116,16 +116,16 @@ All other fields are optional, look at their description under [apiDoc-Params](#
 ### Inherit
 
 Using inherit, you can define reusable snippets of your documentation.  
-[View example output](TODO)
+[View example output](http://sbt-apidoc.com/example-inherit/)
 
-[`build.sbt`](TODO)
+[`build.sbt`](https://github.com/valydia/sbt-apidoc-example/blob/master/build.sbt)
 ```
   apidocName := "example-inherit",
   apidocDescription := "apiDoc inherit example",
   apidocVersion := Some("0.1.0")
 ```
 
-[Hello.scala](TODO)
+[Inherit.scala](https://github.com/valydia/sbt-apidoc-example/blob/master/inherit/src/main/scala/example/Inherit.scala)
 ```scala
 /**
  * @apiDefine UserNotFoundError
@@ -190,7 +190,7 @@ Inheritance only works with 1 parent, more levels would make the inline code unr
 A useful feature provided by apiDoc is the ability to maintain the documentation for all previous versions and the latest version of the API.  
 This makes it possible to compare a methods version with its predecessor. 
 Frontend Developer can thus simply see what have changed and update their code accordingly.  
-[View example output](TODO)
+[View example output](http://sbt-apidoc.com/example-versioning/)
 
 In the example, click top right on select box (the main version) and select 
 `Compare all with predecessor`.
@@ -201,7 +201,7 @@ In the example, click top right on select box (the main version) and select
 * Red marks contents that were removed.
 You can change the main version (top right) to a previous version and compare older methods with their predecessor.
 
-[`build.sbt`](TODO)
+[`build.sbt`](https://github.com/valydia/sbt-apidoc-example/blob/master/build.sbt)
 ```
   apidocName := "example-versioning",
   apidocDescription := "apiDoc versioning example",
@@ -213,7 +213,7 @@ In order to avoid code bloat when API documentation changes over time, it is rec
 Before you change your documentation block, copy the old documentation to to this file, apiDoc will include the historical information automatically.
 
 
-[`resources/apidoc`](TODO)
+[`resources/apidoc`](https://github.com/valydia/sbt-apidoc-example/blob/master/versioning/src/main/resources/apidoc)
 ```scala
 /**
  * @api {get} /user/:id Get User information
@@ -243,7 +243,7 @@ Before you change your documentation block, copy the old documentation to to thi
  */
 ```
 
-[`Hello.scala`](TODO)(your current project file)
+[`Versioning.scala`](https://github.com/valydia/sbt-apidoc-example/blob/master/versioning/src/main/scala/example/Versioning.scala) (your current project file)
 ```scala
 /**
  * @api {get} /user/:id Get User information and Date of Registration.
@@ -280,11 +280,12 @@ You don't have to change the version on an inherit block, the parser check autom
 ### Full example
     
 This is a complex example with `inherit`, `versioning` file and history file `resources/apidoc`, explanation is within code and generated documentation.
+[View example output](http://sbt-apidoc.com/example-full/)
 
 Files:
- * [resources/apidoc](TODO)
- * [Hello.scala](TODO)
- * [build.sbt](TODO)
+ * [resources/apidoc](https://github.com/valydia/sbt-apidoc-example/blob/master/versioning/src/main/resources/apidoc)
+ * [Hello.scala](https://github.com/valydia/sbt-apidoc-example/blob/master/full/src/main/scala/example/Full.scala)
+ * [build.sbt](https://github.com/valydia/sbt-apidoc-example/blob/master/build.sbt)
 
 ## Configuration
 
@@ -384,7 +385,7 @@ Examples:
  * @apiPermission admin
  */
 ```
-For more details, see [inherit example](TODO).
+For more details, see [inherit example](#inherit).
 
 ### @apiDeprecated
 
@@ -1001,7 +1002,7 @@ Example:
  * @apiVersion 1.6.2
  */
 ```
-For more watch [versioning example](TODO).
+For more watch [versioning example](#versioning).
 
 ## License 
 
