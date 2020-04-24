@@ -120,7 +120,7 @@ object SbtApidoc extends AutoPlugin {
 
   private def buildConfig(apidocConfig: Config, log: Logger): Js.Obj = {
 
-    //For some reason, the default value is set to false
+    // This strange behaviour is due to the original library (in JS)
     val sampleUrl: Js.Value =
       apidocConfig.sampleUrl.fold(Js.Bool(false): Js.Value)(Js.Str.apply)
 
@@ -129,37 +129,9 @@ object SbtApidoc extends AutoPlugin {
       "withGenerator" -> apidocConfig.templateGenerator.map(Js.Bool.apply)
     )).filter(_.value.nonEmpty)
 
-    val header =
-      apidocConfig.headerFile.flatMap { file =>
-        if (file.exists()){
-          Some(
-            Util.buildObj(
-              "title" -> apidocConfig.headerTitle.map(Js.Str.apply),
-              "content" -> Some(Js.Str(Util.renderMarkDown(IO.read(file))))
-            )
-          )
-        }
-        else {
-          log.warn(s"The file ${file.getAbsoluteFile} doesn't exist")
-          None
-        }
-      }
+    val header = buildHeaderFooter(apidocConfig.headerFile, apidocConfig.headerTitle, log)
 
-    val footer =
-      apidocConfig.footerFile.flatMap { file =>
-        if (file.exists()){
-          Some(
-            Util.buildObj(
-              "title" -> apidocConfig.footerTitle.map(Js.Str.apply),
-              "content" -> Some(Js.Str(Util.renderMarkDown(IO.read(file))))
-            )
-          )
-        }
-        else {
-          log.warn(s"The file ${file.getAbsoluteFile} doesn't exist")
-          None
-        }
-      }
+    val footer = buildHeaderFooter(apidocConfig.footerFile, apidocConfig.footerTitle, log)
     val order =
       if (apidocConfig.order.nonEmpty)
         Some(Js.Arr.from(apidocConfig.order))
@@ -188,6 +160,23 @@ object SbtApidoc extends AutoPlugin {
     )
   }
 
+  def buildHeaderFooter(file: Option[File], title: Option[String], log: Logger): Option[Js.Obj] = {
+    file.flatMap { file =>
+      if (file.exists()){
+        Some(
+          Util.buildObj(
+            "title" -> title.map(Js.Str.apply),
+            "content" -> Some(Js.Str(Util.renderMarkDown(IO.read(file))))
+          )
+        )
+      }
+      else {
+        log.warn(s"The file ${file.getAbsoluteFile} doesn't exist")
+        None
+      }
+    }
+  }
+
 
   def filter(parsedFiles: Js.Arr): Js.Arr = {
     import scala.collection.mutable
@@ -198,7 +187,6 @@ object SbtApidoc extends AutoPlugin {
               if block("global").obj.isEmpty && block("local").obj.nonEmpty =>
             block("local")
         }
-
       case _ => mutable.ArrayBuffer[Js.Value]()
     })
   }

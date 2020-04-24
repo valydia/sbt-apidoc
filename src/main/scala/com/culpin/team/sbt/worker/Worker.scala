@@ -569,7 +569,7 @@ class ApiUseWorker extends Worker {
               val Js.Num(index) = acc("index")
               val Js.Str(filename) = acc("local")("filename")
               //FIXME Handle the error
-              ???
+              throw new Exception(s"Couldn't find the filname $filename at index $index")
             } else {
               val metadata =
                 if (preProcess(source).obj.getOrElse(name, Js.Obj()).obj.getOrElse(version, Js.Null) != Js.Null) {
@@ -606,7 +606,6 @@ object Worker {
     new ApiUseWorker
   )
 
-  //FIXME
   def matchData(preProcess: Js.Value,
                 source: String,
                 name: String,

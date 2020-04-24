@@ -14,7 +14,7 @@ An attempt to port the [apidocjs plugin][apidocjs] to sbt.
 [license-logo]: https://img.shields.io/badge/License-MIT-blue.svg 
 [MIT-license]: https://opensource.org/licenses/MIT
 
-### Getting Started
+### Usage
 
 This plugin requires sbt 1.0.0+
 Add the following to your `project/plugins.sbt` or `~/.sbt/1.0/plugins/plugins.sbt` file:
