@@ -86,6 +86,7 @@ object Util {
     Js.Arr(sortedChildren)
   }
 
+  // Build a Js.Obj based on a Seq of (String -> Option[Value])
   private[sbt] def buildObj(elems: (String, Option[Js.Value])*) : Js.Obj = {
     val tupleList =
       elems.foldLeft(List.empty[(String, Js.Value)]) { case (acc, elem) =>
