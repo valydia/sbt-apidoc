@@ -209,7 +209,7 @@ You can change the main version (top right) to a previous version and compare ol
   apidocVersionFile := (resource in Compile).value / "apidoc"
 ```
 
-In order to avoid code bloat when API documentation changes over time, it is recommended to use a separate history file or folder named `resources/apidoc`. 
+In order to avoid code bloat when API documentation changes over time, it is recommended to use a separate history file or folder named `resources/apidoc` (can be overriden with the setting key `apidocVersionFile`).  
 Before you change your documentation block, copy the old documentation to to this file, apiDoc will include the historical information automatically.
 
 
@@ -299,7 +299,7 @@ Files:
 |                `apidocURL` |  `Option[String]` |             `None`           | Prefix for api path (endpoints), e.g. `https://api.github.com/v1`                                                                   |
 |          `apidocSampleURL` |  `Option[String]` |             `None`           | If set, a form to test an api method (send a request) will be visible. See [@apiSampleRequest](#apiSampleRequest) for more details. |
 |            `apidocVersion` |  `Option[String]` |   same as `version` value    | Version of your project. If not set uses the same as the `version` setting key.                                                     |
-|        `apidocVersionFile` |  `Option[File]`   |      `resources/apidoc`      | File/Folder to keep track of the old api. It is set by default to `resources/apidoc``.                                              |
+|        `apidocVersionFile` |  `Option[File]`   |      `resources/apidoc`      | File/Folder to keep track of the old api. It is set by default to `resources/apidoc`.                                              |
 |        `apidocHeaderTitle` |  `Option[String]` |             `None`           | Navigation text for the included `Header` file.                                                                                     |
 |         `apidocHeaderFile` |   `Option[File]`  |             `None`           | Filename (markdown-file) for the included `Header` file.                                                                            |
 |        `apidocFooterTitle` |  `Option[String]` |             `None`           | Navigation text for the included `Footer` file.                                                                                     |                                   
@@ -325,7 +325,7 @@ A defined block can have all params (like `@apiParam`), **except other defined b
 ```
 **Required!**  
 Without that indicator, apiDoc parser ignore the documentation block.
-The only exception are documentation blocks defined by `@apiDefine`, they not required `@api`.
+The only exception are documentation blocks defined by `@apiDefine`, they don't require `@api`.
 
 Usage: `@api {get} /user/:id Users unique ID.`
 
@@ -349,7 +349,7 @@ Example:
                 [description]
 ```
 Defines a documentation block to be embedded within `@api` blocks or in an api function like `@apiPermission`.
-`@apiDefine` can only be used once per block
+`@apiDefine` can only be used once per block.  
 By using `@apiUse` a defined block will be imported, or with the name the title and description will be used.
 
 Usage: `@apiDefine MyError`
@@ -358,7 +358,7 @@ Usage: `@apiDefine MyError`
 |:--------------------|:----------------------------------------------------------------------------------------------------------------------------|
 |name                 |Unique name for the block / value. Same name with different `@apiVersion` can be defined.                                    |
 |title       optional |A short title. Only used for named functions like `@apiPermission` or `@apiParam (name)`                                     |
-|description optional |Detailed Description start at the next line, multiple lines can be used. Only used for named functions like `@apiPermission`.|
+|description optional |Detailed description start at the next line, multiple lines can be used. Only used for named functions like `@apiPermission`.|
 
 Examples:
 ```scala
@@ -391,7 +391,7 @@ For more details, see [inherit example](TODO).
 ```
 @apiDeprecated [text]
 ```
-Mark an API Method as deprecated
+Mark an API Method as deprecated.  
 Usage: `@apiDeprecated use now (#Group:Name)`
 
 |Name                 |Description        |
@@ -417,7 +417,7 @@ Example:
 ```
 @apiDescription text
 ```
-Detailed description of the API Method
+Detailed description of the API Method.  
 Usage: `@apiDescription This is the Description.`
 
 |Name                 |Description                    |
@@ -517,7 +517,7 @@ Example:
 ```
 @apiGroup name
 ```
-**Should always be used.**  
+**Should always be used.**    
 Defines to which group the method documentation block belongs. 
 Groups will be used for the Main-Navigation in the generated output. 
 Structure definition doesn't need `@apiGroup`.
@@ -619,7 +619,7 @@ Example:
 ```
 @apiName name
 ```
-**Should always be used.**
+**Should always be used.**  
 Defines the name of the method documentation block. 
 Names will be used for the Sub-Navigation in the generated output. 
 Structure definition doesn't need `@apiName`.
@@ -657,8 +657,8 @@ Example:
 @apiParam [(group)] [{type}] [field=defaultValue] [description]
 ```
 
-Describe a parameter passed to you API-Method.
-Usage: `@apiParam (MyGroup) {Number} id Users unique ID.`
+Describe a parameter passed to you API-Method.  
+Usage: `@apiParam (MyGroup) {Number} id Users unique ID.`  
 For nested parameters, use square bracket notation (`[]`).
 
 <table>
@@ -796,11 +796,11 @@ Example:
 @apiSampleRequest url
 ```
 
-Use this parameter in conjunction with the `settingsKey` in the `build.sbt` [sampleUrl](#apisamplerequest).
-If `sampleUrl` is set, all methods will have the api test form (the endpoint from [@api](#api) will be appended).
-Without sampleUrl only methods with `@apiSampleRequest` will have a form.
-if `@apiSampleRequest url` is set in a method block, this url will be used for the request (it overrides sampleUrl when it starts with http).
-If `sampleUrl` is set and you don't want a method with a test form, then add @apiSampleRequest off to the documentation block.
+Use this parameter in conjunction with the `settingsKey` in the `build.sbt` [apidocSampleURL](#setting-keys).
+If `apidocSampleURL` is set, all methods will have the api test form (the endpoint from [@api](#api) will be appended).
+Without `apidocSampleURL` only methods with `@apiSampleRequest` will have a form.
+if `@apiSampleRequest url` is set in a method block, this url will be used for the request (it overrides apidocSampleURL when it starts with http).
+If `apidocSampleURL` is set and you don't want a method with a test form, then add `@apiSampleRequest off` to the documentation block.
 
 Usage: `@apiSampleRequest http://test.github.com`
 
@@ -814,11 +814,11 @@ Usage: `@apiSampleRequest http://test.github.com`
       <td>url</td>
       <td>
         <p>Url to your test api server.</p>
-        <p>Overwrite the configuration parameter sampleUrl and append <a href="#api">@api</a> url:
+        <p>Overwrite the configuration parameter apidocSampleURL and append <a href="#api">@api</a> url:
           <strong>@apiSampleRequest http://www.example.com</strong></p>
         <p>Prefix the <a href="#api">@api</a> url:
           <strong>@apiSampleRequest /my_test_path</strong></p>
-        <p>Disable api test if configuration parameter sampleUrl is set:
+        <p>Disable api test if configuration parameter apidocSampleURL is set:
           <strong>@apiSampleRequest off</strong></p>
       </td>
     </tr>
@@ -826,26 +826,26 @@ Usage: `@apiSampleRequest http://test.github.com`
 </table>
 
 Examples:  
-This will send the api request to **http://api.github.com/user/:id**
+This will send the api request to **http://api.github.com/user/:id**  
 ```
-Configuration parameter sampleUrl: "http://api.github.com"
+Configuration parameter apidocSampleURL := Some("http://api.github.com")
 /**
  * @api {get} /user/:id
  */
 ```
-This will send the api request to **http://test.github.com/some_path/user/:id**
-It overwrites sampleUrl.
+This will send the api request to **http://test.github.com/some_path/user/:id**  
+It overwrites apidocSampleURL.
 ```
-Configuration parameter sampleUrl: "http://api.github.com"
+Configuration parameter apidocSampleURL := Some("http://api.github.com")
 /**
  * @api {get} /user/:id
  * @apiSampleRequest http://test.github.com/some_path/
  */
 ```
-This will send the api request to **http://api.github.com/test/user/:id**
-It extends sampleUrl.
+This will send the api request to **http://api.github.com/test/user/:id**  
+It extends apidocSampleURL.
 ```
-Configuration parameter sampleUrl: "http://api.github.com"
+Configuration parameter apidocSampleURL := Some("http://api.github.com")
 /**
  * @api {get} /user/:id
  * @apiSampleRequest /test
@@ -853,16 +853,16 @@ Configuration parameter sampleUrl: "http://api.github.com"
 ```
 This will disable the api request for this api-method.
 ```
-Configuration parameter sampleUrl: "http://api.github.com"
+Configuration parameter apidocSampleURL := Some("http://api.github.com")
 /**
  * @api {get} /user/:id
  * @apiSampleRequest off
  */
 ```
-This will send the api request to **http://api.github.com/some_path/user/:id**
+This will send the api request to **http://api.github.com/some_path/user/:id**  
 It activates the request for this method only, because sampleUrl is not set.
 ```
-Configuration parameter sampleUrl is not set
+Configuration parameter apidocSampleURL is not set, apidocSampleURL := None
 /**
  * @api {get} /user/:id
  * @apiSampleRequest http://api.github.com/some_path/
