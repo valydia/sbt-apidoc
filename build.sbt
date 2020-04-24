@@ -12,6 +12,7 @@ lazy val root = (project in file("."))
     licenses := Seq("MIT License" -> url("http://opensource.org/licenses/mit-license.php/")),
     libraryDependencies ++= Seq(
       "com.lihaoyi"           %%     "ujson"                      %    "0.6.6",
+      "com.lihaoyi"           %%     "fastparse"                  %    "0.4.2",
       "com.gilt"              %%     "gfc-semver"                 %    "0.0.5",
       "com.vladsch.flexmark"  %      "flexmark-html-parser"       %    "0.34.48",
       "com.vladsch.flexmark"  %      "flexmark-ext-typographic"   %    "0.34.48",
