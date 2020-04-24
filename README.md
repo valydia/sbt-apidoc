@@ -14,7 +14,7 @@ An attempt to port the [apidocjs plugin][apidocjs] to sbt.
 [license-logo]: https://img.shields.io/badge/License-MIT-blue.svg 
 [MIT-license]: https://opensource.org/licenses/MIT
 
-### Installation
+### Getting Started
 
 This plugin requires sbt 1.0.0+
 Add the following to your `project/plugins.sbt` or `~/.sbt/1.0/plugins/plugins.sbt` file:
@@ -23,7 +23,7 @@ Add the following to your `project/plugins.sbt` or `~/.sbt/1.0/plugins/plugins.s
 addSbtPlugin("com.culpin.team" % "sbt-apidoc" % "0.5.3")
 ```
     
-And some `apidoc` comments in your source code:
+And some `apidoc` comments in your source code using the **Javadoc-Style** comments:
 
 ```
 /**
@@ -54,7 +54,7 @@ And some `apidoc` comments in your source code:
 ```
 
 And the task:
->apidoc
+>sbt apidoc
 
 The output is generated under `target/scala-2.12/apidoc`. 
 And you can open in your browser the `target/scala-2.12/apidoc/index.html`
@@ -69,11 +69,11 @@ In this basic example we have a small project file and few setting keys in the `
 [`build.sbt`](TODO)
 ```
   apidocName := "example",
-  apidocDescription := "A basic apiDoc example",
   apidocVersion := Some("0.3.0")
+  apidocDescription := "A basic apiDoc example",
 ```
 
-From `build.sbt` apiDoc get the name, version and description of your project.
+`apidocName`, `apidocVersion`, `apidocDescription` are set in the `build.sbt`
 Those values are derived from the project `name`, `version`, `description` values by default.
 
 [Hello.scala](TODO)
@@ -297,7 +297,7 @@ Files:
 |              `apidocTitle` |  `Option[String]` |             `None`           | Browser title text.                                                                                                         |
 |        `apidocDescription` |      `String`     | same as `description` value  | Introduction of your project. By default the `description` value                                                            |
 |                `apidocURL` |  `Option[String]` |             `None`           | Prefix for api path (endpoints), e.g. `https://api.github.com/v1`                                                           |
-|          `apidocSampleURL` |  `Option[String]` |             `None`           | If set, a form to test an api method (send a request) will be visible. See [@apiSampleRequest](TODO) for more details.      |
+|          `apidocSampleURL` |  `Option[String]` |             `None`           | If set, a form to test an api method (send a request) will be visible. See [@apiSampleRequest](#apiSampleRequest) for more details.      |
 |            `apidocVersion` |  `Option[String]` |   same as `version` value    | Version of your project. If not set uses the same as the project `version`.                                                 |
 |        `apidocVersionFile` |  `Option[File]`   |   same as `version` value    | Version of your project. If not set uses the same as the project `version`.                                                 |
 |        `apidocHeaderTitle` |  `Option[String]` |             `None`           | Navigation text for the included `Header` file.                                                                     |
@@ -360,7 +360,7 @@ Usage: `@apiDefine MyError`
 |title       optional |A short title. Only used for named functions like `@apiPermission` or `@apiParam (name)`                                     |
 |description optional |Detailed Description start at the next line, multiple lines can be used. Only used for named functions like `@apiPermission`.|
 
-Example:
+Examples:
 ```scala
 /**
  * @apiDefine MyError
@@ -472,7 +472,7 @@ Usage: `@apiErrorExample {json} Error-Response:
 |:--------------------|:--------------------------------------|
 |type        optional | Response format.                      |
 |title       optional | Short title for the example.          |
-|description optional | Detailed example, multilines capable. |
+|example              | Detailed example, multilines capable. |
 
 Example:
 ```scala
@@ -490,7 +490,6 @@ Example:
 ```
 @apiExample [{type}] title
             example
-
 ```
 Example for usage of an API method. Output as a pre-formatted code.
 Use it for a complete example at the beginning of the description of an endpoint.
@@ -518,10 +517,10 @@ Example:
 ```
 @apiGroup name
 ```
-**Should always be used.**
+**Should always be used.**  
 Defines to which group the method documentation block belongs. 
 Groups will be used for the Main-Navigation in the generated output. 
-Structure definition not need `@apiGroup`.
+Structure definition doesn't need `@apiGroup`.
 
 Usage: `@apiGroup User`
 
@@ -542,8 +541,8 @@ Example:
 ```
 @apiHeader [(group)] [{type}] [field=defaultValue] [description]
 ```
-Describe a parameter passed to you API-Header e.g. for Authorization.
-*Similar operation as [`@apiParam`][#apiparam], only the output is above the parameters.*
+Describe a parameter passed to you API-Header e.g. for Authorization.  
+*Similar operation as [`@apiParam`](#apiparam), only the output is above the parameters.*
 
 Usage: `@apiHeader (MyHeaderGroup) {String} authorization Authorization value`
 
@@ -553,7 +552,7 @@ Usage: `@apiHeader (MyHeaderGroup) {String} authorization Authorization value`
 |{type}        optional | Return type, e.g. {Boolean}, {Number}, {String}, {Object}, {String[]} (array of strings), ...                                                                     |
 |field                  | Variable name.                                                                                                                                                    |
 |\[field\]              | Fieldname with brackets define the Variable as optional.                                                                                                          |
-|=defaultValue          | The parameters default value.                                                                                                                                     |
+|=defaultValue optional | The parameters default value.                                                                                                                                     |
 |description   optional | Description of the field.                                                                                                                                         |
 
 Example:
@@ -637,7 +636,7 @@ Usage: `@apiName GetUser`
       <td>text</td>
       <td>
         <p>Unique name of the method. Same name with different <strong>@apiVersion</strong> can be defined.</p>
-        <p>Format: method + path (e.g. Get + User), only a proposal, you can name as you want.</p>
+        <p>Format: <em>method + path</em> (e.g. Get + User), only a proposal, you can name as you want.</p>
         <p>Also used as navigation title.</p>
       </td>
     </tr>
@@ -875,7 +874,7 @@ Configuration parameter sampleUrl is not set
 ```
 @apiSuccess [(group)] [{type}] field [description]
 ```
-Success return Parameter.
+Success return Parameter.  
 Usage: `@apiSuccess {String} firstname Firstname of the User`.
 
 |Name                   |Description                                                                                                                                                           |
