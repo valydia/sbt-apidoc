@@ -505,14 +505,14 @@ lazy val root = (project in file(".")).
         |   }
         | ]
         |""".stripMargin
-      val apiData = target.value / "apidoc" / "api_data.json"
+      val apiData = crossTarget.value / "apidoc" / "api_data.json"
       val output = IO.read(apiData)
       val json = ujson.read(output)
       val expected = ujson.read(expectedOutput)
       assert(json == expected, s"apidoc should produce the right output, received $output")
     },
     TaskKey[Unit]("checkApiProjectHeader") := {
-      val apiProject = target.value / "apidoc" / "api_project.json"
+      val apiProject = crossTarget.value / "apidoc" / "api_project.json"
       val output = IO.read(apiProject)
       val content = ujson.read(output)("header")("content").str
       assert(content == "<h2 id=\"welcome-to-apidoc\">Welcome to apiDoc</h2>\n<p>Please visit <a href=\"http://apidocjs.com\">apidocjs.com</a> with the full documentation.</p>", "Incorrect content header")
@@ -520,7 +520,7 @@ lazy val root = (project in file(".")).
         assert(title ==  "My own header title")
     },
     TaskKey[Unit]("checkApiProjectFooter") := {
-      val apiProject = target.value / "apidoc" / "api_project.json"
+      val apiProject = crossTarget.value / "apidoc" / "api_project.json"
       val output = IO.read(apiProject)
       val content = ujson.read(output)("footer")("content").str
       assert(content == "<h2 id=\"epilogue\">Epilogue</h2>\n<p>Suggestions, contact, support and error reporting on <a href=\"https://github.com/apidoc/apidoc/issues\">GitHub</a></p>", "Incorrect content footer")

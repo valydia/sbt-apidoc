@@ -407,7 +407,6 @@ object Parser {
       )
   }
 
-  //FIXME
   private[parser] def apiSampleRequest(content: String): Option[Js.Obj] = {
     val url = trim(content)
     if (url.isEmpty) None

@@ -86,6 +86,21 @@ object Util {
     Js.Arr(sortedChildren)
   }
 
+  // Build a Js.Obj based on a Seq of (String -> Option[Value])
+  private[sbt] def buildObj(elems: (String, Option[Js.Value])*) : Js.Obj = {
+    val tupleList =
+      elems.foldLeft(List.empty[(String, Js.Value)]) { case (acc, elem) =>
+        val newVal =
+          elem match {
+            case (_, None) => Nil
+            case (key, Some(value)) => List(key -> value)
+          }
+        acc ++ newVal
+      }
+    Js.Obj.from(tupleList)
+  }
+
+
   private[sbt] def renderMarkDown(value: String): String = {
 
     val options = new MutableDataSet().set(
@@ -103,11 +118,12 @@ object Util {
     val renderer = HtmlRenderer.builder(options).build
 
     val document = parser.parse(value)
-    // FIXME hack
+    // TODO a a bit hacky, the might be some api in the library that could do the job
     renderer.render(document).replaceAll("</p>\n<p>", "</p> <p>")
   }
 
   private[sbt] def renderMarkDownNoPTags(value: String): String =
     renderMarkDown(value).replaceAll("<p>|</p>", "")
+
 
 }

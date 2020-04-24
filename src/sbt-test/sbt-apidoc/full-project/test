@@ -3,11 +3,11 @@
 > checkApiData
 > checkApiProjectHeader
 > checkApiProjectFooter
-$ exists target/apidoc
-$ exists target/apidoc/api_data.js
-$ exists target/apidoc/api_project.js
-$ exists target/apidoc/api_data.json
-$ exists target/apidoc/api_project.json
-$ exists target/apidoc/css/style.css
+$ exists target/scala-2.12/apidoc
+$ exists target/scala-2.12/apidoc/api_data.js
+$ exists target/scala-2.12/apidoc/api_project.js
+$ exists target/scala-2.12/apidoc/api_data.json
+$ exists target/scala-2.12/apidoc/api_project.json
+$ exists target/scala-2.12/apidoc/css/style.css
 
 
