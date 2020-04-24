@@ -60,7 +60,7 @@ object SbtApidoc extends AutoPlugin {
 
     val log = streams.value.log
     // This project version
-    val projectVersion = "0.5.3"
+    val projectVersion = "0.5.4"
     val config = Config(
       apidocName.value,
       apidocTitle.value,
