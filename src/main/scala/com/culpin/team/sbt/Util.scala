@@ -117,7 +117,7 @@ object Util {
     val renderer = HtmlRenderer.builder(options).build
 
     val document = parser.parse(value)
-    // TODOa a bit hacky, the might be some api in the library that could do the job
+    // TODO a a bit hacky, the might be some api in the library that could do the job
     renderer.render(document).replaceAll("</p>\n<p>", "</p> <p>")
   }
 

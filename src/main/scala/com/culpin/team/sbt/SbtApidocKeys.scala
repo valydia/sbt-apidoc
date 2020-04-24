@@ -6,8 +6,8 @@ trait SbtApidocKeys {
   lazy val apidoc =
     taskKey[Option[File]]("Generates APIDOC plugin documentation")
   lazy val apidocOutputDir =
-    settingKey[File]("Location where to put to generated documentation")
-  lazy val apidocName = settingKey[String]("Name of your project, by default uses `name` value")
+    settingKey[File]("Location where to put the generated documentation")
+  lazy val apidocName = settingKey[String]("Name of your project, by default uses the name setting key")
   lazy val apidocTitle = settingKey[Option[String]]("Browser title text.")
   lazy val apidocDescription = settingKey[String]("Introduction of your project")
   lazy val apidocURL = settingKey[Option[String]]("If set, a form to test an api method (send a request) will be visible.")

@@ -81,7 +81,7 @@ object SbtApidoc extends AutoPlugin {
 
     val projectDirectory = baseDirectory.value
     val apidocFile = apidocVersionFile.value
-    val versionFile =
+    val versionFiles =
       if (apidocFile.exists()) {
         if (apidocFile.isDirectory)
           IO.listFiles(apidocFile).toList
@@ -89,7 +89,7 @@ object SbtApidoc extends AutoPlugin {
           List(apidocFile)
       } else Nil
     val inputFileAndName =
-      ((sources in Compile).value.toList ++ versionFile) map { f =>
+      ((sources in Compile).value.toList ++ versionFiles) map { f =>
        f -> relativePath(projectDirectory, f)
       }
     val result =

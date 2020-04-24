@@ -290,23 +290,23 @@ Files:
 
 ### Setting keys
 
-|                        Key |       Type        | Default                      |                                                    Description                                                              |
-|---------------------------:|:-----------------:|:-----------------------------|:---------------------------------------------------------------------------------------------------------------------------:|
-|          `apidocOutputDir` |       `File`      |        `target/apidoc/`      | Location where to put to generated documentation                                                                            |
-|               `apidocName` |      `String`     |      same as `name` value    | Name of your project, by default uses `name` value                                                                          |
-|              `apidocTitle` |  `Option[String]` |             `None`           | Browser title text.                                                                                                         |
-|        `apidocDescription` |      `String`     | same as `description` value  | Introduction of your project. By default the `description` value                                                            |
-|                `apidocURL` |  `Option[String]` |             `None`           | Prefix for api path (endpoints), e.g. `https://api.github.com/v1`                                                           |
-|          `apidocSampleURL` |  `Option[String]` |             `None`           | If set, a form to test an api method (send a request) will be visible. See [@apiSampleRequest](#apiSampleRequest) for more details.      |
-|            `apidocVersion` |  `Option[String]` |   same as `version` value    | Version of your project. If not set uses the same as the project `version`.                                                 |
-|        `apidocVersionFile` |  `Option[File]`   |   same as `version` value    | Version of your project. If not set uses the same as the project `version`.                                                 |
-|        `apidocHeaderTitle` |  `Option[String]` |             `None`           | Navigation text for the included `Header` file.                                                                     |
-|         `apidocHeaderFile` |   `Option[File]`  |             `None`           | Filename (markdown-file) for the included Header file.                                                                      |
-|        `apidocFooterTitle` |  `Option[String]` |             `None`           | Navigation text for the included `Footer` file.                                                                     |                                   
-|         `apidocFooterFile` |   `Option[File]`  |             `None`           | Filename (markdown-file) for the included Header file.                                                                      |
-|              `apidocOrder` |  `Option[String]` |             `None`           | A list of api-names / group-names for ordering the output. Not defined names are automatically displayed last.              |
-|    `apidocTemplateCompare` | `Option[Boolean]` |             `None`           | Enable comparison with older api versions. Default: Enabled                                                                 |
-|  `apidocTemplateGenerator` | `Option[Boolean]` |             `None`           | Output the generator information at the footer. Default: Enabled                                                            |
+|                        Key |       Type        | Default                      |                                                    Description                                                                      |
+|---------------------------:|:-----------------:|:-----------------------------|:-----------------------------------------------------------------------------------------------------------------------------------:|
+|          `apidocOutputDir` |       `File`      |        `target/apidoc/`      | Location where to put the generated documentation                                                                                   |
+|               `apidocName` |      `String`     |      same as `name` value    | Name of your project, by default uses the name `name` setting key                                                                   |
+|              `apidocTitle` |  `Option[String]` |             `None`           | Browser title text.                                                                                                                 |
+|        `apidocDescription` |      `String`     | same as `description` value  | Introduction of your project. By default, it is set to the `description` setting key                                                |
+|                `apidocURL` |  `Option[String]` |             `None`           | Prefix for api path (endpoints), e.g. `https://api.github.com/v1`                                                                   |
+|          `apidocSampleURL` |  `Option[String]` |             `None`           | If set, a form to test an api method (send a request) will be visible. See [@apiSampleRequest](#apiSampleRequest) for more details. |
+|            `apidocVersion` |  `Option[String]` |   same as `version` value    | Version of your project. If not set uses the same as the `version` setting key.                                                     |
+|        `apidocVersionFile` |  `Option[File]`   |      `resources/apidoc`      | File/Folder to keep track of the old api. It is set by default to `resources/apidoc``.                                              |
+|        `apidocHeaderTitle` |  `Option[String]` |             `None`           | Navigation text for the included `Header` file.                                                                                     |
+|         `apidocHeaderFile` |   `Option[File]`  |             `None`           | Filename (markdown-file) for the included Header file.                                                                              |
+|        `apidocFooterTitle` |  `Option[String]` |             `None`           | Navigation text for the included `Footer` file.                                                                                     |                                   
+|         `apidocFooterFile` |   `Option[File]`  |             `None`           | Filename (markdown-file) for the included Header file.                                                                              |
+|              `apidocOrder` |  `Option[String]` |             `None`           | A list of api-names / group-names for ordering the output. Not defined names are automatically displayed last.                      |
+|    `apidocTemplateCompare` | `Option[Boolean]` |             `None`           | Enable comparison with older api versions. Default: Enabled                                                                         |
+|  `apidocTemplateGenerator` | `Option[Boolean]` |             `None`           | Output the generator information at the footer. Default: Enabled                                                                    |
 
 
 ## apiDoc-Params
