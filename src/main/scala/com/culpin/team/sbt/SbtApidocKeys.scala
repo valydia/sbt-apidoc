@@ -24,7 +24,7 @@ trait SbtApidocKeys {
   lazy val apidocFooterTitle =
     settingKey[Option[String]]("Navigation text for the included Footer file")
   lazy val apidocFooterFile =
-    settingKey[Option[File]]("Filename (markdown-file) for the included Header file")
+    settingKey[Option[File]]("Filename (markdown-file) for the included Footer file")
   lazy val apidocOrder = settingKey[List[String]]("A list of api-names / group-names for ordering the output. Not defined names are automatically displayed last.")
   lazy val apidocTemplateCompare = settingKey[Option[Boolean]]("Enable comparison with older api versions.")
   lazy val apidocTemplateGenerator = settingKey[Option[Boolean]]("Output the generator information at the footer.")
