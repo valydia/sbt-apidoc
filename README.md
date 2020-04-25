@@ -22,6 +22,12 @@ Add the following to your `project/plugins.sbt` or `~/.sbt/1.0/plugins/plugins.s
 ```sbt
 addSbtPlugin("com.culpin.team" % "sbt-apidoc" % "0.5.4")
 ```
+
+And in your `build.sbt`:
+
+```sbt
+apidocVersion := Some("0.1.0")
+```
     
 And some `apidoc` comments in your source code using the **Javadoc-Style** comments:
 
@@ -58,6 +64,9 @@ And run the command:
 
 The output is generated under `target/scala-2.12/apidoc`. 
 And you can open in your browser the file `target/scala-2.12/apidoc/index.html`.
+
+**NOTE**: If you are using another version of scala - `2.10` or `2.13` - the output will be
+generated under `target/scala-2.10/apidoc` or `target/scala-2.13/apidoc`respectively
 
 You can try an example with [http4s][], by running in your terminal:
 
@@ -303,23 +312,23 @@ Files:
 
 ### Setting keys
 
-|                        Key |       Type        | Default                      |                                                    Description                                                                      |
-|---------------------------:|:-----------------:|:-----------------------------|:-----------------------------------------------------------------------------------------------------------------------------------:|
-|          `apidocOutputDir` |       `File`      |        `target/apidoc/`      | Location where to put the generated documentation                                                                                   |
-|               `apidocName` |      `String`     |      same as `name` value    | Name of your project, by default uses the name `name` setting key                                                                   |
-|              `apidocTitle` |  `Option[String]` |             `None`           | Browser title text.                                                                                                                 |
-|        `apidocDescription` |      `String`     | same as `description` value  | Introduction of your project. By default, it is set to the `description` setting key                                                |
-|                `apidocURL` |  `Option[String]` |             `None`           | Prefix for api path (endpoints), e.g. `https://api.github.com/v1`                                                                   |
-|          `apidocSampleURL` |  `Option[String]` |             `None`           | If set, a form to test an api method (send a request) will be visible. See [@apiSampleRequest](#apiSampleRequest) for more details. |
-|            `apidocVersion` |  `Option[String]` |   same as `version` value    | Version of your project. If not set uses the same as the `version` setting key.                                                     |
-|        `apidocVersionFile` |  `Option[File]`   |      `resources/apidoc`      | File/Folder to keep track of the old api. It is set by default to `resources/apidoc`.                                              |
-|        `apidocHeaderTitle` |  `Option[String]` |             `None`           | Navigation text for the included `Header` file.                                                                                     |
-|         `apidocHeaderFile` |   `Option[File]`  |             `None`           | Filename (markdown-file) for the included `Header` file.                                                                            |
-|        `apidocFooterTitle` |  `Option[String]` |             `None`           | Navigation text for the included `Footer` file.                                                                                     |                                   
-|         `apidocFooterFile` |   `Option[File]`  |             `None`           | Filename (markdown-file) for the included `Footer` file.                                                                            |
-|              `apidocOrder` |  `Option[String]` |             `None`           | A list of api-names / group-names for ordering the output. Not defined names are automatically displayed last.                      |
-|    `apidocTemplateCompare` | `Option[Boolean]` |             `None`           | Enable comparison with older api versions. Default: Enabled                                                                         |
-|  `apidocTemplateGenerator` | `Option[Boolean]` |             `None`           | Output the generator information at the footer. Default: Enabled                                                                    |
+|                        Key |       Type        | Default                      |                                                    Description                                                                          |
+|---------------------------:|:-----------------:|:-----------------------------|:---------------------------------------------------------------------------------------------------------------------------------------:|
+|          `apidocOutputDir` |       `File`      |        `target/apidoc/`      | Location where to put the generated documentation                                                                                       |
+|               `apidocName` |      `String`     |      same as `name` value    | Name of your project, by default uses the name `name` setting key                                                                       |
+|              `apidocTitle` |  `Option[String]` |             `None`           | Browser title text.                                                                                                                     |
+|        `apidocDescription` |      `String`     | same as `description` value  | Introduction of your project. By default, it is set to the `description` setting key                                                    |
+|                `apidocURL` |  `Option[String]` |             `None`           | Prefix for api path (endpoints), e.g. `https://api.github.com/v1`                                                                       |
+|          `apidocSampleURL` |  `Option[String]` |             `None`           | If set, a form to test an api method (send a request) will be visible. See [@apiSampleRequest](#apiSampleRequest) for more details.     |
+|            `apidocVersion` |  `Option[String]` |   same as `version` value    | Version of your project. If not set, uses the same as the `version` setting key if it [semver](https://semver.org/) compliant or 0.0.0. |
+|        `apidocVersionFile` |  `Option[File]`   |      `resources/apidoc`      | File/Folder to keep track of the old api. It is set by default to `resources/apidoc`.                                                   |
+|        `apidocHeaderTitle` |  `Option[String]` |             `None`           | Navigation text for the included `Header` file.                                                                                         |
+|         `apidocHeaderFile` |   `Option[File]`  |             `None`           | Filename (markdown-file) for the included `Header` file.                                                                                |
+|        `apidocFooterTitle` |  `Option[String]` |             `None`           | Navigation text for the included `Footer` file.                                                                                         |                                   
+|         `apidocFooterFile` |   `Option[File]`  |             `None`           | Filename (markdown-file) for the included `Footer` file.                                                                                |
+|              `apidocOrder` |  `Option[String]` |             `None`           | A list of api-names / group-names for ordering the output. Not defined names are automatically displayed last.                          |
+|    `apidocTemplateCompare` | `Option[Boolean]` |             `None`           | Enable comparison with older api versions. Default: Enabled                                                                             |
+|  `apidocTemplateGenerator` | `Option[Boolean]` |             `None`           | Output the generator information at the footer. Default: Enabled                                                                        |
 
 
 ## apiDoc-Params
