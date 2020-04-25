@@ -13,7 +13,8 @@ lazy val commonSettings: Seq[Setting[_]] = Seq(
       "v.diarrassouba@gmail.com",
       url("https://github.com/valydia")
     )
-  )
+  ),
+  homepage := scmInfo.value.map(_.browseUrl)
 )
 
 lazy val root = (project in file("."))
