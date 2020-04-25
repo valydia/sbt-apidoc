@@ -59,6 +59,18 @@ And run the command:
 The output is generated under `target/scala-2.12/apidoc`. 
 And you can open in your browser the file `target/scala-2.12/apidoc/index.html`.
 
+You can try an example with [http4s][], by running in your terminal:
+
+1. sbt new valydia/http4s-apidoc.g8
+2. cd http4s-apidoc
+3. sbt run 
+4. open http://localhost:8080/apidoc (or just open this url in your browser)
+
+You can see more about the template [here][http4s-apidoc]
+
+[http4s-apidoc]: https://github.com/valydia/http4s-apidoc.g8
+[http4s]: https://http4s.org/
+
 ## Examples
 
 ### Basic
