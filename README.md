@@ -64,7 +64,7 @@ You can try an example with [http4s][], by running in your terminal:
 1. sbt new valydia/http4s-apidoc.g8
 2. cd http4s-apidoc
 3. sbt run 
-4. open http://localhost:8080/apidoc (or just open this url in your browser)
+4. open http://localhost:8080/apidoc (or just open this url http://localhost:8080/apidoc in your browser)
 
 You can see more about the template [here][http4s-apidoc]
 
