@@ -1,5 +1,19 @@
 lazy val commonSettings: Seq[Setting[_]] = Seq(
-  organization in ThisBuild := "com.culpin.team"
+  organization in ThisBuild := "com.culpin.team",
+  scmInfo := Some(
+    ScmInfo(
+      url("https://github.com/valydia/sbt-apidoc"),
+      "scm:git:git@github.com:valydia/sbt-apidoc.git"
+    )
+  ),
+  developers := List(
+    Developer(
+      "valydia",
+      "Valy Dia",
+      "v.diarrassouba@gmail.com",
+      url("https://github.com/valydia")
+    )
+  )
 )
 
 lazy val root = (project in file("."))
