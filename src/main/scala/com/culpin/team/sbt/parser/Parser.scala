@@ -75,16 +75,17 @@ object Parser {
           Js.Obj("global" -> Js.Obj(), "local" -> Js.Obj())
         elems.foldLeft(initialResult) {
           case (acc, element) =>
-            parserMap.get(element.name.toLowerCase) map { ep =>
+            parserMap.get(element.name) map { elementParser =>
               log.debug(s"found @${element.sourceName} in block: $index")
-              ep(element.content) map { values =>
+              elementParser(element.content) map { values =>
                 val map = new mutable.LinkedHashMap[String, Js.Value]()
-                if (element.name.toLowerCase == "apiversion")
+                if (element.name == "apiversion")
                   map.put("version", values("local")("version"))
                 map.put("index", index + 1)
                 merge(acc, merge(values, Js.Obj.from(map)))
               } getOrElse {
-                //TODO what to log?
+                // Should not happen
+                log.warn(s"Couldn't parse block ${element.content}")
                 acc
               }
             } getOrElse {
@@ -338,12 +339,13 @@ object Parser {
   private val defaultValue: Parser[String] = P(
     " ".rep ~ "=" ~ " ".rep ~ (doubleQuotedDefaultValue | singleQuotedDefaultValue | noQuotedDefaultValue))
   private val field: Parser[Js.Obj] = P("[".!.? ~ " ".rep ~ CharIn(
-    fieldCharacter).rep.! ~ defaultValue.? ~ " ".rep ~ "]".? ~ " ".rep) map {
-    case (o, f, dv) =>
+    fieldCharacter).rep.! ~ ("["~ " ".rep ~ CharIn(fieldCharacter).rep.! ~ "]").? ~ defaultValue.? ~ " ".rep ~ "]".? ~ " ".rep) map {
+    case (optional, _field, nestedField, defaultValue) =>
       val map = new mutable.LinkedHashMap[String, Js.Value]()
-      map.put("optional", o.isDefined)
-      map.put("field", f)
-      dv.foreach(d => map.put("defaultValue", d))
+      map.put("optional", optional.isDefined)
+      val fieldWithNestedField = nestedField.fold(_field)(nf => s"${_field}[$nf]")
+      map.put("field", fieldWithNestedField)
+      defaultValue.foreach(d => map.put("defaultValue", d))
       Js.Obj.from(map)
   }
   private val description: Parser[Js.Obj] =

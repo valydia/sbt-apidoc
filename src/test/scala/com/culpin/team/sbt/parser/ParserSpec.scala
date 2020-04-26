@@ -13,9 +13,7 @@ class ParserSpec extends FlatSpec {
 
   val stubLogger = new Logger {
     override def log(level: Level.Value, message: => String): Unit = ()
-
     override def trace(t: => Throwable): Unit = ()
-
     override def success(message: => String): Unit = ()
   }
   "Parser" should "parse empty files" in {
@@ -59,28 +57,31 @@ class ParserSpec extends FlatSpec {
                  |  def foo(): Unit = {}
                  |}""".stripMargin
 
-    val result = parseCommentBlocks(file).toList
-    assert(result === List("A simple class and objects to write tests against.", "Block 1\n@param arg", "@apiDefine admin Admin access rights needed.\nOptionally you can write here further Informations about the permission.\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.\n\n@apiVersion 0.3.0"))
+    val List(block1, block2, block3) = parseCommentBlocks(file).toList
+    assert(block1 === "A simple class and objects to write tests against.")
+    assert(block2 === "Block 1\n@param arg")
+    assert(block3 === "@apiDefine admin Admin access rights needed.\nOptionally you can write here further Informations about the permission." +
+      "\n\nAn \"apiDefinePermission\"-block can have an \"apiVersion\", so you can attach the block to a specific version.\n\n@apiVersion 0.3.0")
   }
 
   it should "parse comment block - 2" in {
-    val jennyFromDaBlock = """|/**
-                              |  * @apiDefine admin Admin access rights needed.
-                              |  * Optionally you can write here further Informations about the permission.
-                              |  *
-                              |  * An "apiDefinePermission"-block can have an "apiVersion", so you can attach the block to a specific version.
-                              |  *
-                              |  * @apiVersion 0.3.0
-                              |  */""".stripMargin
+    val commentBlock = """|/**
+                          |  * @apiDefine admin Admin access rights needed.
+                          |  * Optionally you can write here further Informations about the permission.
+                          |  *
+                          |  * An "apiDefinePermission"-block can have an "apiVersion", so you can attach the block to a specific version.
+                          |  *
+                          |  * @apiVersion 0.3.0
+                          |  */""".stripMargin
 
-    val List(commentBlock) = parseCommentBlocks(jennyFromDaBlock).toList
+    val List(parsedCommentBlock) = parseCommentBlocks(commentBlock).toList
     val expected = """|@apiDefine admin Admin access rights needed.
                       |Optionally you can write here further Informations about the permission.
                       |
                       |An "apiDefinePermission"-block can have an "apiVersion", so you can attach the block to a specific version.
                       |
                       |@apiVersion 0.3.0""".stripMargin
-    assert(commentBlock === expected)
+    assert(parsedCommentBlock === expected)
   }
 
   it should "parse elements - 2" in {
@@ -124,6 +125,15 @@ class ParserSpec extends FlatSpec {
     assert(define("description") === Js.Str("<p>Optionally you can write here further Informations about the permission.</p> " +
       "<p>An &quot;apiDefinePermission&quot;-block can have an &quot;apiVersion&quot;, so you can attach the block to a specific version.</p>"))
 
+  }
+
+  it should "process elements for non-existing element" in {
+
+    val description = "some random description"
+    val elementTag = "apiIdontExist"
+    val element = Element(s"@apiIdontExist some random decription", elementTag.toLowerCase, elementTag, description)
+
+    processElements(Seq(Seq(element)), stubLogger)
   }
 
   it should "find element in block" in {
@@ -299,9 +309,11 @@ class ParserSpec extends FlatSpec {
       ("{String} country=\"DE\" Mandatory with default value \"DE\".", "Parameter", Some(Js.Str("String")), Js.Bool(false), Js.Str("country"), Some(Js.Str("DE")), None, None, Some(Js.Str(renderMarkDown("Mandatory with default value \"DE\".")))),
       ("{String} lastname     Mandatory Lastname.", "Parameter", Some(Js.Str("String")), Js.Bool(false), Js.Str("lastname"), None, None, None, Some(Js.Str(renderMarkDown("Mandatory Lastname.")))),
       ("simple", "Parameter", None, Js.Bool(false), Js.Str("simple"), None, None, None, None),
-      ("{String} name The users name.", "Parameter", Some(Js.Str("String")), Js.Bool(false), Js.Str("name"), None, None, None, Some(Js.Str(renderMarkDown("The users name.")))),
+      ("{String} user[firstname] Firstname of the User.", "Parameter", Some(Js.Str("String")), Js.Bool(false), Js.Str("user[firstname]"), None, None, None, Some(Js.Str(renderMarkDown("Firstname of the User.")))),
+      ("{String} [user[firstname]] Firstname of the User.", "Parameter", Some(Js.Str("String")), Js.Bool(true), Js.Str("user[firstname]"), None, None, None, Some(Js.Str(renderMarkDown("Firstname of the User.")))),
       ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  [ \\MyClass\\field.user_first-name = \'John Doe\' ] Some description.", "MyGroup", Some(Js.Str("\\Object\\String.uni-code_char[]")), Js.Bool(true), Js.Str("\\MyClass\\field.user_first-name"), Some(Js.Str("John Doe")), Some(Js.Str("1..10")), Some(Js.Arr("\'abc\'", "\'def\'")), Some(Js.Str(renderMarkDown("Some description.")))),
-      ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  \\MyClass\\field.user_first-name = John_Doe Some description.", "MyGroup", Some(Js.Str("\\Object\\String.uni-code_char[]")), Js.Bool(false), Js.Str("\\MyClass\\field.user_first-name"), Some(Js.Str("John_Doe")), Some(Js.Str("1..10")), Some(Js.Arr("\'abc\'", "\'def\'")), Some(Js.Str(renderMarkDown("Some description.")))))
+      ("( MyGroup ) { \\Object\\String.uni-code_char[] { 1..10 } = \'abc\', \'def\' }  \\MyClass\\field.user_first-name = John_Doe Some description.", "MyGroup", Some(Js.Str("\\Object\\String.uni-code_char[]")), Js.Bool(false), Js.Str("\\MyClass\\field.user_first-name"), Some(Js.Str("John_Doe")), Some(Js.Str("1..10")), Some(Js.Arr("\'abc\'", "\'def\'")), Some(Js.Str(renderMarkDown("Some description."))))
+    )
 
   it should "parse apiparam element" in {
     forAll(apiParamTestCase) { (content, group, `type`, optional, field, defaultValue, size, allowedValue, description) =>
