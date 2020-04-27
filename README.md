@@ -68,20 +68,41 @@ The output is generated under `target/scala-2.12/apidoc`.
 And you can open in your browser the file `target/scala-2.12/apidoc/index.html`.
 
 **NOTE**: If you are using another version of scala - `2.10` or `2.13` - the output will be
-generated under `target/scala-2.10/apidoc` or `target/scala-2.13/apidoc`respectively
+generated under `target/scala-2.10/apidoc` or `target/scala-2.13/apidoc`respectively.
 
-You can try an example with [http4s][], by running in your terminal:
+[semver]: https://semver.org/
+
+### Templates
+
+#### Http4s
+
+You can start a new project with [http4s][], using a [template][http4s-apidoc]
+by running the following command in your terminal:
 
 1. sbt new valydia/http4s-apidoc.g8
 2. cd http4s-apidoc
 3. sbt run 
 4. open http://localhost:8080/apidoc (or just open this url http://localhost:8080/apidoc in your browser)
 
-You can see more about the template [here][http4s-apidoc]
+You can see more about the template [here][http4s-apidoc].
 
 [http4s-apidoc]: https://github.com/valydia/http4s-apidoc.g8
 [http4s]: https://http4s.org/
-[semver]: https://semver.org/
+
+#### Play Framework
+
+You can start a new project with [play][], using a [template][play-apidoc]
+by running the following command in your terminal:
+
+1. sbt new valydia/play-apidoc.g8
+2. cd play-apidoc
+3. sbt run
+4. open http://localhost:9000/apidoc/index.html
+
+You can see more about the template [here][play-apidoc].
+
+[play-apidoc]: https://github.com/valydia/play-apidoc.g8
+[play]: https://www.playframework.com/
 
 ## Examples
 
@@ -323,7 +344,7 @@ Files:
 |        `apidocDescription` |      `String`     | same as `description` value  | Introduction of your project. By default, it is set to the `description` setting key.                                                                                        |
 |                `apidocURL` |  `Option[String]` |             `None`           | Prefix for api path (endpoints), e.g. `https://api.github.com/v1`                                                                                                            |
 |          `apidocSampleURL` |  `Option[String]` |             `None`           | If set, a form to test an api method (send a request) will be visible. See [@apiSampleRequest](#apiSampleRequest) for more details.                                          |
-|            `apidocVersion` |  `Option[String]` |   same as `version` value    | Version of your project - supported (major.minor.patch). If not set, uses the same as the `version` setting key if it uses [Semantic Versioning][semver] or 0.0.0. |
+|            `apidocVersion` |  `Option[String]` |   same as `version` value    | Version of your project - supported (major.minor.patch). If not set, uses the same as the `version` setting key if it uses [Semantic Versioning][semver] or 0.0.0.           |
 |        `apidocVersionFile` |  `Option[File]`   |      `resources/apidoc`      | File/Folder to keep track of the old api. It is set by default to `resources/apidoc`.                                                                                        |
 |        `apidocHeaderTitle` |  `Option[String]` |             `None`           | Navigation text for the included `Header` file.                                                                                                                              |
 |         `apidocHeaderFile` |   `Option[File]`  |             `None`           | Filename (markdown-file) for the included `Header` file.                                                                                                                     |
