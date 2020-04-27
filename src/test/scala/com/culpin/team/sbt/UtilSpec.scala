@@ -2,6 +2,7 @@ package com.culpin.team.sbt
 
 import org.scalatest.FlatSpec
 import ujson.Js
+import org.scalatest.prop.TableDrivenPropertyChecks._
 
 class UtilSpec extends FlatSpec {
 
@@ -82,6 +83,28 @@ class UtilSpec extends FlatSpec {
       "<p>Optionally you can write here further Informations about the permission.</p> <p>An &quot;apiDefinePermission&quot;-block can have an &quot;apiVersion&quot;, so you can attach the block to a specific version.</p>"
 
     assert(Util.renderMarkDown(description) === expected)
+  }
+
+  val defaultVersionTestCases =
+    Table(
+      ("apidocVersion", "projectVersion", "expected"),
+      (Some("invalid"), "invalid", "0.0.0"),
+      (None, "invalid", "0.0.0"),
+      (Some("1.0"), "", "1.0.0"),
+      (Some("1.2.3"), "", "1.2.3"),
+      (Some("1.2.3-SNAPSHOT"), "", "1.2.3"),
+      (Some("invalid"), "1.2.3", "1.2.3"),
+      (None, "1.2.3", "1.2.3" ),
+      (None, "1.2.3-SNAPSHOT", "1.2.3"),
+      // FIXME Strange behaviour
+      //see https://github.com/valydia/sbt-apidoc/issues/11
+      (None, "1.2.3+0-1234abcd+20140707-1030", "1.2.0" )
+    )
+
+  it should "calculate the default ApiVersion" in new LoggerHelper {
+    forAll(defaultVersionTestCases){ (apidocVersion, projectVersion, expected) =>
+      assert(Util.defaultVersion(apidocVersion, projectVersion, stubLogger) === expected)
+    }
   }
 
 }
