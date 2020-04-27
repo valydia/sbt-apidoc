@@ -77,7 +77,7 @@ generated under `target/scala-2.10/apidoc` or `target/scala-2.13/apidoc`respecti
 #### Http4s
 
 You can start a new project with [http4s][], using a [template][http4s-apidoc]
-by running the following command in your terminal:
+by running the following commands in your terminal:
 
 1. sbt new valydia/http4s-apidoc.g8
 2. cd http4s-apidoc
@@ -92,12 +92,12 @@ You can see more about the template [here][http4s-apidoc].
 #### Play Framework
 
 You can start a new project with [play][], using a [template][play-apidoc]
-by running the following command in your terminal:
+by running the following commands in your terminal:
 
 1. sbt new valydia/play-apidoc.g8
 2. cd play-apidoc
 3. sbt run
-4. open http://localhost:9000/apidoc/index.html
+4. open http://localhost:9000/apidoc/index.html (or just open this url http://localhost:9000/apidoc/index.html in your browser)
 
 You can see more about the template [here][play-apidoc].
 
