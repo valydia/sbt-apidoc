@@ -65,7 +65,7 @@ object SbtApidoc extends AutoPlugin {
       apidocName.value,
       apidocTitle.value,
       apidocDescription.value,
-      apidocVersion.value getOrElse version.value,
+      Util.defaultVersion(apidocVersion.value, version.value, log),
       projectVersion,
       apidocVersionFile.value,
       apidocURL.value,
@@ -101,7 +101,7 @@ object SbtApidoc extends AutoPlugin {
     result
   }
 
-  def relativePath(baseDirectory: File, file: File): String = {
+  private def relativePath(baseDirectory: File, file: File): RelativeFilename = {
     file.getAbsolutePath.replaceFirst(baseDirectory.getAbsolutePath, ".")
   }
 
@@ -160,7 +160,7 @@ object SbtApidoc extends AutoPlugin {
     )
   }
 
-  def buildHeaderFooter(file: Option[File], title: Option[String], log: Logger): Option[Js.Obj] = {
+  private def buildHeaderFooter(file: Option[File], title: Option[String], log: Logger): Option[Js.Obj] = {
     file.flatMap { file =>
       if (file.exists()){
         Some(
@@ -196,7 +196,7 @@ object SbtApidoc extends AutoPlugin {
                      apidocOutput: File,
                      apidocOutputRelativePath: String,
                      log: Logger): File = {
-        log.info(s"copy template to $apidocOutputRelativePath")
+    log.info(s"copy template to $apidocOutputRelativePath")
 
     val templateStream =
       getClass.getClassLoader.getResourceAsStream("template.zip")

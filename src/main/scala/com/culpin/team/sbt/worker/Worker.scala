@@ -1,9 +1,9 @@
 package com.culpin.team.sbt.worker
 
-import com.culpin.team.sbt.Util.merge
 import ujson.Js
-import com.gilt.gfc.semver.SemVer
 import ujson.Js.Value
+import com.gilt.gfc.semver.SemVer
+import com.culpin.team.sbt.Util.merge
 
 import scala.collection.mutable
 

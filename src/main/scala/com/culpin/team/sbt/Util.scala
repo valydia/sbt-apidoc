@@ -8,6 +8,9 @@ import ujson.Js
 import com.vladsch.flexmark.html.HtmlRenderer
 import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.util.options.MutableDataSet
+import sbt.Logger
+
+import scala.util.Try
 
 object Util {
 
@@ -124,6 +127,30 @@ object Util {
 
   private[sbt] def renderMarkDownNoPTags(value: String): String =
     renderMarkDown(value).replaceAll("<p>|</p>", "")
+
+  private[sbt] def defaultVersion(apidocVersion: Option[String], version: String, log: Logger): String = {
+    val semverApidocVersion =
+      apidocVersion.flatMap(v => extractSemVer("apidocVersion")(v, log))
+
+
+    semverApidocVersion orElse extractSemVer("version")(version, log) getOrElse "0.0.0"
+  }
+
+  private[sbt] def extractSemVer(keyName: String)(version: String, log: Logger): Option[String] = {
+    Try(SemVer(version)).fold(
+      _ => {
+        log.warn(s"Cannot parse `$keyName` setting key '$version'.")
+        None
+      },
+      semver => {
+        val res = Some(s"${semver.major}.${semver.minor}.${semver.point}")
+        semver.extra.fold(res){ _ =>
+          log.warn(s"Using ${res.get} for `$keyName` setting key instead of $version.")
+          res
+        }
+      }
+    )
+  }
 
 
 }
