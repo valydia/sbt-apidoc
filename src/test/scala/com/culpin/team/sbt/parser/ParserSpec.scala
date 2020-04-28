@@ -1,4 +1,4 @@
-package com.culpin.team.sbt.parser
+package com.github.valydia.sbt.parser
 
 import java.io.File
 
@@ -6,7 +6,7 @@ import org.scalatest.prop.TableDrivenPropertyChecks._
 import org.scalatest.FlatSpec
 import ujson.Js
 import Parser._
-import com.culpin.team.sbt.Util.renderMarkDown
+import com.github.valydia.sbt.Util.renderMarkDown
 import sbt.util.{ Level, Logger }
 
 class ParserSpec extends FlatSpec {

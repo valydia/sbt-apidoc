@@ -1,7 +1,7 @@
-package com.culpin.team.sbt.parser
+package com.github.valydia.sbt.parser
 
-import com.culpin.team.sbt.SbtApidoc.RelativeFilename
-import com.culpin.team.sbt.Util._
+import com.github.valydia.sbt.SbtApidoc.RelativeFilename
+import com.github.valydia.sbt.Util._
 import sbt.{File, IO, Logger}
 import ujson.Js
 import fastparse.all._

@@ -1,4 +1,4 @@
-package com.culpin.team.sbt
+package com.github.valydia.sbt
 
 import org.scalatest.FlatSpec
 import ujson.Js

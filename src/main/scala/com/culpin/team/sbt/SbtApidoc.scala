@@ -1,7 +1,7 @@
-package com.culpin.team.sbt
+package com.github.valydia.sbt
 
-import com.culpin.team.sbt.parser.Parser
-import com.culpin.team.sbt.worker.Worker
+import com.github.valydia.sbt.parser.Parser
+import com.github.valydia.sbt.worker.Worker
 import sbt.Keys.{name, version, _}
 import sbt.plugins.JvmPlugin
 import sbt.{IO, Logger, _}

@@ -1,5 +1,5 @@
 lazy val commonSettings: Seq[Setting[_]] = Seq(
-  organization in ThisBuild := "com.culpin.team",
+  organization in ThisBuild := "com.github.valydia",
   licenses := Seq("MIT License" -> url("http://opensource.org/licenses/mit-license.php/")),
   scmInfo := Some(
     ScmInfo(
