@@ -1,4 +1,4 @@
-package com.culpin.team.sbt
+package com.github.valydia.sbt
 
 import java.util.Collections
 

@@ -1,9 +1,9 @@
-package com.culpin.team.sbt.worker
+package com.github.valydia.sbt.worker
 
 import java.io.File
 
-import com.culpin.team.sbt.LoggerHelper
-import com.culpin.team.sbt.parser.Parser
+import com.github.valydia.sbt.LoggerHelper
+import com.github.valydia.sbt.parser.Parser
 import org.scalatest.FlatSpec
 import ujson.Js
 

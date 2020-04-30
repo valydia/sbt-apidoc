@@ -1,11 +1,6 @@
 lazy val commonSettings: Seq[Setting[_]] = Seq(
-  organization in ThisBuild := "com.culpin.team",
-  scmInfo := Some(
-    ScmInfo(
-      url("https://github.com/valydia/sbt-apidoc"),
-      "scm:git:git@github.com:valydia/sbt-apidoc.git"
-    )
-  ),
+  organization in ThisBuild := "com.github.valydia",
+  licenses := Seq("MIT License" -> url("http://opensource.org/licenses/mit-license.php/")),
   developers := List(
     Developer(
       "valydia",
@@ -14,7 +9,7 @@ lazy val commonSettings: Seq[Setting[_]] = Seq(
       url("https://github.com/valydia")
     )
   ),
-  homepage := scmInfo.value.map(_.browseUrl)
+  homepage := Some(url("https://github.com/valydia/sbt-apidoc"))
 )
 
 lazy val root = (project in file("."))
@@ -24,7 +19,6 @@ lazy val root = (project in file("."))
     sbtPlugin := true,
     name := "sbt-apidoc",
     scalacOptions ++= Seq("-deprecation", "-feature"),
-    licenses := Seq("MIT License" -> url("http://opensource.org/licenses/mit-license.php/")),
     libraryDependencies ++= Seq(
       "com.lihaoyi"           %%     "ujson"                      %    "0.6.6",
       "com.lihaoyi"           %%     "fastparse"                  %    "0.4.2",

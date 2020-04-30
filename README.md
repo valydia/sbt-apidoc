@@ -20,7 +20,7 @@ This plugin requires sbt 1.0.0+
 Add the following to your `project/plugins.sbt` or `~/.sbt/1.0/plugins/plugins.sbt` file:
 
 ```sbt
-addSbtPlugin("com.culpin.team" % "sbt-apidoc" % "0.5.5")
+addSbtPlugin("com.github.valydia" % "sbt-apidoc" % "0.5.5")
 ```
 
 And in your `build.sbt`:

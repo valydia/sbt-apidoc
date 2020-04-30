@@ -1,9 +1,9 @@
-package com.culpin.team.sbt.worker
+package com.github.valydia.sbt.worker
 
 import ujson.Js
 import ujson.Js.Value
 import com.gilt.gfc.semver.SemVer
-import com.culpin.team.sbt.Util.merge
+import com.github.valydia.sbt.Util.merge
 
 import scala.collection.mutable
 
