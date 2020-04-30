@@ -1,26 +1,22 @@
 language: scala
 
+jdk:
+  - openjdk8
+  - openjdk11
+
+env:
+  - SBT_VERSION="1.0.0"
+  - SBT_VERSION="1.2.8"
+
 before_install:
   - git fetch --tags
+
+script: sbt -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M "^^${SBT_VERSION}" test scripted
 
 stages:
   - name: test
   - name: release
     if: ((branch = master AND type = push) OR (tag IS present)) AND NOT fork
-
-matrix:
-  include:
-    - env: SBT_VERSION="1.0.0"
-      jdk: openjdk8
-
-    - env: SBT_VERSION="1.2.8"
-      jdk: openjdk8
-
-    - env: SBT_VERSION="1.2.8"
-      jdk: openjdk11
-
-script:
-  - sbt -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M "^^${SBT_VERSION}" test scripted
 
 jobs:
   include:
