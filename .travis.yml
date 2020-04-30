@@ -1,5 +1,3 @@
-sudo: false
-
 language: scala
 
 before_install:
@@ -27,6 +25,7 @@ script:
 jobs:
   include:
     - stage: release
+      jdk: openjdk8
       script: sbt ci-release
 
 before_cache:

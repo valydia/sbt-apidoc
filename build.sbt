@@ -1,12 +1,6 @@
 lazy val commonSettings: Seq[Setting[_]] = Seq(
   organization in ThisBuild := "com.github.valydia",
   licenses := Seq("MIT License" -> url("http://opensource.org/licenses/mit-license.php/")),
-  scmInfo := Some(
-    ScmInfo(
-      url("https://github.com/valydia/sbt-apidoc"),
-      "scm:git:git@github.com:valydia/sbt-apidoc.git"
-    )
-  ),
   developers := List(
     Developer(
       "valydia",
@@ -15,7 +9,7 @@ lazy val commonSettings: Seq[Setting[_]] = Seq(
       url("https://github.com/valydia")
     )
   ),
-  homepage := scmInfo.value.map(_.browseUrl)
+  homepage := Some(url("https://github.com/valydia/sbt-apidoc")),
 )
 
 lazy val root = (project in file("."))
