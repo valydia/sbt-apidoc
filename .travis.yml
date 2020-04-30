@@ -5,8 +5,8 @@ jdk:
   - openjdk11
 
 env:
-  - SBT_VERSION="1.0.0"
   - SBT_VERSION="1.2.8"
+  - SBT_VERSION="1.0.0"
 
 before_install:
   - git fetch --tags
