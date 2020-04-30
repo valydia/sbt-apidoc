@@ -1,7 +1,7 @@
 # sbt-apidoc
 
 [![Build Status][build-status-logo]][travis]
-[![Download][build-version-logo]][bintray]
+[![Maven Central][maven-badge]][maven]
 [![License: MIT][license-logo]][MIT-license]
 
 An attempt to port the [apidocjs plugin][apidocjs] to sbt.
@@ -9,8 +9,8 @@ An attempt to port the [apidocjs plugin][apidocjs] to sbt.
 [apidocjs]: https://apidocjs.com/
 [build-status-logo]: https://api.travis-ci.org/valydia/sbt-apidoc.png
 [travis]: http://travis-ci.org/valydia/sbt-apidoc
-[build-version-logo]: https://api.bintray.com/packages/valydia/sbt-plugins/sbt-apidoc/images/download.svg
-[bintray]: https://bintray.com/valydia/sbt-plugins/sbt-apidoc/_latestVersion
+[maven]: https://search.maven.org/artifact/com.github.valydia/sbt-apidoc
+[maven-badge]: https://maven-badges.herokuapp.com/maven-central/com.github.valydia/sbt-apidoc/badge.svg?kill_cache=1
 [license-logo]: https://img.shields.io/badge/License-MIT-blue.svg 
 [MIT-license]: https://opensource.org/licenses/MIT
 
