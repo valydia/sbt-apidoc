@@ -1,12 +1,9 @@
-import models.gathr.culpinteam.v1.EventDao
 import org.slf4j.LoggerFactory
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc._
 import service.{ FacebookManager, EmailManager }
 import scala.concurrent.ExecutionContext.Implicits.global
-
-import views.html.gathr.culpinteam.v1.{ welcome => welcomePage }
 
 import scala.concurrent.Future
 
