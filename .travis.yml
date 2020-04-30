@@ -8,22 +8,18 @@ stages:
   - name: release
     if: ((branch = master AND type = push) OR (tag IS present)) AND NOT fork
 
-matrix:
-  include:
-    - env: SBT_VERSION="1.0.0"
-      jdk: openjdk8
-
-    - env: SBT_VERSION="1.2.8"
-      jdk: openjdk8
-
-    - env: SBT_VERSION="1.2.8"
-      jdk: openjdk11
-
-script:
-  - sbt -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M "^^${SBT_VERSION}" test scripted
-
 jobs:
   include:
+    - stage: test
+      jdk: openjdk8
+      env: SBT_VERSION="1.0.0"
+    - script: sbt -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M "^^${SBT_VERSION}" test scripted
+      jdk: openjdk8
+      env: SBT_VERSION="1.2.8"
+    - script: sbt -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M "^^${SBT_VERSION}" test scripted
+      jdk: openjdk11
+      env: SBT_VERSION="1.2.8"
+    - script: sbt -Dfile.encoding=UTF8 -J-XX:ReservedCodeCacheSize=256M "^^${SBT_VERSION}" test scripted
     - stage: release
       jdk: openjdk8
       script: sbt ci-release
