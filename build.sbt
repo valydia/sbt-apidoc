@@ -9,7 +9,7 @@ lazy val commonSettings: Seq[Setting[_]] = Seq(
       url("https://github.com/valydia")
     )
   ),
-  homepage := Some(url("https://github.com/valydia/sbt-apidoc")),
+  homepage := Some(url("https://github.com/valydia/sbt-apidoc"))
 )
 
 lazy val root = (project in file("."))
